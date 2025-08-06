@@ -61,7 +61,7 @@ gem "whenever", require: false
 # Tournament Management System
 gem "rqrcode", "~> 2.0", groups: [:development] # QR code generation
 gem "aasm", "~> 5.5", groups: [:development] # State machine for tournament states
-gem "paper_trail", "~> 15.0", groups: [:development] # Change tracking
+gem "paper_trail", "~> 16.0", groups: [:development] # Change tracking
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
