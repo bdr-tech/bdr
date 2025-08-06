@@ -32,9 +32,9 @@ gem "httparty"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
+# gem "solid_cache"
+# gem "solid_queue"
+# gem "solid_cable"
 
 # Redis for caching
 gem "redis", "~> 5.0"
@@ -44,10 +44,10 @@ gem "connection_pool"
 gem "bootsnap", require: false
 
 # Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
-gem "kamal", require: false
+# gem "kamal", require: false
 
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
-gem "thruster", require: false
+# gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
@@ -59,9 +59,9 @@ gem "view_component", "~> 3.0"
 gem "whenever", require: false
 
 # Tournament Management System
-gem "rqrcode", "~> 2.0" # QR code generation
-gem "aasm", "~> 5.5" # State machine for tournament states
-gem "paper_trail", "~> 15.0" # Change tracking
+gem "rqrcode", "~> 2.0", groups: [:development] # QR code generation
+gem "aasm", "~> 5.5", groups: [:development] # State machine for tournament states
+gem "paper_trail", "~> 15.0", groups: [:development] # Change tracking
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
