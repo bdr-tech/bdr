@@ -2,8 +2,8 @@ services:
   - type: web
     name: bdr-app
     runtime: ruby
-    buildCommand: "./render-build.sh"
-    startCommand: "bundle exec puma -t 5:5 -p ${PORT:-3000} -e production"
+    buildCommand: "bundle install && bundle exec rake assets:precompile"
+    startCommand: "bundle exec puma -p ${PORT:-3000} -e production"
     envVars:
       - key: RAILS_MASTER_KEY
         sync: false
