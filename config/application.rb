@@ -25,6 +25,15 @@ module BdrPjt
     # config.eager_load_paths << Rails.root.join("extras")
 
     # ViewComponent configuration
-    config.view_component.preview_paths << "#{Rails.root}/test/components/previews"
+    # config.view_component.preview_paths << "#{Rails.root}/test/components/previews"
+    
+    # Set time zone
+    config.time_zone = "Seoul"
+    
+    # Disable some features for initial deployment
+    if Rails.env.production?
+      config.active_storage.variant_processor = nil
+      config.action_mailer.perform_deliveries = false
+    end
   end
 end
