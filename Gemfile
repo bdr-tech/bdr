@@ -59,7 +59,7 @@ gem "view_component", "~> 3.0"
 gem "whenever", require: false
 
 # Tournament Management System
-gem "rqrcode", "~> 2.0", groups: [:development] # QR code generation
+gem "rqrcode", "~> 3.1", groups: [:development] # QR code generation
 gem "aasm", "~> 5.5", groups: [:development] # State machine for tournament states
 gem "paper_trail", "~> 15.0", groups: [:development] # Change tracking
 
