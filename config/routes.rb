@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Health check endpoint
+  get "/up", to: "health#check"
+  
   # Court realtime activities
   resources :courts do
     member do

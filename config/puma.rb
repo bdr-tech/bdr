@@ -30,7 +30,7 @@ threads threads_count, threads_count
 # Specifies the `worker` count for production
 if ENV["RAILS_ENV"] == "production"
   workers ENV.fetch("WEB_CONCURRENCY", 2)
-  preload_app!
+  # preload_app! # Temporarily disable for debugging
 end
 
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
