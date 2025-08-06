@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Test endpoint
+  get "/test", to: "test#index"
+  
   # Health check endpoint
   get "/up", to: "health#check"
   
