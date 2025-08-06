@@ -53,7 +53,7 @@ gem "bootsnap", require: false
 # gem "image_processing", "~> 1.2"
 
 # ViewComponent for component-based UI
-gem "view_component", "~> 3.0"
+gem "view_component", "~> 4.0"
 
 # Cron jobs
 gem "whenever", require: false
