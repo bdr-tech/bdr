@@ -1,0 +1,254 @@
+<div class="min-h-screen bg-gray-50 py-4 sm:py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-sm rounded-lg p-4 sm:p-6">
+      <h1 class="text-lg sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+        대회 참가 신청
+        <span class="block text-sm sm:text-base text-gray-600 font-normal mt-1"><%= @tournament.name %></span>
+      </h1>
+      
+      <%= form_with model: [@tournament, @tournament_team], url: tournament_registrations_path(@tournament), local: true do |form| %>
+        
+        <!-- 팀 선택 옵션 -->
+        <div class="mb-4 sm:mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">팀 선택 방법</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 touch-manipulation">
+              <input type="radio" name="team_option" value="new" class="mr-3 w-4 h-4" checked>
+              <div>
+                <span class="font-medium">새로운 팀 구성</span>
+                <span class="block text-xs text-gray-500 mt-1">새 멤버들로 팀을 구성합니다</span>
+              </div>
+            </label>
+            <% if @user_teams.any? %>
+              <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 touch-manipulation">
+                <input type="radio" name="team_option" value="existing" class="mr-3 w-4 h-4">
+                <div>
+                  <span class="font-medium">기존 팀 사용</span>
+                  <span class="block text-xs text-gray-500 mt-1">내 팀에서 선택합니다</span>
+                </div>
+              </label>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 기존 팀 선택 -->
+        <div id="existing-team-section" class="mb-4 sm:mb-6 hidden">
+          <label class="block text-sm font-medium text-gray-700 mb-2">내 팀 선택</label>
+          <select id="team-select" name="team_id" class="w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base sm:text-sm bg-white">
+            <option value="">팀을 선택하세요</option>
+            <% @user_teams.each do |team| %>
+              <option value="<%= team.id %>" data-members="<%= team.member_count %>">
+                <%= team.name %> (<%= team.member_count %>명)
+              </option>
+            <% end %>
+          </select>
+          <input type="hidden" name="use_existing_team" id="use-existing-team" value="false">
+        </div>
+        
+        <!-- 팀 정보 -->
+        <div class="mb-4 sm:mb-6">
+          <%= form.label :team_name, "팀 이름", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.text_field :team_name, required: true, 
+                class: "w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base sm:text-sm",
+                autocomplete: "off" %>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div>
+            <%= form.label :contact_phone, "연락처", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.telephone_field :contact_phone, required: true, 
+                  class: "w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base sm:text-sm",
+                  placeholder: "010-1234-5678",
+                  autocomplete: "tel" %>
+          </div>
+          
+          <div>
+            <%= form.label :contact_email, "이메일", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.email_field :contact_email, required: true, 
+                  class: "w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base sm:text-sm",
+                  autocomplete: "email" %>
+          </div>
+        </div>
+        
+        <!-- 팀 멤버 섹션 -->
+        <div class="mb-4 sm:mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base sm:text-lg font-semibold">팀 멤버</h3>
+            <button type="button" id="add-player-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 touch-manipulation flex items-center">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              선수 추가
+            </button>
+          </div>
+          
+          <!-- 플레이어 검색 -->
+          <div id="player-search" class="mb-4 hidden">
+            <input type="text" id="player-search-input" 
+                   placeholder="이름, 닉네임 또는 이메일로 검색..." 
+                   class="w-full px-4 py-3 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base sm:text-sm"
+                   autocomplete="off">
+            <div id="search-results" class="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+            </div>
+          </div>
+          
+          <!-- 선택된 팀 멤버 목록 -->
+          <div id="selected-players" class="space-y-2">
+            <div class="text-gray-500 text-sm">아직 선택된 멤버가 없습니다.</div>
+          </div>
+        </div>
+        
+        <!-- 제출 버튼 -->
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 sm:mt-8">
+          <%= link_to "취소", tournament_path(@tournament), 
+                class: "w-full sm:w-auto px-6 py-3 sm:py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-center font-medium touch-manipulation" %>
+          <%= form.submit "참가 신청", 
+                class: "w-full sm:w-auto px-6 py-3 sm:py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium touch-manipulation cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 팀 옵션 선택
+  const teamOptions = document.querySelectorAll('input[name="team_option"]');
+  const existingTeamSection = document.getElementById('existing-team-section');
+  const teamSelect = document.getElementById('team-select');
+  const useExistingTeam = document.getElementById('use-existing-team');
+  const teamNameField = document.querySelector('input[name="tournament_team[team_name]"]');
+  
+  teamOptions.forEach(option => {
+    option.addEventListener('change', function() {
+      if (this.value === 'existing') {
+        existingTeamSection.classList.remove('hidden');
+        useExistingTeam.value = 'true';
+      } else {
+        existingTeamSection.classList.add('hidden');
+        useExistingTeam.value = 'false';
+        teamNameField.value = '';
+      }
+    });
+  });
+  
+  // 기존 팀 선택 시 멤버 로드
+  teamSelect.addEventListener('change', function() {
+    const teamId = this.value;
+    if (!teamId) return;
+    
+    // 팀 이름 자동 입력
+    const selectedOption = this.options[this.selectedIndex];
+    teamNameField.value = selectedOption.text.split(' (')[0];
+    
+    // 팀 멤버 로드
+    fetch(`/tournaments/<%= @tournament.id %>/registrations/load_team_members?team_id=${teamId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          displayTeamMembers(data.members);
+        }
+      });
+  });
+  
+  // 플레이어 추가 버튼
+  const addPlayerBtn = document.getElementById('add-player-btn');
+  const playerSearch = document.getElementById('player-search');
+  const playerSearchInput = document.getElementById('player-search-input');
+  const searchResults = document.getElementById('search-results');
+  const selectedPlayers = document.getElementById('selected-players');
+  let selectedPlayerIds = [];
+  
+  addPlayerBtn.addEventListener('click', function() {
+    playerSearch.classList.toggle('hidden');
+    playerSearchInput.focus();
+  });
+  
+  // 플레이어 검색
+  let searchTimeout;
+  playerSearchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+      searchResults.classList.add('hidden');
+      return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+      fetch(`/tournaments/<%= @tournament.id %>/registrations/search_players?q=${query}&exclude_ids=${selectedPlayerIds.join(',')}`)
+        .then(response => response.json())
+        .then(users => {
+          displaySearchResults(users);
+        });
+    }, 300);
+  });
+  
+  // 검색 결과 표시
+  function displaySearchResults(users) {
+    if (users.length === 0) {
+      searchResults.innerHTML = '<div class="p-3 text-gray-500">검색 결과가 없습니다.</div>';
+    } else {
+      searchResults.innerHTML = users.map(user => `
+        <div class="p-3 hover:bg-gray-50 cursor-pointer player-result" data-user='${JSON.stringify(user)}'>
+          <div class="font-medium">${user.name} ${user.nickname ? `(${user.nickname})` : ''}</div>
+          <div class="text-sm text-gray-500">
+            ${user.positions ? user.positions.join(', ') : '포지션 없음'} | 
+            레벨: ${user.skill_level}
+          </div>
+        </div>
+      `).join('');
+      
+      // 클릭 이벤트 추가
+      document.querySelectorAll('.player-result').forEach(result => {
+        result.addEventListener('click', function() {
+          const user = JSON.parse(this.dataset.user);
+          addPlayer(user);
+          searchResults.classList.add('hidden');
+          playerSearchInput.value = '';
+        });
+      });
+    }
+    searchResults.classList.remove('hidden');
+  }
+  
+  // 플레이어 추가
+  function addPlayer(user) {
+    if (selectedPlayerIds.includes(user.id)) return;
+    
+    selectedPlayerIds.push(user.id);
+    updateSelectedPlayers();
+  }
+  
+  // 선택된 플레이어 목록 업데이트
+  function updateSelectedPlayers() {
+    if (selectedPlayerIds.length === 0) {
+      selectedPlayers.innerHTML = '<div class="text-gray-500 text-sm">아직 선택된 멤버가 없습니다.</div>';
+    } else {
+      // 실제 구현에서는 선택된 플레이어 정보를 표시
+      selectedPlayers.innerHTML = `
+        <div class="text-sm text-gray-600">${selectedPlayerIds.length}명의 선수가 선택됨</div>
+        ${selectedPlayerIds.map(id => `<input type="hidden" name="player_ids[]" value="${id}">`).join('')}
+      `;
+    }
+  }
+  
+  // 팀 멤버 표시
+  function displayTeamMembers(members) {
+    selectedPlayerIds = members.map(m => m.id);
+    selectedPlayers.innerHTML = members.map(member => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+        <div>
+          <span class="font-medium">${member.name}</span>
+          ${member.nickname ? `<span class="text-gray-500">(${member.nickname})</span>` : ''}
+          <span class="text-sm text-gray-500 ml-2">${member.position || '포지션 없음'}</span>
+        </div>
+        <div class="text-sm">
+          ${member.jersey_number ? `#${member.jersey_number}` : ''}
+        </div>
+      </div>
+      <input type="hidden" name="player_ids[]" value="${member.id}">
+    `).join('');
+  }
+});
+</script>

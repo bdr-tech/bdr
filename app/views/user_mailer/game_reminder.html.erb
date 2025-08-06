@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #ff9800; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+      .button { display: inline-block; padding: 12px 24px; background-color: #ff9800; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+      .info-box { background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e0; }
+      .checklist { background-color: #fff3e0; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffb74d; }
+      .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+      .participants { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+      .participant { background-color: #e3f2fd; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
+    </style>
+  </head>
+  
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>⏰ 내일 경기가 있습니다!</h1>
+      </div>
+      
+      <div class="content">
+        <h2>안녕하세요, <%= @user.display_name %>님!</h2>
+        
+        <p style="font-size: 18px; font-weight: bold; color: #ff9800;">
+          내일 예정된 경기를 잊지 마세요! 🏀
+        </p>
+        
+        <div class="info-box">
+          <h3>경기 정보</h3>
+          <p>
+            <strong>경기명:</strong> <%= @game.title %><br>
+            <strong>일시:</strong> <span style="color: #ff9800; font-weight: bold;"><%= @game.start_time.strftime('%Y년 %m월 %d일 %H:%M') %></span><br>
+            <strong>장소:</strong> <%= @game.venue_name %><br>
+            <strong>주소:</strong> <%= @game.venue_address %><br>
+            <strong>호스트:</strong> <%= @game.organizer.display_name %><br>
+            <strong>현재 참가자:</strong> <%= @game.game_applications.where(status: 'final_approved').count %>/<%= @game.max_participants %>명
+          </p>
+        </div>
+        
+        <div class="checklist">
+          <h3 style="margin-top: 0;">✅ 준비물 체크리스트</h3>
+          <ul style="margin-bottom: 0;">
+            <li>운동복 및 농구화</li>
+            <li>충분한 물 (최소 1L 이상 권장)</li>
+            <li>수건</li>
+            <li>개인 농구공 (선택사항)</li>
+            <li>간단한 간식 (경기 후 섭취용)</li>
+          </ul>
+        </div>
+        
+        <% if @game.uniform_colors.any? %>
+          <div style="background-color: #e8eaf6; padding: 15px; border-radius: 8px; border: 1px solid #9fa8da; margin: 20px 0;">
+            <h3 style="color: #3f51b5; margin-top: 0;">👕 유니폼 색상</h3>
+            <p style="color: #3f51b5; margin-bottom: 0;">
+              착용 가능한 색상: <strong><%= @game.uniform_colors.join(', ') %></strong><br>
+              <small>위 색상 중 하나를 착용해주세요.</small>
+            </p>
+          </div>
+        <% end %>
+        
+        <h3>🚗 오시는 길</h3>
+        <p>
+          <strong>주소:</strong> <%= @game.venue_address %><br>
+          <a href="https://map.kakao.com/?q=<%= CGI.escape(@game.venue_address) %>" target="_blank" style="color: #ff9800;">
+            카카오맵에서 길찾기 →
+          </a>
+        </p>
+        
+        <div style="background-color: #ffebee; padding: 15px; border-radius: 8px; border: 1px solid #ef9a9a; margin: 20px 0;">
+          <h3 style="color: #c62828; margin-top: 0;">⚠️ 주의사항</h3>
+          <ul style="color: #c62828; margin-bottom: 0;">
+            <li>경기 시작 10분 전까지 도착해주세요</li>
+            <li>부상 방지를 위해 충분한 스트레칭을 해주세요</li>
+            <li>음주 후 참가는 절대 금지입니다</li>
+            <li>불참 시 24시간 전까지 취소해주세요</li>
+          </ul>
+        </div>
+        
+        <center>
+          <%= link_to "홈으로 가기", root_url, class: "button" %>
+        </center>
+        
+        <p style="text-align: center; font-size: 18px; color: #333; margin-top: 30px;">
+          내일 코트에서 만나요! 화이팅! 💪
+        </p>
+      </div>
+      
+      <div class="footer">
+        <p>이 메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.</p>
+        <p>문의사항이 있으시면 support@bdr-platform.com으로 연락주세요.</p>
+        <p>&copy; <%= Date.current.year %> BDR Platform. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

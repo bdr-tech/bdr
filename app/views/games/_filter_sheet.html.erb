@@ -1,0 +1,161 @@
+<!-- 모바일 필터 Sheet -->
+<div id="filterSheet" class="fixed inset-0 z-50 hidden">
+  <!-- 오버레이 -->
+  <div class="absolute inset-0 bg-black bg-opacity-50" onclick="window.filterSheet && window.filterSheet.close()"></div>
+  
+  <!-- Sheet 컨텐츠 -->
+  <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl transform translate-y-full transition-transform duration-300" 
+       id="filterSheetContent">
+    <div class="p-6 max-h-[80vh] overflow-y-auto">
+      <!-- 헤더 -->
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-gray-800">필터 설정</h3>
+        <button onclick="window.filterSheet && window.filterSheet.close()" 
+                class="text-gray-500 hover:text-gray-700">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <%= form_with url: games_path, method: :get, local: true, id: "mobile-filter-form" do |f| %>
+        <!-- 날짜 필터 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">날짜</label>
+          <div class="grid grid-cols-2 gap-2">
+            <% [['전체', ''], ['오늘', 'today'], ['내일', 'tomorrow'], ['이번 주', 'week']].each do |label, value| %>
+              <label class="cursor-pointer">
+                <%= radio_button_tag 'date_filter', value, params[:date_filter] == value, 
+                    class: "sr-only peer" %>
+                <span class="block text-center py-2 px-4 border rounded-lg peer-checked:bg-orange-500 peer-checked:text-white peer-checked:border-orange-500 transition-colors">
+                  <%= label %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 지역 필터 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">특별시/광역시/도</label>
+          <%= f.select :city,
+              options_for_select([["전체", ""]] + cities.map { |city| [city, city] }, params[:city]),
+              {},
+              {
+                class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                id: "mobile-filter-city",
+                onchange: "updateMobileFilterDistricts()"
+              } %>
+        </div>
+        
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">시/군/구</label>
+          <%= f.select :district,
+              [["전체", ""]],
+              {},
+              {
+                class: "w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                id: "mobile-filter-district"
+              } %>
+        </div>
+        
+        <!-- 게임 타입 필터 -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">게임 타입</label>
+          <div class="space-y-2">
+            <% [['전체', ''], ['픽업게임', '픽업게임'], ['게스트모집', '게스트모집'], ['TvT연습경기', 'TvT연습경기']].each do |label, value| %>
+              <label class="flex items-center cursor-pointer">
+                <%= radio_button_tag 'game_type', value, params[:game_type] == value, 
+                    class: "text-orange-600 focus:ring-orange-500" %>
+                <span class="ml-2"><%= label %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 과거 경기 표시 -->
+        <div class="mb-6">
+          <label class="flex items-center cursor-pointer">
+            <%= f.check_box :show_past,
+                { checked: params[:show_past] == 'true',
+                  class: "text-orange-600 focus:ring-orange-500" },
+                'true', '' %>
+            <span class="ml-2 text-sm font-medium text-gray-700">과거 경기도 표시</span>
+          </label>
+        </div>
+        
+        <!-- 버튼 -->
+        <div class="flex gap-3">
+          <button type="button" 
+                  onclick="resetMobileFilters()"
+                  class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition-colors">
+            초기화
+          </button>
+          <%= f.submit "필터 적용", 
+              class: "flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+// Filter Sheet 관리
+window.filterSheet = {
+  open: function() {
+    const sheet = document.getElementById('filterSheet');
+    const content = document.getElementById('filterSheetContent');
+    
+    sheet.classList.remove('hidden');
+    // 애니메이션을 위한 딜레이
+    setTimeout(() => {
+      content.classList.remove('translate-y-full');
+    }, 10);
+  },
+  
+  close: function() {
+    const sheet = document.getElementById('filterSheet');
+    const content = document.getElementById('filterSheetContent');
+    
+    content.classList.add('translate-y-full');
+    // 애니메이션 완료 후 숨기기
+    setTimeout(() => {
+      sheet.classList.add('hidden');
+    }, 300);
+  }
+};
+
+// 모바일 구/군 업데이트
+function updateMobileFilterDistricts() {
+  const citySelect = document.getElementById('mobile-filter-city');
+  const districtSelect = document.getElementById('mobile-filter-district');
+  const selectedCity = citySelect.value;
+  
+  // 구/군 선택 초기화
+  districtSelect.innerHTML = '';
+  
+  // 기본 옵션 추가
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = '전체';
+  districtSelect.appendChild(defaultOption);
+  
+  if (selectedCity && locationData[selectedCity]) {
+    // 선택된 시/도의 구/군 목록 추가
+    const districts = locationData[selectedCity].map(location => location.district).sort();
+    
+    districts.forEach(district => {
+      const option = document.createElement('option');
+      option.value = district;
+      option.textContent = district;
+      districtSelect.appendChild(option);
+    });
+  }
+}
+
+// 필터 초기화
+function resetMobileFilters() {
+  document.getElementById('mobile-filter-form').reset();
+  updateMobileFilterDistricts();
+}
+</script>

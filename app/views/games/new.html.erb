@@ -1,0 +1,751 @@
+<% content_for :title, "새 경기 만들기 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 뒤로 가기 -->
+    <div class="mb-6">
+      <%= link_to "← 경기 목록으로", games_path, class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🏀 새 경기 만들기</h1>
+        <p class="text-gray-600">3단계로 간편하게 경기를 만들어보세요</p>
+      </div>
+    </div>
+
+    <%= form_with model: @game, local: true, html: { id: "gameForm", novalidate: true } do |form| %>
+      
+      <!-- 단계 표시 -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex justify-center">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center">
+              <div id="step1-indicator" class="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+              <span class="ml-3 text-sm font-medium text-orange-600">기본 정보</span>
+            </div>
+            <div id="step1-2-line" class="w-12 h-1 bg-gray-300"></div>
+            <div class="flex items-center">
+              <div id="step2-indicator" class="w-10 h-10 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-bold">2</div>
+              <span class="ml-3 text-sm font-medium text-gray-500">세부 내용</span>
+            </div>
+            <div id="step2-3-line" class="w-12 h-1 bg-gray-300"></div>
+            <div class="flex items-center">
+              <div id="step3-indicator" class="w-10 h-10 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-bold">3</div>
+              <span class="ml-3 text-sm font-medium text-gray-500">추가 요구사항</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <% if @game.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+          <h3 class="text-red-800 font-semibold mb-3">오류가 발생했습니다:</h3>
+          <ul class="text-red-700 space-y-1">
+            <% @game.errors.full_messages.each do |message| %>
+              <li>• <%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- 1단계: 기본 정보 -->
+      <div id="step1" class="step-content bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+          기본 정보
+        </h2>
+        
+        <div class="space-y-6">
+          <!-- 경기 종류 선택 -->
+          <div>
+            <%= form.label :game_type, "경기 종류", class: "block text-sm font-medium text-gray-700 mb-3" %>
+            <div class="space-y-3">
+              <% Game::GAME_TYPES.each do |type, description| %>
+                <label class="game-type-option block">
+                  <%= form.radio_button :game_type, type, class: "sr-only game-type-radio", required: true %>
+                  <div class="game-type-card border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-orange-300 hover:shadow-md hover:bg-orange-25 transition-all duration-300 transform hover:scale-[1.02]">
+                    <div class="text-lg font-bold text-gray-800 mb-1"><%= type %></div>
+                    <div class="text-sm text-gray-600"><%= description %></div>
+                  </div>
+                </label>
+              <% end %>
+            </div>
+          </div>
+          
+          <!-- 팀명 입력 -->
+          <div>
+            <%= form.label :team_name, "팀명", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_field :team_name, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "팀명을 입력하세요 (2-50자)", required: true %>
+          </div>
+          
+          <!-- 지역 선택 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <%= form.label :city, "시/도", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.select :city, 
+                    options_for_select([['선택하세요', '']] + @cities.map { |city| [city, city] }),
+                    {},
+                    {
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      id: "game_city",
+                      onchange: "updateDistricts()",
+                      required: true
+                    } %>
+            </div>
+            
+            <div>
+              <%= form.label :district, "시/군/구", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.select :district, 
+                    [['먼저 시/도를 선택하세요', '']],
+                    {},
+                    {
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      id: "game_district",
+                      required: true
+                    } %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-end mt-8">
+          <button type="button" id="next-step-1" class="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition duration-300">
+            다음 단계 →
+          </button>
+        </div>
+      </div>
+
+      <!-- 2단계: 세부 내용 -->
+      <div id="step2" class="step-content bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+          세부 내용
+        </h2>
+        
+        <div class="space-y-6">
+          <!-- 경기 제목 -->
+          <div>
+            <%= form.label :title, "경기 제목", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_field :title, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "경기 제목을 입력하세요 (5-100자)", required: true %>
+          </div>
+          
+          <!-- 체육관 정보 -->
+          <div>
+            <%= form.label :venue_name, "체육관명", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_field :venue_name, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "체육관 이름", required: true %>
+          </div>
+          
+          <div>
+            <%= form.label :venue_address, "체육관 주소", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_field :venue_address, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "상세 주소를 입력하세요", required: true %>
+          </div>
+          
+          <!-- 날짜 -->
+          <div>
+            <%= form.label :scheduled_at, "경기 날짜", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.date_field :scheduled_at, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  min: Date.current, required: true %>
+          </div>
+          
+          <!-- 시간 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <%= form.label :start_time, "시작시간", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <div class="flex gap-2">
+                <select name="start_hour" id="start_hour" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                  <option value="">시</option>
+                  <% (6..23).each do |hour| %>
+                    <option value="<%= hour %>"><%= hour %>시</option>
+                  <% end %>
+                </select>
+                <select name="start_minute" id="start_minute" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                  <option value="">분</option>
+                  <% [0, 10, 20, 30, 40, 50].each do |minute| %>
+                    <option value="<%= minute %>"><%= sprintf('%02d', minute) %>분</option>
+                  <% end %>
+                </select>
+              </div>
+              <%= form.hidden_field :start_time, id: "game_start_time", required: false %>
+            </div>
+            
+            <div>
+              <%= form.label :end_time, "종료시간", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <div class="flex gap-2">
+                <select name="end_hour" id="end_hour" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                  <option value="">시</option>
+                  <% (6..23).each do |hour| %>
+                    <option value="<%= hour %>"><%= hour %>시</option>
+                  <% end %>
+                </select>
+                <select name="end_minute" id="end_minute" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500" required>
+                  <option value="">분</option>
+                  <% [0, 10, 20, 30, 40, 50].each do |minute| %>
+                    <option value="<%= minute %>"><%= sprintf('%02d', minute) %>분</option>
+                  <% end %>
+                </select>
+              </div>
+              <%= form.hidden_field :end_time, id: "game_end_time", required: false %>
+            </div>
+          </div>
+          
+          <!-- 참가자 수와 레벨 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <%= form.label :max_players, "최대 참가자", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.number_field :max_players, 
+                    class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                    min: 2, max: 30, value: 10, required: true %>
+            </div>
+            
+            <div>
+              <%= form.label :level, "경기 레벨", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.select :level, 
+                    options_for_select(Game::LEVELS.map { |level, name| ["#{level}. #{name}", level] }),
+                    { prompt: '레벨 선택' },
+                    { class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500", required: true } %>
+            </div>
+          </div>
+          
+          <!-- 참가비 -->
+          <div>
+            <%= form.label :fee, "참가비 (원)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.number_field :fee, 
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  min: 0, value: 0, step: 1000,
+                  placeholder: "0 (무료)", required: true %>
+          </div>
+          
+          <!-- 유니폼 색상 선택 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">준비해야 할 유니폼 색상 (최대 2개)</label>
+            <p class="text-sm text-gray-500 mb-4">참가자들이 준비해야 할 유니폼 색상을 선택해주세요.</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <% uniform_colors = [
+                   ['흰색', 'white', '#FFFFFF'],
+                   ['검은색', 'black', '#000000'],
+                   ['파란색', 'blue', '#3B82F6'],
+                   ['노란색', 'yellow', '#EAB308'],
+                   ['빨간색', 'red', '#EF4444']
+                 ] %>
+              
+              <% uniform_colors.each do |color_name, color_value, color_code| %>
+                <label class="uniform-color-option block cursor-pointer">
+                  <input type="checkbox" name="game[uniform_colors][]" value="<%= color_value %>" 
+                         class="sr-only uniform-color-checkbox" 
+                         onchange="updateUniformColorSelection()">
+                  <div class="uniform-color-card border-2 border-gray-200 rounded-lg p-3 hover:border-orange-300 hover:shadow-md transition-all duration-300 text-center">
+                    <div class="w-12 h-12 rounded-full mx-auto mb-2 border-2 border-gray-300 flex items-center justify-center"
+                         style="background-color: <%= color_code %>; <%= color_value == 'white' ? 'border-color: #D1D5DB;' : 'border-color: ' + color_code + ';' %>">
+                      <% if color_value == 'white' %>
+                        <span class="text-gray-600 text-xs font-bold">흰</span>
+                      <% elsif color_value == 'black' %>
+                        <span class="text-white text-xs font-bold">검</span>
+                      <% else %>
+                        <span class="text-white text-xs font-bold drop-shadow-md"><%= color_name.first %></span>
+                      <% end %>
+                    </div>
+                    <div class="text-sm font-medium text-gray-800"><%= color_name %></div>
+                  </div>
+                </label>
+              <% end %>
+            </div>
+            
+            <div class="mt-2 text-xs text-gray-500">
+              <span id="uniform-color-count">0</span>/2개 선택됨
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-between mt-8">
+          <button type="button" id="prev-step-2" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300">
+            ← 이전 단계
+          </button>
+          <button type="button" id="next-step-2" class="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition duration-300">
+            다음 단계 →
+          </button>
+        </div>
+      </div>
+
+      <!-- 3단계: 추가 요구사항 -->
+      <div id="step3" class="step-content bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+          추가 요구사항
+        </h2>
+        
+        <div class="space-y-4">
+          <p class="text-sm text-gray-600 mb-4">체육관에서 필요한 시설을 선택해주세요 (선택사항)</p>
+          
+          <!-- 시설 요구사항 -->
+          <div class="space-y-3">
+            <!-- 주차 -->
+            <label class="facility-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <%= form.check_box :parking_required, class: "w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500" %>
+              <div class="ml-3 flex items-center">
+                <span class="text-2xl mr-3">🚗</span>
+                <div>
+                  <div class="font-medium text-gray-900">주차 가능</div>
+                  <div class="text-sm text-gray-500">차량 이용 시 필수</div>
+                </div>
+              </div>
+            </label>
+            
+            <!-- 샤워실 -->
+            <label class="facility-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <%= form.check_box :shower_required, class: "w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500" %>
+              <div class="ml-3 flex items-center">
+                <span class="text-2xl mr-3">🚿</span>
+                <div>
+                  <div class="font-medium text-gray-900">샤워 가능</div>
+                  <div class="text-sm text-gray-500">경기 후 샤워 필요</div>
+                </div>
+              </div>
+            </label>
+            
+            <!-- 정수기 -->
+            <label class="facility-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <%= form.check_box :water_fountain_required, class: "w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500" %>
+              <div class="ml-3 flex items-center">
+                <span class="text-2xl mr-3">💧</span>
+                <div>
+                  <div class="font-medium text-gray-900">정수기</div>
+                  <div class="text-sm text-gray-500">깨끗한 물 공급</div>
+                </div>
+              </div>
+            </label>
+            
+            <!-- 냉난방 -->
+            <label class="facility-item flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <%= form.check_box :air_conditioning_required, class: "w-5 h-5 text-orange-600 border-gray-300 rounded focus:ring-orange-500" %>
+              <div class="ml-3 flex items-center">
+                <span class="text-2xl mr-3">❄️</span>
+                <div>
+                  <div class="font-medium text-gray-900">냉난방</div>
+                  <div class="text-sm text-gray-500">쾌적한 실내 온도</div>
+                </div>
+              </div>
+            </label>
+          </div>
+          
+          <!-- 전달사항 -->
+          <div class="mt-6">
+            <%= form.label :message, "간단한 전달사항", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area :message, rows: 4,
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "참가자들에게 전달하고 싶은 내용이 있으면 작성해주세요..." %>
+          </div>
+          
+          <!-- 경기 설명 -->
+          <div>
+            <%= form.label :description, "경기 설명 (선택사항)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.text_area :description, rows: 3,
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "경기에 대한 추가 설명..." %>
+          </div>
+        </div>
+        
+        <div class="flex justify-between mt-8">
+          <button type="button" id="prev-step-3" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300">
+            ← 이전 단계
+          </button>
+          <div class="flex items-center space-x-4">
+            <%= link_to "취소", games_path, class: "px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300" %>
+            <%= form.submit "🏀 경기 생성하기", 
+                  class: "px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition duration-300 transform hover:scale-105" %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+// 지역 데이터
+const locationData = <%= raw @locations.to_json %>;
+
+// 현재 단계 추적
+let currentStep = 1;
+
+function updateDistricts() {
+  const citySelect = document.getElementById('game_city');
+  const districtSelect = document.getElementById('game_district');
+  const selectedCity = citySelect.value;
+  
+  // 구/군 선택 초기화
+  districtSelect.innerHTML = '';
+  
+  if (selectedCity && locationData[selectedCity]) {
+    // 선택된 시/도의 구/군 목록 추가
+    const districts = locationData[selectedCity].map(location => location.district).sort();
+    
+    // 기본 옵션 추가
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '구/군을 선택하세요';
+    districtSelect.appendChild(defaultOption);
+    
+    // 구/군 옵션들 추가
+    districts.forEach(district => {
+      const option = document.createElement('option');
+      option.value = district;
+      option.textContent = district;
+      districtSelect.appendChild(option);
+    });
+  } else {
+    // 기본 상태
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '먼저 시/도를 선택하세요';
+    districtSelect.appendChild(defaultOption);
+  }
+}
+
+function updateGameTypeSelection() {
+  // 모든 게임 타입 옵션 초기화
+  document.querySelectorAll('.game-type-card').forEach(card => {
+    card.classList.remove('border-orange-500', 'bg-orange-50', 'shadow-lg', 'ring-2', 'ring-orange-200');
+    card.classList.add('border-gray-200');
+  });
+  
+  // 선택된 라디오 버튼 찾기
+  const selectedRadio = document.querySelector('.game-type-radio:checked');
+  
+  if (selectedRadio) {
+    const selectedCard = selectedRadio.closest('.game-type-option').querySelector('.game-type-card');
+    if (selectedCard) {
+      selectedCard.classList.remove('border-gray-200');
+      selectedCard.classList.add('border-orange-500', 'bg-orange-50', 'shadow-lg', 'ring-2', 'ring-orange-200');
+    }
+  }
+}
+
+function validateStep(step) {
+  const stepElement = document.getElementById(`step${step}`);
+  const requiredFields = stepElement.querySelectorAll('input[required], select[required]');
+  
+  let isValid = true;
+  
+  requiredFields.forEach(field => {
+    // hidden 필드는 검증에서 제외
+    if (field.type === 'hidden') {
+      return;
+    }
+    
+    if (field.type === 'radio') {
+      // 라디오 버튼 그룹 검증
+      const radioName = field.name;
+      const radioGroup = stepElement.querySelectorAll(`input[name="${radioName}"]`);
+      const isRadioChecked = Array.from(radioGroup).some(radio => radio.checked);
+      
+      if (!isRadioChecked) {
+        isValid = false;
+        // 라디오 버튼 그룹의 모든 카드에 빨간 테두리 추가
+        radioGroup.forEach(radio => {
+          const card = radio.closest('.game-type-option')?.querySelector('.game-type-card');
+          if (card) card.classList.add('border-red-500');
+        });
+      } else {
+        // 라디오 버튼 그룹의 모든 카드에서 빨간 테두리 제거
+        radioGroup.forEach(radio => {
+          const card = radio.closest('.game-type-option')?.querySelector('.game-type-card');
+          if (card) card.classList.remove('border-red-500');
+        });
+      }
+    } else {
+      // 일반 필드 검증
+      if (!field.value || field.value.trim() === '') {
+        isValid = false;
+        field.classList.add('border-red-500');
+      } else {
+        field.classList.remove('border-red-500');
+      }
+    }
+  });
+  
+  // 2단계에서 시간 필드 추가 검증
+  if (step === 2) {
+    const startHour = document.getElementById('start_hour');
+    const startMinute = document.getElementById('start_minute');
+    const endHour = document.getElementById('end_hour');
+    const endMinute = document.getElementById('end_minute');
+    
+    if (!startHour.value || !startMinute.value) {
+      isValid = false;
+      startHour.classList.add('border-red-500');
+      startMinute.classList.add('border-red-500');
+    } else {
+      startHour.classList.remove('border-red-500');
+      startMinute.classList.remove('border-red-500');
+    }
+    
+    if (!endHour.value || !endMinute.value) {
+      isValid = false;
+      endHour.classList.add('border-red-500');
+      endMinute.classList.add('border-red-500');
+    } else {
+      endHour.classList.remove('border-red-500');
+      endMinute.classList.remove('border-red-500');
+    }
+  }
+  
+  return isValid;
+}
+
+function showStep(step) {
+  // 모든 단계 숨기기
+  document.querySelectorAll('.step-content').forEach(content => {
+    content.classList.add('hidden');
+  });
+  
+  // 현재 단계 표시
+  document.getElementById(`step${step}`).classList.remove('hidden');
+  
+  // 단계 표시기 업데이트
+  updateStepIndicators(step);
+  
+  // 1단계로 돌아갈 때 게임 타입 선택 상태 복원
+  if (step === 1) {
+    setTimeout(() => {
+      updateGameTypeSelection();
+    }, 10);
+  }
+  
+  currentStep = step;
+}
+
+function updateStepIndicators(step) {
+  // 모든 표시기 초기화
+  for (let i = 1; i <= 3; i++) {
+    const indicator = document.getElementById(`step${i}-indicator`);
+    const span = indicator.nextElementSibling;
+    
+    if (i <= step) {
+      indicator.className = 'w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold';
+      span.className = 'ml-3 text-sm font-medium text-orange-600';
+    } else {
+      indicator.className = 'w-10 h-10 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center font-bold';
+      span.className = 'ml-3 text-sm font-medium text-gray-500';
+    }
+  }
+  
+  // 연결선 업데이트
+  const line1 = document.getElementById('step1-2-line');
+  const line2 = document.getElementById('step2-3-line');
+  
+  if (step >= 2) {
+    line1.className = 'w-12 h-1 bg-orange-500';
+  } else {
+    line1.className = 'w-12 h-1 bg-gray-300';
+  }
+  
+  if (step >= 3) {
+    line2.className = 'w-12 h-1 bg-orange-500';
+  } else {
+    line2.className = 'w-12 h-1 bg-gray-300';
+  }
+}
+
+function updateUniformColorSelection() {
+  const checkboxes = document.querySelectorAll('.uniform-color-checkbox');
+  const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+  
+  // 카드 스타일 업데이트
+  checkboxes.forEach(checkbox => {
+    const card = checkbox.closest('.uniform-color-option').querySelector('.uniform-color-card');
+    if (checkbox.checked) {
+      card.classList.remove('border-gray-200');
+      card.classList.add('border-orange-500', 'bg-orange-50', 'shadow-lg', 'ring-2', 'ring-orange-200');
+    } else {
+      card.classList.remove('border-orange-500', 'bg-orange-50', 'shadow-lg', 'ring-2', 'ring-orange-200');
+      card.classList.add('border-gray-200');
+    }
+  });
+  
+  // 선택된 개수 업데이트
+  document.getElementById('uniform-color-count').textContent = checkedCount;
+  
+  // 2개 이상 선택 시 나머지 비활성화
+  checkboxes.forEach(checkbox => {
+    if (!checkbox.checked && checkedCount >= 2) {
+      checkbox.disabled = true;
+      const card = checkbox.closest('.uniform-color-option').querySelector('.uniform-color-card');
+      card.classList.add('opacity-50', 'cursor-not-allowed');
+    } else if (!checkbox.checked) {
+      checkbox.disabled = false;
+      const card = checkbox.closest('.uniform-color-option').querySelector('.uniform-color-card');
+      card.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+  });
+}
+
+function initializeGameForm() {
+  // 시간 선택 처리
+  function updateTimeFields() {
+    const startHour = document.getElementById('start_hour').value;
+    const startMinute = document.getElementById('start_minute').value;
+    const endHour = document.getElementById('end_hour').value;
+    const endMinute = document.getElementById('end_minute').value;
+    
+    console.log('Time values:', {startHour, startMinute, endHour, endMinute});
+    
+    if (startHour && startMinute !== '') {
+      const startTime = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
+      document.getElementById('game_start_time').value = startTime;
+      console.log('Start time set to:', startTime);
+    }
+    
+    if (endHour && endMinute !== '') {
+      const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+      document.getElementById('game_end_time').value = endTime;
+      console.log('End time set to:', endTime);
+    }
+  }
+
+  // 시간 선택 이벤트 리스너
+  document.getElementById('start_hour').addEventListener('change', updateTimeFields);
+  document.getElementById('start_minute').addEventListener('change', updateTimeFields);
+  document.getElementById('end_hour').addEventListener('change', updateTimeFields);
+  document.getElementById('end_minute').addEventListener('change', updateTimeFields);
+  
+  // 페이지 로드 시 선택된 상태 표시
+  updateGameTypeSelection();
+  
+  // 경기 종류 선택 기능 - 카드 클릭
+  document.querySelectorAll('.game-type-option').forEach(option => {
+    option.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // 라디오 버튼 체크
+      const radio = this.querySelector('.game-type-radio');
+      if (radio) {
+        radio.checked = true;
+        // 즉시 선택 상태 업데이트
+        updateGameTypeSelection();
+      }
+    });
+  });
+  
+  // 라디오 버튼 change 이벤트 처리
+  document.querySelectorAll('.game-type-radio').forEach(radio => {
+    radio.addEventListener('change', function() {
+      updateGameTypeSelection();
+    });
+  });
+  
+  // 유니폼 색상 선택 기능 - 카드 클릭
+  document.querySelectorAll('.uniform-color-option').forEach(option => {
+    option.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const checkbox = this.querySelector('.uniform-color-checkbox');
+      if (checkbox && !checkbox.disabled) {
+        checkbox.checked = !checkbox.checked;
+        updateUniformColorSelection();
+      }
+    });
+  });
+  
+  // 유니폼 색상 체크박스 change 이벤트 처리
+  document.querySelectorAll('.uniform-color-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      updateUniformColorSelection();
+    });
+  });
+  
+  // 초기 유니폼 색상 선택 상태 표시
+  updateUniformColorSelection();
+  
+  // 다음 단계 버튼들
+  const nextStep1 = document.getElementById('next-step-1');
+  if (nextStep1) {
+    nextStep1.addEventListener('click', function() {
+      if (validateStep(1)) {
+        showStep(2);
+      } else {
+        alert('모든 필수 항목을 입력해주세요.');
+      }
+    });
+  }
+  
+  const nextStep2 = document.getElementById('next-step-2');
+  if (nextStep2) {
+    nextStep2.addEventListener('click', function() {
+      if (validateStep(2)) {
+        showStep(3);
+      } else {
+        alert('모든 필수 항목을 입력해주세요.');
+      }
+    });
+  }
+  
+  // 이전 단계 버튼들
+  const prevStep2 = document.getElementById('prev-step-2');
+  if (prevStep2) {
+    prevStep2.addEventListener('click', function() {
+      showStep(1);
+    });
+  }
+  
+  const prevStep3 = document.getElementById('prev-step-3');
+  if (prevStep3) {
+    prevStep3.addEventListener('click', function() {
+      showStep(2);
+    });
+  }
+  
+  // 초기 상태 설정
+  showStep(1);
+  
+  // 폼 제출 전 시간 필드 업데이트
+  const gameForm = document.getElementById('gameForm');
+  if (gameForm) {
+    gameForm.addEventListener('submit', function(e) {
+      console.log('Form submit event triggered');
+      
+      // 모든 단계 검증
+      for (let i = 1; i <= 3; i++) {
+        if (!validateStep(i)) {
+          e.preventDefault();
+          console.log(`Step ${i} validation failed`);
+          alert(`${i}단계의 필수 항목을 모두 입력해주세요.`);
+          showStep(i);
+          return false;
+        }
+      }
+      
+      updateTimeFields();
+      
+      // 시간이 제대로 설정되었는지 확인
+      const startTime = document.getElementById('game_start_time').value;
+      const endTime = document.getElementById('game_end_time').value;
+      
+      console.log('Start time:', startTime);
+      console.log('End time:', endTime);
+      
+      if (!startTime || !endTime) {
+        e.preventDefault();
+        alert('시작시간과 종료시간을 모두 선택해주세요.');
+        return false;
+      }
+      
+      console.log('Form validation passed, submitting...');
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initializeGameForm);
+document.addEventListener('turbo:load', initializeGameForm);
+</script>

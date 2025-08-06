@@ -1,0 +1,1036 @@
+<% content_for :title, "#{@game.court&.name || @game.venue_name || @game.title} 경기 상세 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 뒤로 가기 -->
+    <div class="mb-6">
+      <%= link_to "← 경기 목록으로", games_path, class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+    </div>
+
+    <!-- 경기 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">🏀 <%= @game.court&.name || @game.venue_name || @game.title %></h1>
+          <!-- 게임 ID 숨김 처리
+          <div class="text-sm text-gray-600 mb-3 font-mono bg-gray-100 inline-block px-2 py-1 rounded">
+            게임 ID: <%= @game.game_id %>
+          </div>
+          -->
+          <div class="flex items-center gap-3 mb-4">
+            <% if @game.can_accept_players? %>
+              <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">참가 가능</span>
+            <% else %>
+              <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">정원 마감</span>
+            <% end %>
+            
+            <% if @game.scheduled_at.to_date == Date.current %>
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">오늘</span>
+            <% elsif @game.scheduled_at.to_date == Date.tomorrow %>
+              <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">내일</span>
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="text-right">
+          <div class="text-2xl font-bold text-orange-600 mb-1">
+            <%= @game.confirmed_players_count %>/<%= @game.max_players %>명
+          </div>
+          <div class="text-sm text-gray-600">
+            <%= pluralize(@game.available_spots, '자리') %> 남음
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 신청자 관리 (호스트 전용) -->
+    <% if logged_in? && @game.organizer == current_user %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">📋 신청자 관리</h3>
+        
+        <% 
+          pending_apps = @game.game_applications.pending.includes(:user)
+          waiting_payment_apps = @game.game_applications.waiting_payment.includes(:user, :payment)
+          final_approved_apps = @game.game_applications.final_approved.includes(:user)
+        %>
+        
+        <!-- 수익 요약 -->
+        <% if @game.fee && @game.fee > 0 %>
+          <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <span class="text-green-600 text-xl mr-2">💰</span>
+                <span class="text-green-800 font-semibold">호스트 수익</span>
+              </div>
+              <div class="text-right">
+                <div class="text-lg font-bold text-green-700">
+                  <%= final_approved_apps.count %>명 × <%= number_to_currency(@game.fee, unit: '', precision: 0) %>원 = 
+                  <span class="text-green-800"><%= number_to_currency(@game.expected_host_revenue, unit: '', precision: 0) %>원</span>
+                </div>
+                <div class="text-sm text-green-600">
+                  <% if @game.current_platform_fee_percentage > 0 %>
+                    (플랫폼 수수료 <%= @game.current_platform_fee_percentage.to_i %>% 제외)
+                  <% end %>
+                </div>
+                <% if @game.payment_completion_rate < 100 %>
+                  <div class="text-sm text-orange-600 mt-1">
+                    결제 완료: <%= @game.payment_completion_rate %>% 
+                    (실제 수익: <%= number_to_currency(@game.actual_host_revenue, unit: '', precision: 0) %>원)
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 1단계: 승인 대기 신청자 -->
+        <% if pending_apps.any? %>
+          <div class="mb-8">
+            <h4 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <span class="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm mr-2">1</span>
+              승인 대기 (<%= pending_apps.count %>명)
+            </h4>
+            <div class="space-y-4">
+              <% pending_apps.each do |application| %>
+                <div class="border border-yellow-200 bg-yellow-50 rounded-lg p-4 flex items-center justify-between">
+                  <div class="flex items-start">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                      <%= application.user.nickname&.first&.upcase || application.user.name&.first&.upcase || 'U' %>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center mb-2">
+                        <div class="font-semibold text-gray-800 text-lg mr-3">
+                          <%= application.user.nickname || application.user.name %>
+                          <% if application.user.real_name.present? && application.user.real_name != (application.user.nickname || application.user.name) %>
+                            <span class="text-sm text-gray-500 font-normal">(<%= application.user.real_name %>)</span>
+                          <% end %>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          <%= application.applied_at.strftime("%m/%d %H:%M") %>에 신청
+                        </div>
+                      </div>
+                      
+                      <!-- 상세 정보 그리드 -->
+                      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-600 mb-2">
+                        <div class="flex items-center">
+                          <span class="text-blue-500 mr-1">👤</span>
+                          <span><%= application.user.age ? "#{application.user.age}세" : "나이 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-green-500 mr-1">🏀</span>
+                          <span><%= application.user.position_names.first || "포지션 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-purple-500 mr-1">⭐</span>
+                          <span><%= application.user.basketball_experience_text %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-orange-500 mr-1">📊</span>
+                          <span>Lv.<%= application.user.skill_level || "미정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-500 mr-1">★</span>
+                          <span>평점 <%= application.user.evaluation_rating_percentage %>%</span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-gray-500 mr-1">📞</span>
+                          <span><%= application.user.phone.present? ? application.user.phone.gsub(/(\d{3})(\d{4})(\d{4})/, '\1-\2-\3') : "번호 미설정" %></span>
+                        </div>
+                      </div>
+                      
+                      <% if application.message.present? %>
+                        <div class="bg-gray-50 rounded-lg p-2 mt-2">
+                          <div class="text-xs text-gray-500 mb-1">신청 메시지</div>
+                          <div class="text-sm text-gray-700">
+                            "<%= application.message %>"
+                          </div>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button onclick="approveApplication('<%= approve_application_game_path(@game, application_id: application.id) %>')" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                      승인
+                    </button>
+                    <button onclick="rejectApplication('<%= reject_application_game_path(@game, application_id: application.id) %>')" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                      거절
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 2단계: 입금 대기 신청자 -->
+        <% if waiting_payment_apps.any? %>
+          <div class="mb-8">
+            <h4 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <span class="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm mr-2">2</span>
+              입금 대기 (<%= waiting_payment_apps.count %>명)
+            </h4>
+            <div class="space-y-4">
+              <% waiting_payment_apps.each do |application| %>
+                <div class="border border-orange-200 bg-orange-50 rounded-lg p-4 flex items-center justify-between">
+                  <div class="flex items-start">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                      <%= application.user.nickname&.first&.upcase || application.user.name&.first&.upcase || 'U' %>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center mb-2">
+                        <div class="font-semibold text-gray-800 text-lg mr-3">
+                          <%= application.user.nickname || application.user.name %>
+                          <% if application.user.real_name.present? && application.user.real_name != (application.user.nickname || application.user.name) %>
+                            <span class="text-sm text-gray-500 font-normal">(<%= application.user.real_name %>)</span>
+                          <% end %>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          <%= application.approved_at.strftime("%m/%d %H:%M") %>에 승인됨
+                        </div>
+                      </div>
+                      
+                      <div class="mb-2">
+                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-semibold">
+                          입금 대기중 (<%= number_to_currency(application.game.fee, unit: '₩', precision: 0) %>)
+                        </span>
+                      </div>
+                      
+                      <!-- 상세 정보 그리드 -->
+                      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-600 mb-2">
+                        <div class="flex items-center">
+                          <span class="text-blue-500 mr-1">👤</span>
+                          <span><%= application.user.age ? "#{application.user.age}세" : "나이 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-green-500 mr-1">🏀</span>
+                          <span><%= application.user.position_names.first || "포지션 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-purple-500 mr-1">⭐</span>
+                          <span><%= application.user.basketball_experience_text %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-orange-500 mr-1">📊</span>
+                          <span>Lv.<%= application.user.skill_level || "미정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-500 mr-1">★</span>
+                          <span>평점 <%= application.user.evaluation_rating_percentage %>%</span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-gray-500 mr-1">📞</span>
+                          <span><%= application.user.phone.present? ? application.user.phone.gsub(/(\d{3})(\d{4})(\d{4})/, '\1-\2-\3') : "번호 미설정" %></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button onclick="confirmPayment('<%= confirm_payment_game_path(@game, application_id: application.id) %>')" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                      입금 확인
+                    </button>
+                    <button onclick="rejectApplication('<%= reject_application_game_path(@game, application_id: application.id) %>')" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                      거절
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 3단계: 최종 승인된 참가자 -->
+        <% if final_approved_apps.any? %>
+          <div class="mb-8">
+            <h4 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+              <span class="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm mr-2">✓</span>
+              최종 승인 (<%= final_approved_apps.count %>명)
+            </h4>
+            <div class="space-y-4">
+              <% final_approved_apps.each do |application| %>
+                <div class="border border-green-200 bg-green-50 rounded-lg p-4 flex items-center justify-between">
+                  <div class="flex items-start">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                      <%= application.user.nickname&.first&.upcase || application.user.name&.first&.upcase || 'U' %>
+                    </div>
+                    <div class="flex-1">
+                      <div class="flex items-center mb-2">
+                        <div class="font-semibold text-gray-800 text-lg mr-3">
+                          <%= application.user.nickname || application.user.name %>
+                          <% if application.user.real_name.present? && application.user.real_name != (application.user.nickname || application.user.name) %>
+                            <span class="text-sm text-gray-500 font-normal">(<%= application.user.real_name %>)</span>
+                          <% end %>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          <%= application.final_approved_at.strftime("%m/%d %H:%M") %>에 최종 승인됨
+                        </div>
+                      </div>
+                      
+                      <div class="mb-2">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                          참가 확정
+                        </span>
+                      </div>
+                      
+                      <!-- 상세 정보 그리드 -->
+                      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs text-gray-600 mb-2">
+                        <div class="flex items-center">
+                          <span class="text-blue-500 mr-1">👤</span>
+                          <span><%= application.user.age ? "#{application.user.age}세" : "나이 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-green-500 mr-1">🏀</span>
+                          <span><%= application.user.position_names.first || "포지션 미설정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-purple-500 mr-1">⭐</span>
+                          <span><%= application.user.basketball_experience_text %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-orange-500 mr-1">📊</span>
+                          <span>Lv.<%= application.user.skill_level || "미정" %></span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-500 mr-1">★</span>
+                          <span>평점 <%= application.user.evaluation_rating_percentage %>%</span>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-gray-500 mr-1">📞</span>
+                          <span><%= application.user.phone.present? ? application.user.phone.gsub(/(\d{3})(\d{4})(\d{4})/, '\1-\2-\3') : "번호 미설정" %></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center">
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      승인 완료
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 신청자가 없는 경우 -->
+        <% if pending_apps.empty? && waiting_payment_apps.empty? && final_approved_apps.empty? %>
+          <div class="text-center text-gray-500 py-8">
+            <div class="text-6xl mb-4">📭</div>
+            <div class="text-lg">아직 신청자가 없습니다</div>
+            <div class="text-sm mt-2">경기가 생성되면 신청자들이 나타날 거예요!</div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- 경기 정보 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <!-- 기본 정보 -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📋 경기 정보</h2>
+        
+        <div class="space-y-4">
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+              <span class="text-blue-600">📅</span>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">경기 날짜</div>
+              <div class="text-gray-600"><%= @game.scheduled_at.strftime("%Y년 %m월 %d일 (%a)") %></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+              <span class="text-green-600">⏰</span>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">경기 시간</div>
+              <div class="text-gray-600">
+                <%= @game.start_time&.strftime("%H:%M") || @game.scheduled_at.strftime("%H:%M") %> ~ <%= @game.end_time&.strftime("%H:%M") || (@game.scheduled_at + 2.hours).strftime("%H:%M") %>
+                <% if @game.start_time && @game.end_time %>
+                  <% duration_hours = ((@game.end_time - @game.start_time) / 1.hour).round(1) %>
+                  (<%= duration_hours == duration_hours.to_i ? duration_hours.to_i : duration_hours %>시간)
+                <% else %>
+                  (2시간)
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+              <span class="text-orange-600">📍</span>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">경기 장소</div>
+              <div class="text-gray-600"><%= @game.court&.address || @game.venue_address || '장소 정보 없음' %></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+              <span class="text-purple-600">🏟️</span>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">코트 유형</div>
+              <div class="text-gray-600"><%= @game.court&.court_type == 'indoor' ? '실내 코트' : (@game.court&.court_type == 'outdoor' ? '실외 코트' : '유형 미정') %></div>
+            </div>
+          </div>
+          
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+              <span class="text-red-600">👥</span>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800">모집 인원</div>
+              <div class="text-gray-600">최대 <%= @game.max_players %>명</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주최자 정보 -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">👤 주최자 정보</h2>
+        
+        <% if @game.organizer %>
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-4">
+              <%= @game.organizer.name.first %>
+            </div>
+            <div>
+              <div class="font-semibold text-gray-800"><%= @game.organizer.nickname || @game.organizer.name %></div>
+              <div class="text-sm text-gray-600">경기 주최자</div>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">실력 수준</span>
+              <div class="flex items-center">
+                <span class="text-gray-800 font-semibold"><%= @game.organizer.skill_level_name %></span>
+                <span class="ml-2 text-sm text-gray-600">(Lv.<%= @game.organizer.skill_level || 3 %>)</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between">
+              <span class="text-gray-600">평점</span>
+              <div class="flex items-center">
+                <span class="text-yellow-500 mr-1">★</span>
+                <span class="text-gray-800 font-semibold"><%= @game.organizer.evaluation_rating_percentage %>%</span>
+                <span class="ml-2 text-sm text-gray-600">(<%= @game.organizer.rating_count %>개 평가)</span>
+              </div>
+            </div>
+            
+            <% if @game.organizer.position_names.any? %>
+              <div class="flex justify-between">
+                <span class="text-gray-600">선호 포지션</span>
+                <div class="flex gap-1">
+                  <% @game.organizer.position_names.each do |position| %>
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs"><%= position %></span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @game.organizer.location_full_name.present? %>
+              <div class="flex justify-between">
+                <span class="text-gray-600">활동 지역</span>
+                <span class="text-gray-800"><%= @game.organizer.location_full_name %></span>
+              </div>
+            <% end %>
+            
+            <% if @game.organizer.team_name.present? %>
+              <div class="flex justify-between">
+                <span class="text-gray-600">소속 팀</span>
+                <span class="text-gray-800"><%= @game.organizer.team_name %></span>
+              </div>
+            <% end %>
+          </div>
+          
+          <% if @game.organizer.bio.present? %>
+            <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div class="text-sm text-gray-600 mb-1">소개</div>
+              <div class="text-gray-800 text-sm"><%= @game.organizer.bio %></div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="text-center py-8">
+            <div class="text-gray-500">주최자 정보가 없습니다.</div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 참가자 목록 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">👥 참가자 목록</h2>
+      
+      <% if @game.confirmed_players.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% @game.confirmed_players.each do |player| %>
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                <%= player.name.first %>
+              </div>
+              <div>
+                <div class="font-semibold text-gray-800"><%= player.nickname || player.name %></div>
+                <div class="text-sm text-gray-600">
+                  <% if player.position_names.any? %>
+                    <%= player.position_names.join(', ') %>
+                  <% else %>
+                    <%= player.old_position || 'N/A' %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-8">
+          <div class="text-gray-500">아직 참가자가 없습니다.</div>
+          <div class="text-sm text-gray-400 mt-1">첫 번째 참가자가 되어보세요!</div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 코트 상세 정보 -->
+    <% if @game.court.present? %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">🏟️ 코트 정보</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">코트명</span>
+              <span class="text-gray-800 font-semibold"><%= @game.court.name %></span>
+            </div>
+            
+            <div class="flex justify-between">
+              <span class="text-gray-600">주소</span>
+              <span class="text-gray-800"><%= @game.court.address %></span>
+            </div>
+            
+            <div class="flex justify-between">
+              <span class="text-gray-600">코트 유형</span>
+              <span class="text-gray-800">
+                <span class="bg-<%= @game.court.court_type == 'indoor' ? 'blue' : 'green' %>-100 text-<%= @game.court.court_type == 'indoor' ? 'blue' : 'green' %>-800 px-2 py-1 rounded text-sm">
+                  <%= @game.court.court_type == 'indoor' ? '실내' : '실외' %>
+                </span>
+              </span>
+            </div>
+            
+            <div class="flex justify-between">
+              <span class="text-gray-600">수용 인원</span>
+              <span class="text-gray-800">최대 <%= @game.court.capacity %>명</span>
+            </div>
+          </div>
+          
+          <!-- 시설 정보 -->
+          <div class="space-y-3">
+            <h3 class="font-semibold text-gray-800 mb-3">🏢 시설 정보</h3>
+            
+            <div class="grid grid-cols-2 gap-2 text-sm">
+              <div class="flex items-center">
+                <span class="<%= @game.court.water_fountain? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.water_fountain? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">정수기</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.shower_available? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.shower_available? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">샤워실</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.parking_available? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.parking_available? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">주차장</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.locker_room? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.locker_room? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">라커룸</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.air_conditioning? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.air_conditioning? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">에어컨</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.equipment_rental? ? 'text-green-600' : 'text-red-600' %> mr-2">
+                  <%= @game.court.equipment_rental? ? '✅' : '❌' %>
+                </span>
+                <span class="text-gray-600">장비대여</span>
+              </div>
+              
+              <div class="flex items-center">
+                <span class="<%= @game.court.smoking_allowed? ? 'text-yellow-600' : 'text-green-600' %> mr-2">
+                  <%= @game.court.smoking_allowed? ? '⚠️' : '🚭' %>
+                </span>
+                <span class="text-gray-600">흡연 <%= @game.court.smoking_allowed? ? '허용' : '금지' %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <!-- 게임에 코트가 없을 경우 장소 정보만 표시 -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">🏟️ 장소 정보</h2>
+        
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">장소명</span>
+            <span class="text-gray-800 font-semibold"><%= @game.venue_name || '장소 정보 없음' %></span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-600">주소</span>
+            <span class="text-gray-800"><%= @game.venue_address || '주소 정보 없음' %></span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-600">모집 인원</span>
+            <span class="text-gray-800">최대 <%= @game.max_players %>명</span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 유니폼 색상 정보 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">👕 준비해야 할 유니폼</h2>
+      
+      <% if @game.uniform_colors.present? && @game.uniform_colors.any? %>
+        <div class="grid grid-cols-<%= @game.uniform_colors.length %> gap-4 justify-center">
+          <% @game.uniform_colors.each_with_index do |color, index| %>
+            <div class="text-center">
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="text-lg font-semibold text-gray-800 mb-2">
+                  <%= index == 0 ? "1순위" : "2순위" %>
+                </div>
+                <div class="w-16 h-16 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center mb-2" 
+                     style="background-color: <%= get_uniform_color_code(color) %>; <%= color == 'white' ? 'border-color: #D1D5DB;' : '' %>">
+                  <% if color == 'white' %>
+                    <span class="text-gray-600 font-bold text-xs">유니폼</span>
+                  <% elsif color == 'black' %>
+                    <span class="text-white font-bold text-xs">유니폼</span>
+                  <% else %>
+                    <span class="text-white font-bold text-xs drop-shadow-md">유니폼</span>
+                  <% end %>
+                </div>
+                <div class="text-sm text-gray-600"><%= Game::UNIFORM_COLORS[color] %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-8">
+          <div class="text-gray-500">유니폼 색상 정보가 없습니다.</div>
+        </div>
+      <% end %>
+      
+      <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+        <div class="flex items-center">
+          <span class="text-blue-600 mr-2">ℹ️</span>
+          <span class="text-sm text-blue-800">
+            위에 표시된 색상의 유니폼을 준비해주세요. 팀 배정은 경기 시작 전 주최자가 진행합니다.
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 신청하기 버튼 -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <% if logged_in? %>
+        <% current_application = @game.game_applications.find_by(user: current_user) %>
+        
+        <% if current_application %>
+          <!-- 이미 신청한 경우 -->
+          <div class="text-center">
+            <% if current_application.pending? %>
+              <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <div class="text-yellow-800 font-semibold mb-2">⏳ 승인 대기중</div>
+                <div class="text-sm text-yellow-600">
+                  주최자가 신청을 검토 중입니다. 조금만 기다려주세요.
+                </div>
+              </div>
+              <button onclick="cancelApplication('<%= cancel_application_game_path(@game) %>')" 
+                      class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                신청 취소
+              </button>
+            <% elsif current_application.status == 'waiting_payment' %>
+              <!-- 승인됨 - 결제 대기 상태 -->
+              <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <div class="text-orange-800 font-semibold mb-2">💳 결제 필요</div>
+                <div class="text-sm text-orange-600 mb-3">
+                  경기 참가가 승인되었습니다! 참가비를 결제해주세요.
+                </div>
+                <div class="text-lg font-bold text-gray-800 mb-4">
+                  참가비: <%= @game.fee_display %>
+                </div>
+              </div>
+              
+              <!-- 결제 버튼 -->
+              <%= link_to "💳 결제하기", new_game_game_application_payment_path(@game, current_application), 
+                          class: "w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+                          
+            <% elsif current_application.status == 'final_approved' %>
+              <!-- 최종 승인됨 -->
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="text-green-800 font-semibold mb-2">✅ 참가 확정</div>
+                <div class="text-sm text-green-600">
+                  결제가 완료되어 경기 참가가 확정되었습니다!
+                </div>
+              </div>
+              
+              <!-- 평가 버튼 (경기 종료 30분 후부터 24시간 동안) -->
+              <% if @game.evaluation_available? %>
+                <%= link_to "🌟 동료 평가하기", game_player_evaluations_path(@game), 
+                            class: "w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block mb-2" %>
+              <% end %>
+              
+              <!-- 평점 주기 버튼 (경기 완료 후) -->
+              <% if @game.status == 'completed' && !current_user.ratings.where(game: @game).exists? %>
+                <%= link_to "⭐ 평점 주기", new_game_rating_path(@game), 
+                            class: "w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block mb-2" %>
+              <% end %>
+              
+              <!-- 평점 보기 버튼 -->
+              <% if @game.status == 'completed' && @game.ratings.any? %>
+                <%= link_to "📊 평점 보기", game_ratings_path(@game), 
+                            class: "w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block mb-2" %>
+              <% end %>
+              
+              <!-- 환불 버튼 (경기 시작 24시간 전까지) -->
+              <% payment = current_application.payment %>
+              <% if payment && ['completed', 'paid'].include?(payment.status) && @game.start_time > 24.hours.from_now %>
+                <%= link_to "💸 환불 신청", new_payment_refund_path(payment), 
+                            class: "w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 text-center block" %>
+              <% end %>
+            <% elsif current_application.rejected? %>
+              <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="text-red-800 font-semibold mb-2">❌ 거절됨</div>
+                <div class="text-sm text-red-600">
+                  죄송합니다. 이번 경기 참가가 거절되었습니다.
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% elsif @game.organizer == current_user %>
+          <!-- 주최자인 경우 -->
+          <div class="text-center">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div class="text-blue-800 font-semibold mb-2">🎯 주최자</div>
+              <div class="text-sm text-blue-600">
+                이 경기의 주최자입니다. 신청자들을 확인하고 승인해주세요.
+              </div>
+            </div>
+            <div class="flex justify-center space-x-3">
+              <%= link_to "✏️ 경기 수정", edit_game_path(@game), 
+                          class: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300" %>
+              <%= button_to "📋 경기 복사", duplicate_game_path(@game),
+                          method: :post,
+                          class: "bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300" %>
+              <button onclick="confirmDeleteGame()" 
+                      class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                🗑️ 경기 삭제
+              </button>
+            </div>
+            
+            <!-- 호스트도 평가 가능 -->
+            <% if @game.evaluation_available? %>
+              <div class="mt-4">
+                <%= link_to "🌟 동료 평가하기", game_player_evaluations_path(@game), 
+                            class: "w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+              </div>
+            <% end %>
+            
+            <!-- 평점 주기 버튼 (경기 완료 후) -->
+            <% if @game.status == 'completed' && !current_user.ratings.where(game: @game).exists? %>
+              <div class="mt-4">
+                <%= link_to "⭐ 평점 주기", new_game_rating_path(@game), 
+                            class: "w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+              </div>
+            <% end %>
+            
+            <!-- 평점 보기 버튼 -->
+            <% if @game.status == 'completed' && @game.ratings.any? %>
+              <div class="mt-4">
+                <%= link_to "📊 평점 보기", game_ratings_path(@game), 
+                            class: "w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+              </div>
+            <% end %>
+          </div>
+        <% elsif !current_user.can_apply_for_games? %>
+          <!-- 신청 제한 상태 -->
+          <div class="text-center">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <div class="text-red-800 font-semibold mb-2">🚫 신청 제한</div>
+              <div class="text-sm text-red-600">
+                취소 횟수 제한으로 인해 <%= current_user.cancellation_hours_until_reset %>시간 후 신청이 가능합니다.
+              </div>
+            </div>
+          </div>
+        <% elsif !current_user.can_participate_in_games? %>
+          <!-- 프로필 미완성 -->
+          <div class="text-center">
+            <div class="mb-4">
+              <div class="text-red-600 font-semibold mb-2">프로필을 완성해주세요</div>
+              <div class="text-sm text-gray-600">
+                경기 참가를 위해서는 프로필 완성이 필요합니다. (현재 완성도: <%= current_user.profile_completion_percentage %>%)
+              </div>
+            </div>
+            <%= link_to "프로필 완성하기", profile_edit_path, class: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300" %>
+          </div>
+        <% elsif !@game.can_accept_players? %>
+          <!-- 정원 마감 -->
+          <div class="text-center">
+            <button disabled class="bg-gray-300 text-gray-500 font-bold py-4 px-8 rounded-lg text-lg cursor-not-allowed">
+              정원이 마감되었습니다
+            </button>
+          </div>
+        <% else %>
+          <!-- 신청 가능 -->
+          <div class="text-center">
+            <button onclick="showApplicationModal()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300 transform hover:scale-105">
+              🏀 이 경기에 참가 신청하기
+            </button>
+            <div class="mt-3 text-sm text-gray-600">
+              신청 후 주최자 승인을 기다려주세요
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="text-center">
+          <div class="mb-4">
+            <div class="text-gray-700 font-semibold mb-2">로그인이 필요합니다</div>
+            <div class="text-sm text-gray-600">
+              경기 참가 신청을 위해 로그인해주세요
+            </div>
+          </div>
+          <%= link_to "로그인하기", login_path, class: "bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-8 rounded-lg text-lg transition duration-300" %>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- 디버깅 정보 숨김 처리
+    <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+      <h3 class="text-xl font-bold text-gray-800 mb-6">🔍 디버깅 정보</h3>
+      <div class="bg-gray-100 p-4 rounded-lg text-sm">
+        <p><strong>로그인 상태:</strong> <%= logged_in? ? "로그인됨" : "로그인 안됨" %></p>
+        <p><strong>현재 사용자:</strong> <%= current_user&.nickname || current_user&.name || "없음" %> (ID: <%= current_user&.id || "없음" %>)</p>
+        <p><strong>게임 주최자:</strong> <%= @game.organizer.nickname || @game.organizer.name %> (ID: <%= @game.organizer.id %>)</p>
+        <p><strong>주최자 일치:</strong> <%= @game.organizer == current_user ? "일치" : "불일치" %></p>
+        <p><strong>대기 신청자 수:</strong> <%= @pending_applications.count %></p>
+        <% if @pending_applications.any? %>
+          <p><strong>신청자 목록:</strong></p>
+          <ul class="ml-4">
+            <% @pending_applications.each do |app| %>
+              <li>- <%= app.user.nickname || app.user.name %> (ID: <%= app.user.id %>)</li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    </div>
+    -->
+    
+  </div>
+</div>
+
+<!-- 참가 신청 모달 -->
+<div id="applicationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">경기 참가 신청</h3>
+    
+    <%= form_with url: apply_game_path(@game), local: true, class: "space-y-4" do |form| %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">신청 메시지 (선택)</label>
+        <%= form.text_area :message, rows: 3,
+              class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+              placeholder: "주최자에게 전달할 메시지를 작성해주세요" %>
+      </div>
+      
+      <div class="flex justify-end space-x-3">
+        <button type="button" onclick="hideApplicationModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          취소
+        </button>
+        <%= form.submit "신청하기", class: "px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- 경기 삭제 확인 모달 -->
+<div id="deleteGameModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+        <span class="text-red-600 text-2xl">⚠️</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">경기를 삭제하시겠습니까?</h3>
+      <p class="text-sm text-gray-600 mb-6">
+        이 작업은 되돌릴 수 없습니다.<br>
+        <% if @game.confirmed_players_count > 0 %>
+          <span class="text-red-600 font-semibold">현재 <%= @game.confirmed_players_count %>명의 참가자가 있습니다.</span><br>
+        <% end %>
+        삭제 시 모든 참가 신청 정보가 함께 삭제됩니다.
+      </p>
+    </div>
+    
+    <div class="flex justify-center space-x-3">
+      <button type="button" onclick="hideDeleteGameModal()" 
+              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+        취소
+      </button>
+      <%= button_to "삭제", game_path(@game), 
+                    method: :delete,
+                    class: "px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md" %>
+    </div>
+  </div>
+</div>
+
+<script>
+function showApplicationModal() {
+  document.getElementById('applicationModal').classList.remove('hidden');
+  document.getElementById('applicationModal').classList.add('flex');
+}
+
+function hideApplicationModal() {
+  document.getElementById('applicationModal').classList.add('hidden');
+  document.getElementById('applicationModal').classList.remove('flex');
+}
+
+function confirmDeleteGame() {
+  document.getElementById('deleteGameModal').classList.remove('hidden');
+  document.getElementById('deleteGameModal').classList.add('flex');
+}
+
+function hideDeleteGameModal() {
+  document.getElementById('deleteGameModal').classList.add('hidden');
+  document.getElementById('deleteGameModal').classList.remove('flex');
+}
+
+// 모달 외부 클릭 시 닫기
+document.getElementById('applicationModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    hideApplicationModal();
+  }
+});
+
+document.getElementById('deleteGameModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    hideDeleteGameModal();
+  }
+});
+
+// 신청 취소 함수
+function cancelApplication(url) {
+  if (confirm('정말로 신청을 취소하시겠습니까?')) {
+    fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('신청 취소에 실패했습니다.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('신청 취소에 실패했습니다.');
+    });
+  }
+}
+
+// 신청 승인 함수
+function approveApplication(url) {
+  if (confirm('이 신청을 승인하시겠습니까?')) {
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('신청 승인에 실패했습니다.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('신청 승인에 실패했습니다.');
+    });
+  }
+}
+
+// 신청 거절 함수
+function rejectApplication(url) {
+  if (confirm('이 신청을 거절하시겠습니까?')) {
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('신청 거절에 실패했습니다.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('신청 거절에 실패했습니다.');
+    });
+  }
+}
+
+// 입금 확인 함수
+function confirmPayment(url) {
+  if (confirm('입금을 확인하시겠습니까? 확인 후 해당 신청자는 최종 승인되며 경기 참가가 확정됩니다.')) {
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        alert('입금 확인에 실패했습니다.');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('입금 확인에 실패했습니다.');
+    });
+  }
+}
+</script>

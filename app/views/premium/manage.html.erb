@@ -1,0 +1,107 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">프리미엄 구독 관리</h1>
+        <%= link_to "← 프리미엄 홈", premium_path, class: "text-blue-500 hover:text-blue-600" %>
+      </div>
+    </div>
+
+    <!-- 현재 활성 구독 -->
+    <% if @active_subscriptions.any? %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">현재 구독 중인 플랜</h2>
+        <% @active_subscriptions.each do |subscription| %>
+          <div class="border rounded-lg p-4 mb-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-lg font-semibold">
+                  <%= subscription.plan_type == 'monthly' ? '프로 월간' : '프리미엄 연간' %> 이용권
+                </h3>
+                <p class="text-gray-600 mt-1">
+                  결제일: <%= subscription.created_at.strftime('%Y년 %m월 %d일') %>
+                </p>
+                <p class="text-gray-600">
+                  결제 금액: <%= number_to_currency(subscription.amount) %>
+                </p>
+                <% if current_user.premium_expires_at %>
+                  <p class="text-gray-600">
+                    만료일: <%= current_user.premium_expires_at.strftime('%Y년 %m월 %d일') %>
+                  </p>
+                <% end %>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm mb-2">
+                  활성
+                </span>
+                <div>
+                  <%= form_with url: premium_cancel_path, method: :post, 
+                      data: { confirm: '정말로 구독을 취소하시겠습니까?' } do |f| %>
+                    <%= f.hidden_field :subscription_id, value: subscription.id %>
+                    <%= f.submit '구독 취소', 
+                        class: 'text-red-600 hover:text-red-800 text-sm cursor-pointer' %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="text-center py-8">
+          <p class="text-gray-600 mb-4">활성화된 프리미엄 구독이 없습니다.</p>
+          <%= link_to "프리미엄 시작하기", premium_path, 
+              class: "bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 환불 정책 -->
+    <div class="bg-blue-50 rounded-lg p-6 mb-6">
+      <h3 class="text-lg font-semibold text-blue-900 mb-3">환불 정책</h3>
+      <ul class="space-y-2 text-blue-800">
+        <li>• <strong>월간 구독:</strong> 결제 후 7일 이내 취소 시 50% 환불</li>
+        <li>• <strong>연간 구독:</strong> 결제 후 30일 이내 취소 시 70% 환불</li>
+        <li>• 환불 금액은 영업일 기준 3-5일 내에 원결제 수단으로 입금됩니다.</li>
+        <li>• 이용 약관 위반으로 인한 강제 해지 시 환불이 불가합니다.</li>
+      </ul>
+    </div>
+
+    <!-- 과거 구독 내역 -->
+    <% if @past_subscriptions.any? %>
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">구독 이력</h2>
+        <div class="space-y-3">
+          <% @past_subscriptions.each do |subscription| %>
+            <div class="border rounded-lg p-4">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h4 class="font-medium">
+                    <%= subscription.plan_type == 'monthly' ? '프로 월간' : '프리미엄 연간' %> 이용권
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    <%= subscription.started_at.strftime('%Y.%m.%d') %> ~ 
+                    <%= subscription.cancelled_at&.strftime('%Y.%m.%d') || '만료' %>
+                  </p>
+                </div>
+                <div class="text-right">
+                  <span class="inline-block px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm">
+                    <%= subscription.status == 'cancelled' ? '취소됨' : 
+                        subscription.status == 'refunded' ? '환불됨' : '만료' %>
+                  </span>
+                  <% if subscription.refund_amount %>
+                    <p class="text-sm text-gray-600 mt-1">
+                      환불: <%= number_to_currency(subscription.refund_amount) %>
+                    </p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

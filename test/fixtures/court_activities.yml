@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  court: one
+  user: one
+  activity_type: MyString
+  player_count: 1
+  recorded_at: 2025-07-22 16:13:43
+
+two:
+  court: two
+  user: two
+  activity_type: MyString
+  player_count: 1
+  recorded_at: 2025-07-22 16:13:43

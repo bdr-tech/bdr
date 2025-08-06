@@ -1,0 +1,185 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- 코트 이미지 갤러리 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <% if @court.image1.present? %>
+          <div class="aspect-w-16 aspect-h-9">
+            <%= image_tag @court.image1, class: "w-full h-64 object-cover rounded-lg", alt: "#{@court.name} 사진 1" %>
+          </div>
+        <% else %>
+          <div class="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+            <div class="text-center text-gray-500">
+              <span class="text-4xl mb-2 block">🏀</span>
+              <p>코트 사진이 없습니다</p>
+            </div>
+          </div>
+        <% end %>
+        
+        <% if @court.image2.present? %>
+          <div class="aspect-w-16 aspect-h-9">
+            <%= image_tag @court.image2, class: "w-full h-64 object-cover rounded-lg", alt: "#{@court.name} 사진 2" %>
+          </div>
+        <% elsif @court.image1.present? %>
+          <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+            <div class="text-center text-gray-400">
+              <span class="text-4xl mb-2 block">📷</span>
+              <p>추가 사진 없음</p>
+            </div>
+          </div>
+        <% else %>
+          <div class="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+            <div class="text-center text-gray-500">
+              <span class="text-4xl mb-2 block">🏟️</span>
+              <p><%= @court.court_type == 'indoor' ? '실내' : '실외' %> 코트</p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 코트 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-start">
+        <div class="flex-1">
+          <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= @court.name %></h1>
+          <p class="text-gray-600 text-lg mb-4">📍 <%= @court.address %></p>
+          
+          <div class="flex items-center space-x-6 text-sm">
+            <span class="<%= @court.court_type == 'indoor' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' %> px-3 py-1 rounded-full">
+              🏀 <%= @court.court_type == 'indoor' ? '실내' : '실외' %> 코트
+            </span>
+            <span class="text-gray-600">
+              👥 최대 <%= @court.capacity %>명
+            </span>
+          </div>
+        </div>
+        
+        <div class="text-right">
+          <div class="text-3xl font-bold text-orange-500 mb-2">
+            <%= @total_games %>
+            <span class="text-base font-normal text-gray-600">경기</span>
+          </div>
+          <div class="text-sm text-gray-600">
+            활동 플레이어 <%= @active_players %>명
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 왼쪽: 코트 정보 -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- 편의시설 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">🏢 편의시설</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="flex items-center space-x-2 <%= @court.parking_available ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🅿️</span>
+              <span>주차 <%= @court.parking_available ? '가능' : '불가' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.water_fountain ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🚰</span>
+              <span>음수대 <%= @court.water_fountain ? '있음' : '없음' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.shower_available ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🚿</span>
+              <span>샤워실 <%= @court.shower_available ? '있음' : '없음' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.smoking_allowed ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🚬</span>
+              <span>흡연 <%= @court.smoking_allowed ? '가능' : '불가' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.air_conditioning ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">❄️</span>
+              <span>에어컨 <%= @court.air_conditioning ? '있음' : '없음' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.locker_room ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🔒</span>
+              <span>락커룸 <%= @court.locker_room ? '있음' : '없음' %></span>
+            </div>
+            <div class="flex items-center space-x-2 <%= @court.equipment_rental ? 'text-green-600' : 'text-gray-400' %>">
+              <span class="text-2xl">🏀</span>
+              <span>장비대여 <%= @court.equipment_rental ? '가능' : '불가' %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 위치 정보 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">📍 위치 정보</h2>
+          <div class="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg mb-4">
+            <!-- 지도 API 연동 시 여기에 지도 표시 -->
+            <div class="flex items-center justify-center h-64 text-gray-500">
+              <div class="text-center">
+                <p class="mb-2">🗺️</p>
+                <p>지도 준비중</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex space-x-2">
+            <a href="https://map.naver.com/v5/search/<%= CGI.escape(@court.address) %>" 
+               target="_blank"
+               class="flex-1 bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded-lg transition duration-300">
+              네이버 지도로 보기
+            </a>
+            <a href="https://map.kakao.com/?q=<%= CGI.escape(@court.address) %>" 
+               target="_blank"
+               class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-center py-2 rounded-lg transition duration-300">
+              카카오맵으로 보기
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 예정된 경기 -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">📅 예정된 경기</h2>
+            <%= link_to "전체보기", games_path(court_id: @court.id), class: "text-blue-600 hover:text-blue-800 text-sm" %>
+          </div>
+          
+          <% if @recent_games.any? %>
+            <div class="space-y-3">
+              <% @recent_games.each do |game| %>
+                <div class="border rounded-lg p-3 hover:shadow-md transition duration-300">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-semibold text-gray-800"><%= game.title %></h3>
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      <%= game.confirmed_players_count %>/<%= game.max_players %>
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <p>📅 <%= game.scheduled_at.strftime("%m월 %d일") %></p>
+                    <p>⏰ <%= game.start_time&.strftime("%H:%M") || game.scheduled_at.strftime("%H:%M") %> ~ <%= game.end_time&.strftime("%H:%M") || (game.scheduled_at + 2.hours).strftime("%H:%M") %></p>
+                    <p>💰 <%= game.fee > 0 ? "#{number_with_delimiter(game.fee)}원" : "무료" %></p>
+                  </div>
+                  <%= link_to "상세보기", game_path(game), class: "block text-center bg-orange-500 hover:bg-orange-600 text-white py-2 rounded mt-3 transition duration-300 text-sm" %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-8 text-gray-500">
+              <p class="text-3xl mb-2">📭</p>
+              <p>예정된 경기가 없습니다</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- 이 코트에서 경기 만들기 -->
+        <div class="bg-orange-50 rounded-lg p-6 text-center">
+          <p class="text-gray-700 mb-4">이 코트에서 경기를 주최하시겠습니까?</p>
+          <%= link_to "경기 만들기", new_game_path(court_id: @court.id), 
+              class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300 inline-block" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div class="mt-8 text-center">
+      <%= link_to "← 코트 목록으로", courts_path, 
+          class: "text-gray-600 hover:text-gray-800 transition duration-300" %>
+    </div>
+  </div>
+</div>

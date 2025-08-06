@@ -1,0 +1,96 @@
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">대회 알림</h1>
+    <p class="text-gray-600 mt-2">내가 참가한 대회의 최신 소식</p>
+  </div>
+
+  <% if @my_tournaments.any? %>
+    <!-- My Tournaments -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">내 대회</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% @my_tournaments.each do |tournament| %>
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="font-semibold text-gray-800">
+              <%= link_to tournament.name, tournament_path(tournament), 
+                  class: "hover:text-blue-600" %>
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+              <%= tournament.status_text %>
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+              <%= tournament.tournament_start_at.strftime("%Y년 %m월 %d일") %> - 
+              <%= tournament.tournament_end_at.strftime("%Y년 %m월 %d일") %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Recent Updates -->
+    <div>
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">최근 업데이트</h2>
+      
+      <% if @recent_updates.any? %>
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="divide-y divide-gray-200">
+            <% @recent_updates.each do |match| %>
+              <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <p class="text-sm text-gray-500">
+                      <%= match.tournament.name %> - <%= match.round_name %>
+                    </p>
+                    <p class="font-medium text-gray-900 mt-1">
+                      <%= match.home_team.team_name %> vs <%= match.away_team.team_name %>
+                    </p>
+                    
+                    <% if match.completed? %>
+                      <p class="text-sm mt-1">
+                        <span class="font-semibold"><%= match.home_score %></span> - 
+                        <span class="font-semibold"><%= match.away_score %></span>
+                        <% if match.winner_team %>
+                          <span class="text-green-600 ml-2">
+                            <%= match.winner_team.team_name %> 승리
+                          </span>
+                        <% end %>
+                      </p>
+                    <% elsif match.scheduled_at.present? %>
+                      <p class="text-sm text-gray-600 mt-1">
+                        예정: <%= match.scheduled_at.strftime("%m월 %d일 %H:%M") %>
+                      </p>
+                    <% else %>
+                      <p class="text-sm text-gray-500 mt-1">일정 미정</p>
+                    <% end %>
+                  </div>
+                  
+                  <div class="text-xs text-gray-400">
+                    <%= time_ago_in_words(match.updated_at) %> 전
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="bg-gray-100 rounded-lg p-8 text-center">
+          <p class="text-gray-500">최근 업데이트가 없습니다.</p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- No Tournaments -->
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+      <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">참가한 대회가 없습니다</h3>
+      <p class="text-gray-500 mb-6">대회에 참가하면 여기에서 최신 소식을 확인할 수 있습니다.</p>
+      <%= link_to "대회 둘러보기", tournaments_path, 
+          class: "inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700" %>
+    </div>
+  <% end %>
+</div>

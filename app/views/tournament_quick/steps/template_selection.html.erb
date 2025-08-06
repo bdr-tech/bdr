@@ -1,0 +1,112 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- 진행 상태 표시 -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4">
+        <%= render 'tournament_quick/shared/progress_bar', wizard: @wizard %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 템플릿 선택 단계 -->
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= form_with url: tournament_quick_path, method: :patch, local: true do |f| %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+          템플릿을 선택하세요
+        </h2>
+
+        <div class="space-y-4">
+          <% tournament_templates.each do |template| %>
+            <label class="block">
+              <input type="radio" 
+                     name="wizard[template_type]" 
+                     value="<%= template[:id] %>"
+                     class="sr-only peer"
+                     <%= 'checked' if @wizard.wizard_data['template_type'] == template[:id] %>>
+              
+              <div class="border-2 rounded-lg p-4 cursor-pointer transition-all
+                          border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50
+                          hover:border-gray-300">
+                <div class="flex items-start">
+                  <span class="text-2xl mr-3"><%= template[:icon] %></span>
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-gray-900">
+                      <%= template[:name] %>
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                      <%= template[:description] %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </label>
+          <% end %>
+
+          <!-- 직접 만들기 옵션 -->
+          <label class="block">
+            <input type="radio" 
+                   name="wizard[template_type]" 
+                   value="custom"
+                   class="sr-only peer"
+                   <%= 'checked' if @wizard.wizard_data['template_type'] == 'custom' %>>
+            
+            <div class="border-2 rounded-lg p-4 cursor-pointer transition-all
+                        border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50
+                        hover:border-gray-300">
+              <div class="flex items-start">
+                <span class="text-2xl mr-3">✨</span>
+                <div class="flex-1">
+                  <h3 class="font-semibold text-gray-900">
+                    직접 만들기
+                  </h3>
+                  <p class="text-sm text-gray-600 mt-1">
+                    템플릿 없이 처음부터 설정합니다
+                  </p>
+                </div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- 버튼 영역 -->
+        <div class="mt-8 flex justify-between">
+          <%= link_to "취소", tournaments_path, 
+                      class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+          
+          <%= f.submit "다음", 
+                       class: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% def tournament_templates
+  [
+    {
+      id: 'saturday_afternoon',
+      name: '토요일 오후 토너먼트',
+      description: '8팀 싱글 엘리미네이션, 오후 2시~6시',
+      icon: '🏆'
+    },
+    {
+      id: '3x3_lightning',
+      name: '3x3 번개 대회',
+      description: '4~8팀, 2시간 완성, 라운드 로빈',
+      icon: '⚡'
+    },
+    {
+      id: 'company_friendly',
+      name: '회사 동료 친선대회',
+      description: '부서별 대항전, 순위 상관없이 모두 상품',
+      icon: '🤝'
+    },
+    {
+      id: 'monthly_club',
+      name: '동호회 월례 대회',
+      description: '매달 마지막 주, 실력 균등 분배',
+      icon: '📅'
+    }
+  ]
+end %>

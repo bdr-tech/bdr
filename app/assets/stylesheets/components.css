@@ -1,0 +1,211 @@
+/* shadcn 스타일 CSS 변수 */
+:root {
+  /* Colors */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  
+  --primary: 24 100% 50%; /* Orange */
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 217 91% 60%; /* Blue */
+  --secondary-foreground: 0 0% 100%;
+  
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --ring: 24 100% 50%;
+  
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+/* 다크 모드 (향후 구현) */
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  
+  --primary: 24 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 85.7% 97.3%;
+  
+  --ring: 24 100% 50%;
+}
+
+/* 애니메이션 */
+@keyframes slide-up {
+  from {
+    transform: translateY(0.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-0.5rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 포커스 스타일 */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+}
+
+/* 스크롤바 스타일 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground)) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--foreground));
+}
+
+/* 유틸리티 클래스 */
+.bg-background {
+  background-color: hsl(var(--background));
+}
+
+.text-foreground {
+  color: hsl(var(--foreground));
+}
+
+.bg-primary {
+  background-color: hsl(var(--primary));
+}
+
+.text-primary {
+  color: hsl(var(--primary));
+}
+
+.text-primary-foreground {
+  color: hsl(var(--primary-foreground));
+}
+
+.bg-secondary {
+  background-color: hsl(var(--secondary));
+}
+
+.text-secondary {
+  color: hsl(var(--secondary));
+}
+
+.bg-muted {
+  background-color: hsl(var(--muted));
+}
+
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
+.bg-card {
+  background-color: hsl(var(--card));
+}
+
+.text-card-foreground {
+  color: hsl(var(--card-foreground));
+}
+
+.border-input {
+  border-color: hsl(var(--input));
+}
+
+.ring-ring {
+  --tw-ring-color: hsl(var(--ring));
+}
+
+.ring-offset-background {
+  --tw-ring-offset-color: hsl(var(--background));
+}

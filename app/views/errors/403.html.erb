@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>접근 권한이 없습니다 - BDR</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-md w-full text-center">
+      <div class="mb-8">
+        <div class="text-9xl font-bold text-red-500 mb-4">403</div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">접근 권한이 없습니다</h1>
+        <p class="text-gray-600 mb-8">
+          이 페이지에 접근할 수 있는 권한이 없습니다.
+        </p>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <div class="text-6xl mb-4">🚫</div>
+        <p class="text-gray-700 mb-6">
+          파울! 이 구역은 출입 금지입니다.<br>
+          권한이 필요한 페이지입니다.
+        </p>
+        
+        <div class="space-y-3">
+          <% if logged_in? %>
+            <%= link_to "프로필로 가기", profile_path, 
+                  class: "block w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+          <% else %>
+            <%= link_to "로그인하기", login_path, 
+                  class: "block w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+          <% end %>
+          
+          <%= link_to "홈으로 돌아가기", root_path, 
+                class: "block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+          
+          <button onclick="history.back()" 
+                  class="block w-full border border-gray-300 hover:bg-gray-50 text-gray-700 px-6 py-3 rounded-lg font-semibold transition duration-300">
+            이전 페이지로
+          </button>
+        </div>
+      </div>
+      
+      <div class="mt-8 text-sm text-gray-500">
+        <p>정당한 권한이 있다고 생각하신다면</p>
+        <p class="mt-1">
+          <%= link_to "시스템 건의사항", "#", 
+                class: "text-blue-600 hover:text-blue-800 underline",
+                onclick: "document.getElementById('suggestion-btn')?.click(); return false;" %>
+          을 통해 문의해주세요.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

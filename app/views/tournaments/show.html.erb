@@ -1,0 +1,312 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    <!-- 대회 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg mb-8">
+      <% if @tournament.images.attached? && @tournament.main_image %>
+        <%= image_tag @tournament.main_image.variant(resize_to_limit: [1200, 400]), 
+                      class: "w-full h-64 object-cover rounded-t-lg" %>
+      <% else %>
+        <div class="w-full h-64 bg-gradient-to-br from-orange-400 to-red-500 rounded-t-lg flex items-center justify-center">
+          <span class="text-white text-8xl">🏆</span>
+        </div>
+      <% end %>
+      
+      <div class="p-8">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= @tournament.name %></h1>
+            <p class="text-gray-600 text-lg"><%= @tournament.description %></p>
+            <p class="text-sm text-gray-500 mt-2">대회 코드: <%= @tournament.display_code %></p>
+          </div>
+          
+          <div class="text-right">
+            <% case @tournament.status %>
+            <% when 'registration_open' %>
+              <span class="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold">🟢 접수중</span>
+            <% when 'ongoing' %>
+              <span class="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">🔵 진행중</span>
+            <% when 'completed' %>
+              <span class="bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-semibold">⚫ 종료</span>
+            <% else %>
+              <span class="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-semibold">🟡 예정</span>
+            <% end %>
+            <p class="text-sm text-gray-500 mt-2">조회수 <%= @tournament.view_count %></p>
+            
+            <% if logged_in? && (current_user == @tournament.organizer || current_user.admin?) %>
+              <div class="mt-4">
+                <%= link_to "대회 수정", edit_tournament_path(@tournament), 
+                    class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 대회 정보 그리드 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-gray-600 text-sm mb-1">대회 일정</div>
+            <div class="font-semibold text-gray-800">
+              <%= @tournament.tournament_start_at&.strftime("%Y.%m.%d") || "미정" %> ~ 
+              <%= @tournament.tournament_end_at&.strftime("%Y.%m.%d") || "미정" %>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-gray-600 text-sm mb-1">대회 장소</div>
+            <div class="font-semibold text-gray-800"><%= @tournament.location_name || "미정" %></div>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-gray-600 text-sm mb-1">참가 팀</div>
+            <div class="font-semibold text-gray-800">
+              <%= @tournament.approved_teams.count %> / <%= @tournament.max_teams %>팀
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="text-gray-600 text-sm mb-1">총 상금</div>
+            <div class="font-semibold text-gray-800"><%= number_with_delimiter(@tournament.prize_pool.to_i) %>원</div>
+          </div>
+        </div>
+        
+        <!-- 대회 신청 버튼 -->
+        <div class="mt-6">
+          <% if @tournament.status == 'registration_open' %>
+            <% if logged_in? %>
+              <% if @user_team.nil? %>
+                <%= link_to "대회 신청하기", register_tournament_path(@tournament), 
+                    class: "bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-4 rounded-lg text-lg transition duration-300 inline-block" %>
+                <p class="text-sm text-gray-600 mt-2">
+                  참가비: <%= @tournament.entry_fee > 0 ? "#{number_with_delimiter(@tournament.entry_fee.to_i)}원" : "무료" %> | 
+                  남은 자리: <%= @tournament.spots_remaining %>팀
+                </p>
+              <% else %>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p class="text-blue-800">
+                    ✅ 이미 "<%= @user_team.team_name %>" 팀으로 신청하셨습니다.
+                    <span class="text-sm">(상태: <%= @user_team.status == 'approved' ? '승인됨' : '대기중' %>)</span>
+                  </p>
+                </div>
+              <% end %>
+            <% else %>
+              <%= link_to "로그인 후 대회 신청", login_path, 
+                  class: "bg-gray-400 text-white font-bold px-8 py-4 rounded-lg text-lg inline-block" %>
+            <% end %>
+          <% elsif @tournament.status == 'registration_closed' %>
+            <div class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg inline-block">
+              대회 신청이 마감되었습니다.
+            </div>
+          <% elsif @tournament.status == 'ongoing' %>
+            <div class="bg-blue-100 text-blue-600 px-6 py-3 rounded-lg inline-block">
+              대회가 진행중입니다.
+            </div>
+          <% elsif @tournament.status == 'completed' %>
+            <div class="bg-gray-100 text-gray-600 px-6 py-3 rounded-lg inline-block">
+              대회가 종료되었습니다.
+            </div>
+          <% else %>
+            <div class="bg-yellow-100 text-yellow-600 px-6 py-3 rounded-lg inline-block">
+              대회 신청 준비중입니다.
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이미지 갤러리 -->
+    <% if @tournament.images.attached? && @tournament.images.count > 1 %>
+      <div class="bg-white rounded-lg shadow-lg mb-8 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📸 대회 이미지</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <% @tournament.images.each_with_index do |image, index| %>
+            <div class="relative group cursor-pointer" onclick="openImageModal('<%= url_for(image) %>')">
+              <div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                <%= image_tag image.variant(resize_to_limit: [300, 300]), 
+                              class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
+                              alt: "Tournament image #{index + 1}" %>
+              </div>
+              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg flex items-center justify-center">
+                <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                </svg>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 왼쪽: 대회 정보 -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- 대회 규정 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">📋 대회 규정</h2>
+          <div class="prose max-w-none text-gray-600">
+            <%= simple_format(@tournament.rules || "대회 규정이 준비중입니다.") %>
+          </div>
+        </div>
+        
+        <!-- 상금 정보 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">💰 상금 정보</h2>
+          <div class="space-y-3">
+            <% @tournament.prizes_array.each_with_index do |prize, index| %>
+              <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <span class="font-semibold">
+                  <%= index == 0 ? "🥇 우승" : index == 1 ? "🥈 준우승" : index == 2 ? "🥉 3위" : "#{index + 1}위" %>
+                </span>
+                <span class="text-orange-600 font-bold">
+                  <%= number_with_delimiter(prize['amount'] || 0) %>원
+                </span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 최근 경기 결과 -->
+        <% if @recent_matches.any? %>
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🏀 최근 경기 결과</h2>
+            <div class="space-y-3">
+              <% @recent_matches.each do |match| %>
+                <%= link_to tournament_match_path(@tournament, match), 
+                    class: "block border rounded-lg p-4 hover:bg-gray-50 hover:border-blue-300 transition-all" do %>
+                  <div class="flex justify-between items-center">
+                    <div class="text-center flex-1">
+                      <p class="font-semibold"><%= match.home_team&.team_name || "TBD" %></p>
+                      <p class="text-2xl font-bold text-gray-800"><%= match.home_score %></p>
+                    </div>
+                    <div class="px-4">
+                      <p class="text-gray-500">VS</p>
+                    </div>
+                    <div class="text-center flex-1">
+                      <p class="font-semibold"><%= match.away_team&.team_name || "TBD" %></p>
+                      <p class="text-2xl font-bold text-gray-800"><%= match.away_score %></p>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-500 text-center mt-2">
+                    <%= match.round_name %> | <%= match.updated_at.strftime("%m/%d %H:%M") %>
+                  </p>
+                  <p class="text-xs text-center text-blue-600 mt-2">박스스코어 보기 →</p>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- 오른쪽: 참가 팀 & 일정 -->
+      <div class="space-y-8">
+        <!-- 참가 팀 목록 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">👥 참가 팀</h2>
+          
+          <% if @approved_teams.any? %>
+            <div class="space-y-2">
+              <% @approved_teams.each_with_index do |team, index| %>
+                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                  <div class="flex items-center">
+                    <span class="text-gray-500 mr-3"><%= index + 1 %></span>
+                    <span class="font-semibold"><%= team.team_name %></span>
+                  </div>
+                  <% if team.seed_number %>
+                    <span class="text-xs bg-gray-100 px-2 py-1 rounded">시드 <%= team.seed_number %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-4">아직 승인된 팀이 없습니다.</p>
+          <% end %>
+          
+          <% if @pending_teams.any? %>
+            <div class="mt-4 pt-4 border-t">
+              <p class="text-sm text-gray-600 mb-2">승인 대기중: <%= @pending_teams.count %>팀</p>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- 다음 경기 일정 -->
+        <% if @upcoming_matches.any? %>
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📅 다음 경기 일정</h2>
+            <div class="space-y-3">
+              <% @upcoming_matches.each do |match| %>
+                <div class="border rounded p-3">
+                  <p class="text-sm font-semibold text-gray-800 mb-1">
+                    <%= match.home_team&.team_name || "TBD" %> vs <%= match.away_team&.team_name || "TBD" %>
+                  </p>
+                  <p class="text-xs text-gray-600">
+                    <%= match.scheduled_at&.strftime("%m/%d %H:%M") %> | <%= match.court_name || "미정" %>
+                  </p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 주최자 정보 -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-4">📞 문의</h2>
+          <div class="space-y-2 text-sm">
+            <p><span class="text-gray-600">주최:</span> <%= @tournament.organizer.name %></p>
+            <% if @tournament.contact_phone.present? %>
+              <p><span class="text-gray-600">전화:</span> <%= @tournament.contact_phone %></p>
+            <% end %>
+            <% if @tournament.contact_email.present? %>
+              <p><span class="text-gray-600">이메일:</span> <%= @tournament.contact_email %></p>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- 후원사 -->
+        <% if @tournament.sponsor_list.any? %>
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🤝 후원사</h2>
+            <div class="space-y-2">
+              <% @tournament.sponsor_list.each do |sponsor| %>
+                <p class="text-gray-700"><%= sponsor %></p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 이미지 모달 -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden" onclick="closeImageModal()">
+  <div class="flex items-center justify-center h-full p-4">
+    <img id="modalImage" src="" alt="Full size image" class="max-w-full max-h-full object-contain">
+    <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-75">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+function openImageModal(imageUrl) {
+  const modal = document.getElementById('imageModal');
+  const modalImage = document.getElementById('modalImage');
+  modalImage.src = imageUrl;
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  modal.classList.add('hidden');
+  document.body.style.overflow = 'auto';
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeImageModal();
+  }
+});
+</script>

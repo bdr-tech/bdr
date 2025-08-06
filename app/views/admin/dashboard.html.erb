@@ -1,0 +1,192 @@
+<% content_for :title, "BDR 관리자 대시보드" %>
+
+    <!-- 대시보드 제목 -->
+    <div class="mb-8">
+      <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">📊 대시보드</h2>
+      <p class="text-sm sm:text-base text-gray-600">BDR 플랫폼 현황을 한눈에 확인하세요</p>
+    </div>
+
+    <!-- 주요 통계 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- 사용자 통계 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-600">전체 사용자</p>
+            <p class="text-lg sm:text-xl md:text-2xl font-bold text-blue-600"><%= @stats[:total_users] %></p>
+            <p class="text-xs sm:text-sm text-gray-500">활성: <%= @stats[:active_users] %>명</p>
+          </div>
+          <div class="text-2xl sm:text-3xl">👥</div>
+        </div>
+      </div>
+
+      <!-- 경기 통계 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-600">전체 경기</p>
+            <p class="text-lg sm:text-xl md:text-2xl font-bold text-green-600"><%= @stats[:total_games] %></p>
+            <p class="text-xs sm:text-sm text-gray-500">활성: <%= @stats[:active_games] %>건</p>
+          </div>
+          <div class="text-2xl sm:text-3xl">🏀</div>
+        </div>
+      </div>
+
+      <!-- 결제 통계 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-600">오늘 매출</p>
+            <p class="text-lg sm:text-xl md:text-2xl font-bold text-purple-600"><%= number_to_currency(@stats[:today_revenue], unit: '₩', precision: 0) %></p>
+            <p class="text-xs sm:text-sm text-gray-500">이번달: <%= number_to_currency(@stats[:monthly_revenue], unit: '₩', precision: 0) %></p>
+          </div>
+          <div class="text-2xl sm:text-3xl">💰</div>
+        </div>
+      </div>
+
+      <!-- 신청 통계 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs sm:text-sm font-medium text-gray-600">경기 신청</p>
+            <p class="text-lg sm:text-xl md:text-2xl font-bold text-orange-600"><%= @stats[:total_applications] %></p>
+            <p class="text-xs sm:text-sm text-gray-500">대기: <%= @stats[:pending_applications] %>건</p>
+          </div>
+          <div class="text-2xl sm:text-3xl">📝</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 주요 지표 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- 결제 현황 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4">💳 결제 현황</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">전체 결제</span>
+            <span class="font-medium"><%= @stats[:total_payments] %>건</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">완료된 결제</span>
+            <span class="font-medium text-green-600"><%= @stats[:completed_payments] %>건</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">결제 대기</span>
+            <span class="font-medium text-orange-600"><%= @stats[:waiting_payment_applications] %>건</span>
+          </div>
+          <div class="border-t pt-3">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">완료율</span>
+              <span class="font-medium text-blue-600">
+                <%= @stats[:total_payments] > 0 ? ((@stats[:completed_payments].to_f / @stats[:total_payments]) * 100).round(1) : 0 %>%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 건의사항 내용 -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-800">📮 건의사항 내용</h3>
+          <%= link_to "전체 보기", admin_suggestions_path, class: "text-xs sm:text-sm text-blue-600 hover:text-blue-800" %>
+        </div>
+        <div class="space-y-3">
+          <% @recent_suggestions = Suggestion.active.recent.limit(5) %>
+          <% if @recent_suggestions.any? %>
+            <% @recent_suggestions.each do |suggestion| %>
+              <div class="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <p class="text-xs sm:text-sm font-medium text-gray-800"><%= suggestion.title.truncate(40) %></p>
+                    <p class="text-xs sm:text-sm text-gray-600 mt-1"><%= suggestion.content.truncate(60) %></p>
+                    <div class="flex items-center space-x-3 mt-2">
+                      <span class="text-xs text-gray-500">
+                        <strong><%= suggestion.user.nickname || suggestion.user.name %></strong>
+                      </span>
+                      <span class="text-xs text-gray-500"><%= time_ago_in_words(suggestion.created_at) %> 전</span>
+                      <span class="text-xs px-2 py-1 rounded-full <%= suggestion.status == 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' %>">
+                        <%= suggestion.status == 'pending' ? '대기중' : '검토중' %>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-gray-500 text-center py-4">접수된 건의사항이 없습니다.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이슈 및 알림 -->
+    <% if @payment_issues.any? %>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4">⚠️ 주의사항</h3>
+        <div class="space-y-3">
+          <% @payment_issues.each do |issue| %>
+            <div class="flex items-center space-x-3 p-3 rounded <%= issue[:severity] == 'high' ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200' %>">
+              <span class="text-base sm:text-lg"><%= issue[:icon] %></span>
+              <div class="flex-1">
+                <p class="text-xs sm:text-sm text-gray-800"><%= issue[:message] %></p>
+                <p class="text-xs sm:text-sm text-gray-500">우선순위: <%= issue[:severity] == 'high' ? '높음' : '보통' %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 빠른 액션 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-8">
+      <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4">🚀 빠른 액션</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <%= link_to admin_users_path, class: "bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">👥</div>
+          <div class="text-sm sm:text-base font-medium">사용자 관리</div>
+        <% end %>
+        
+        <%= link_to admin_games_path, class: "bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">🏀</div>
+          <div class="text-sm sm:text-base font-medium">경기 관리</div>
+        <% end %>
+        
+        <%= link_to admin_payments_path, class: "bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">💳</div>
+          <div class="text-sm sm:text-base font-medium">결제 관리</div>
+        <% end %>
+        
+        <%= link_to admin_applications_path, class: "bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">📝</div>
+          <div class="text-sm sm:text-base font-medium">신청 관리</div>
+        <% end %>
+        
+        <%= link_to admin_analytics_path, class: "bg-teal-500 hover:bg-teal-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">📊</div>
+          <div class="text-sm sm:text-base font-medium">분석</div>
+        <% end %>
+        
+        <%= link_to admin_reports_path, class: "bg-indigo-500 hover:bg-indigo-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">📋</div>
+          <div class="text-sm sm:text-base font-medium">리포트</div>
+        <% end %>
+        
+        <%= link_to admin_settings_path, class: "bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">⚙️</div>
+          <div class="text-sm sm:text-base font-medium">설정</div>
+        <% end %>
+        
+        <%= link_to admin_logs_path, class: "bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+          <div class="text-xl sm:text-2xl mb-2">📜</div>
+          <div class="text-sm sm:text-base font-medium">로그</div>
+        <% end %>
+      </div>
+    </div>
+<!-- 자동 새로고침 (30초마다) -->
+<script>
+  setTimeout(function() {
+    location.reload();
+  }, 30000);
+</script>

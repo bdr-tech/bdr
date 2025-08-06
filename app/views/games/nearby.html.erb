@@ -1,0 +1,348 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- 내 주변 게임 헤더 -->
+    <div class="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">📍 내 주변 게임</h1>
+          <p class="text-lg opacity-90">가까운 거리에서 진행되는 농구 게임들</p>
+          <p class="opacity-80">현재 위치 기준으로 가까운 순서대로 정렬</p>
+        </div>
+        <div class="mt-4 md:mt-0 flex space-x-3">
+          <%= link_to "📍 위치 설정", "#", class: "bg-white hover:bg-gray-100 text-green-600 px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+          <%= link_to "⚡ 빠른 매칭", quick_match_path, class: "bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 거리 및 위치 필터 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-gray-800 mb-4">🎯 거리 및 위치 설정</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 현재 위치 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">현재 위치</label>
+          <div class="flex items-center space-x-2">
+            <input type="text" value="서울시 강남구 테헤란로" 
+                   class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                   placeholder="주소를 입력하세요">
+            <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-300">
+              📍
+            </button>
+          </div>
+        </div>
+        
+        <!-- 검색 반경 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">검색 반경</label>
+          <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            <option value="2">2km 이내</option>
+            <option value="5" selected>5km 이내</option>
+            <option value="10">10km 이내</option>
+            <option value="20">20km 이내</option>
+          </select>
+        </div>
+        
+        <!-- 이동 수단 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">이동 수단</label>
+          <select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500">
+            <option value="walk">도보</option>
+            <option value="bike">자전거</option>
+            <option value="car" selected>자동차</option>
+            <option value="public">대중교통</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="mt-4 flex justify-end">
+        <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition duration-300">
+          위치 기준 검색
+        </button>
+      </div>
+    </div>
+
+    <!-- 주변 게임 통계 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-2xl font-bold text-green-500 mb-2"><%= @games.count %></div>
+        <div class="text-gray-600 text-sm">주변 게임</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-2xl font-bold text-blue-500 mb-2">
+          <%= @games.select { |g| g.players.count < g.max_players }.count %>
+        </div>
+        <div class="text-gray-600 text-sm">참가 가능</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-2xl font-bold text-orange-500 mb-2">2.3km</div>
+        <div class="text-gray-600 text-sm">평균 거리</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-2xl font-bold text-purple-500 mb-2">15분</div>
+        <div class="text-gray-600 text-sm">평균 이동시간</div>
+      </div>
+    </div>
+
+    <!-- 거리별 게임 목록 -->
+    <% 
+      # 실제로는 GPS 좌표로 계산해야 하지만, 샘플 데이터로 시뮬레이션
+      games_with_distance = @games.map.with_index do |game, index|
+        distance = (index + 1) * 0.8 + rand(0.5) # 0.8km~5km 사이 랜덤
+        travel_time = case index % 4
+                     when 0 then "도보 #{(distance * 12).round}분"
+                     when 1 then "자전거 #{(distance * 4).round}분" 
+                     when 2 then "자동차 #{(distance * 2).round}분"
+                     else "대중교통 #{(distance * 5).round}분"
+                     end
+        [game, distance.round(1), travel_time]
+      end.sort_by { |_, distance, _| distance }
+      
+      close_games = games_with_distance.select { |_, distance, _| distance <= 2 }
+      medium_games = games_with_distance.select { |_, distance, _| distance > 2 && distance <= 5 }
+      far_games = games_with_distance.select { |_, distance, _| distance > 5 }
+    %>
+
+    <% if games_with_distance.any? %>
+      <!-- 가까운 게임 (2km 이내) -->
+      <% if close_games.any? %>
+        <div class="mb-8">
+          <div class="flex items-center mb-4">
+            <div class="bg-green-100 p-3 rounded-full mr-4">
+              <span class="text-green-600 text-xl">🚶‍♂️</span>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">가까운 게임 (2km 이내)</h2>
+            <span class="ml-3 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+              <%= close_games.count %>개
+            </span>
+          </div>
+          
+          <div class="space-y-4">
+            <% close_games.each do |game, distance, travel_time| %>
+              <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h3 class="text-lg font-bold text-gray-800 mr-3"><%= game.court.name %></h3>
+                      <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        <%= distance %>km
+                      </span>
+                      <% if game.players.count < game.max_players %>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold ml-2">참가가능</span>
+                      <% end %>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                      <div class="flex items-center">
+                        <span class="w-5 text-orange-500">📍</span>
+                        <span><%= game.court.address %></span>
+                      </div>
+                      
+                      <div class="flex items-center">
+                        <span class="w-5 text-blue-500">⏰</span>
+                        <span><%= game.scheduled_at.strftime("%m/%d %H:%M") %></span>
+                      </div>
+                      
+                      <div class="flex items-center">
+                        <span class="w-5 text-green-500">🚶‍♂️</span>
+                        <span><%= travel_time %></span>
+                      </div>
+                      
+                      <div class="flex items-center">
+                        <span class="w-5 text-purple-500">👥</span>
+                        <span><%= game.players.count %>/<%= game.max_players %>명</span>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600">
+                      <span class="w-5 text-gray-500">👤</span>
+                      <span>주최자: <%= game.organizer&.name || '관리자' %></span>
+                      <span class="mx-2">•</span>
+                      <span>🏟️ <%= game.court.court_type == 'indoor' ? '실내' : '실외' %></span>
+                    </div>
+                  </div>
+                  
+                  <div class="ml-6 flex flex-col space-y-2">
+                    <% if logged_in? %>
+                      <%= link_to "상세보기", game_path(game), class: "bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-300" %>
+                      
+                      <% if game.players.count < game.max_players %>
+                        <%= link_to "⚡ 참가", quick_join_path(game), class: "bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-300" %>
+                      <% else %>
+                        <button disabled class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-center text-sm cursor-not-allowed">
+                          정원마감
+                        </button>
+                      <% end %>
+                    <% else %>
+                      <%= link_to "로그인", login_path, class: "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-center text-sm transition duration-300" %>
+                      
+                      <span class="bg-gray-300 text-gray-500 px-4 py-2 rounded-lg text-center text-sm">
+                        로그인 필요
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- 보통 거리 게임 (2-5km) -->
+      <% if medium_games.any? %>
+        <div class="mb-8">
+          <div class="flex items-center mb-4">
+            <div class="bg-blue-100 p-3 rounded-full mr-4">
+              <span class="text-blue-600 text-xl">🚴‍♂️</span>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">보통 거리 (2-5km)</h2>
+            <span class="ml-3 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+              <%= medium_games.count %>개
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <% medium_games.each do |game, distance, travel_time| %>
+              <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+                <div class="flex justify-between items-start mb-4">
+                  <div>
+                    <div class="flex items-center mb-2">
+                      <h3 class="text-lg font-bold text-gray-800 mr-3"><%= game.court.name %></h3>
+                      <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        <%= distance %>km
+                      </span>
+                    </div>
+                    <p class="text-sm text-gray-600"><%= game.court.address %></p>
+                  </div>
+                  
+                  <% if game.players.count < game.max_players %>
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">참가가능</span>
+                  <% end %>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+                  <div class="flex items-center">
+                    <span class="w-4 text-blue-500">⏰</span>
+                    <span class="ml-2"><%= game.scheduled_at.strftime("%H:%M") %></span>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <span class="w-4 text-green-500">👥</span>
+                    <span class="ml-2"><%= game.players.count %>/<%= game.max_players %>명</span>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <span class="w-4 text-purple-500">🚴‍♂️</span>
+                    <span class="ml-2"><%= travel_time %></span>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <span class="w-4 text-gray-500">🏟️</span>
+                    <span class="ml-2"><%= game.court.court_type == 'indoor' ? '실내' : '실외' %></span>
+                  </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                  <% if logged_in? %>
+                    <%= link_to "상세보기", game_path(game), class: "flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+                    
+                    <% if game.players.count < game.max_players %>
+                      <%= link_to "참가", quick_join_path(game), class: "flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+                    <% else %>
+                      <button disabled class="flex-1 bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-center text-sm cursor-not-allowed">
+                        정원마감
+                      </button>
+                    <% end %>
+                  <% else %>
+                    <%= link_to "로그인", login_path, class: "flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+                    
+                    <span class="flex-1 bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-center text-sm">
+                      로그인 필요
+                    </span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- 먼 거리 게임 (5km 이상) -->
+      <% if far_games.any? %>
+        <div class="mb-8">
+          <div class="flex items-center mb-4">
+            <div class="bg-gray-100 p-3 rounded-full mr-4">
+              <span class="text-gray-600 text-xl">🚗</span>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800">먼 거리 (5km 이상)</h2>
+            <span class="ml-3 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
+              <%= far_games.count %>개
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <% far_games.each do |game, distance, travel_time| %>
+              <%= render partial: 'game_card', locals: { game: game } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+    <% else %>
+      <!-- 주변에 게임이 없을 때 -->
+      <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <div class="text-6xl mb-4">📍</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">주변에 게임이 없습니다</h3>
+        <p class="text-gray-600 mb-6">검색 반경을 늘리거나 새로운 게임을 만들어보세요</p>
+        
+        <div class="space-x-4">
+          <%= link_to "검색 반경 늘리기", "#", class: "bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition duration-300" %>
+          <%= link_to "새 게임 만들기", new_game_path, class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition duration-300" %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 위치 기반 추천 -->
+    <div class="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg shadow-lg p-8 mt-8">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold mb-4">🎯 맞춤 추천</h2>
+        <p class="mb-6 opacity-90">AI가 당신의 위치와 선호도를 바탕으로 추천하는 게임</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+            <div class="text-lg font-bold mb-2">가장 가까운 게임</div>
+            <% if games_with_distance.any? %>
+              <% closest_game, closest_distance, _ = games_with_distance.first %>
+              <div><%= closest_game.court.name %></div>
+              <div class="opacity-80"><%= closest_distance %>km 거리</div>
+            <% else %>
+              <div>게임 없음</div>
+            <% end %>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+            <div class="text-lg font-bold mb-2">곧 시작하는 게임</div>
+            <% next_game = @games.select { |g| g.scheduled_at > Time.current }.min_by(&:scheduled_at) %>
+            <% if next_game %>
+              <div><%= next_game.court.name %></div>
+              <div class="opacity-80"><%= time_ago_in_words(next_game.scheduled_at) %> 후</div>
+            <% else %>
+              <div>게임 없음</div>
+            <% end %>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+            <div class="text-lg font-bold mb-2">참가 가능한 게임</div>
+            <% available_games = @games.select { |g| g.players.count < g.max_players } %>
+            <div><%= available_games.count %>개</div>
+            <div class="opacity-80">전체 <%= @games.count %>개 중</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

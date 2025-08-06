@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #FF6B6B; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 5px 5px; }
+      .game-info { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+      .applicant-info { background-color: #e3f2fd; padding: 15px; margin: 20px 0; border-radius: 5px; }
+      .button { display: inline-block; padding: 12px 30px; background-color: #FF6B6B; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+      .info-row { margin: 10px 0; }
+      .label { font-weight: bold; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>새로운 경기 참가 신청</h1>
+      </div>
+      
+      <div class="content">
+        <h2>안녕하세요, <%= @host.nickname || @host.name %>님!</h2>
+        
+        <p><strong><%= @applicant.nickname || @applicant.name %></strong>님이 회원님의 경기에 참가 신청했습니다.</p>
+        
+        <div class="game-info">
+          <h3>경기 정보</h3>
+          <div class="info-row">
+            <span class="label">경기명:</span> <%= @game.title %>
+          </div>
+          <div class="info-row">
+            <span class="label">일시:</span> <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+          <div class="info-row">
+            <span class="label">장소:</span> <%= @game.venue_name %> (<%= @game.city %> <%= @game.district %>)
+          </div>
+          <div class="info-row">
+            <span class="label">참가비:</span> <%= number_to_currency(@game.fee, unit: "₩", precision: 0) %>
+          </div>
+        </div>
+        
+        <div class="applicant-info">
+          <h3>신청자 정보</h3>
+          <div class="info-row">
+            <span class="label">이름:</span> <%= @applicant.nickname || @applicant.name %>
+          </div>
+          <div class="info-row">
+            <span class="label">레벨:</span> <%= @applicant.level %> 레벨
+          </div>
+          <div class="info-row">
+            <span class="label">포지션:</span> <%= @applicant.position %>
+          </div>
+          <% if @applicant.play_style&.description.present? %>
+          <div class="info-row">
+            <span class="label">플레이 스타일:</span> <%= @applicant.play_style.description %>
+          </div>
+          <% end %>
+          <div class="info-row">
+            <span class="label">신청 시간:</span> <%= @game_application.applied_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <%= link_to "참가 신청 관리하기", game_url(@game), class: "button" %>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">
+          * 이 이메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.<br>
+          * 참가 신청을 승인하거나 거절하려면 위 버튼을 클릭하세요.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

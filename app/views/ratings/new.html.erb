@@ -1,0 +1,106 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">경기 평가하기</h1>
+    
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+      <h3 class="font-semibold text-gray-700 mb-2">경기 정보</h3>
+      <p class="text-sm text-gray-600">
+        <span class="font-medium">경기 ID:</span> <%= @game.game_id %><br>
+        <span class="font-medium">일시:</span> <%= @game.start_time.strftime('%Y년 %m월 %d일 %H:%M') %><br>
+        <span class="font-medium">장소:</span> <%= @game.venue_name %>
+      </p>
+    </div>
+
+    <%= form_with url: game_ratings_path(@game), method: :post, local: true do |form| %>
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      
+      <div class="space-y-6">
+        <% if @host && !@existing_ratings.include?(@host.id) %>
+          <div class="border rounded-lg p-4">
+            <h3 class="font-semibold text-gray-700 mb-3">
+              호스트 평가: <%= @host.display_name %>
+              <span class="text-sm text-gray-500 ml-2">(주최자)</span>
+            </h3>
+            
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-2">평점</label>
+              <div class="flex space-x-2">
+                <% (1..5).each do |i| %>
+                  <label class="cursor-pointer">
+                    <%= radio_button_tag "rating[ratings][#{@host.id}][rating]", i, false, 
+                        class: "sr-only peer", 
+                        required: true %>
+                    <span class="block w-12 h-12 rounded-full border-2 peer-checked:bg-yellow-400 peer-checked:border-yellow-500 hover:bg-yellow-100 transition-colors flex items-center justify-center">
+                      <%= i %>
+                    </span>
+                  </label>
+                <% end %>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">코멘트 (선택)</label>
+              <%= text_area_tag "rating[ratings][#{@host.id}][comment]", nil, 
+                  class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500", 
+                  rows: 2,
+                  placeholder: "호스트의 운영에 대한 평가를 남겨주세요" %>
+            </div>
+          </div>
+        <% end %>
+
+        <% @participants.each do |participant| %>
+          <% next if @existing_ratings.include?(participant.id) %>
+          <div class="border rounded-lg p-4">
+            <h3 class="font-semibold text-gray-700 mb-3">
+              <%= participant.display_name %>
+              <% if participant.premium? %>
+                <span class="ml-2 px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700">
+                  <%= participant.membership_badge_text %>
+                </span>
+              <% end %>
+            </h3>
+            
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-2">평점</label>
+              <div class="flex space-x-2">
+                <% (1..5).each do |i| %>
+                  <label class="cursor-pointer">
+                    <%= radio_button_tag "rating[ratings][#{participant.id}][rating]", i, false, 
+                        class: "sr-only peer" %>
+                    <span class="block w-12 h-12 rounded-full border-2 peer-checked:bg-yellow-400 peer-checked:border-yellow-500 hover:bg-yellow-100 transition-colors flex items-center justify-center">
+                      <%= i %>
+                    </span>
+                  </label>
+                <% end %>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">필수 입력 (평가하지 않으려면 비워두세요)</p>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">코멘트 (선택)</label>
+              <%= text_area_tag "rating[ratings][#{participant.id}][comment]", nil, 
+                  class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500", 
+                  rows: 2,
+                  placeholder: "플레이 스타일, 매너 등에 대한 평가를 남겨주세요" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-8 flex justify-between items-center">
+        <%= link_to "취소", game_path(@game), class: "text-gray-600 hover:text-gray-800" %>
+        <%= submit_tag "평가 완료", class: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300" %>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+    <h4 class="font-semibold text-gray-700 mb-2">평가 안내</h4>
+    <ul class="text-sm text-gray-600 space-y-1">
+      <li>• 평가는 경기 종료 후 7일 이내에 가능합니다</li>
+      <li>• 공정하고 객관적인 평가를 부탁드립니다</li>
+      <li>• 평가를 완료하면 10 포인트가 지급됩니다</li>
+      <li>• 한 번 제출한 평가는 수정할 수 없습니다</li>
+    </ul>
+  </div>
+</div>

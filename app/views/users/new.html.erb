@@ -1,0 +1,108 @@
+<% content_for :title, "회원가입 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <div class="mx-auto h-12 w-12 text-center text-4xl">🏀</div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        BDR 회원가입
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        농구 경기를 찾고 참가하세요
+      </p>
+    </div>
+    
+    <%= form_with model: @user, url: signup_path, local: true, class: "mt-8 space-y-6" do |form| %>
+      <% if @user && @user.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-md p-4">
+          <h3 class="text-sm font-medium text-red-800">다음 오류를 확인해주세요:</h3>
+          <ul class="mt-2 text-sm text-red-700">
+            <% @user.errors.full_messages.each do |message| %>
+              <li>• <%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="space-y-4">
+        <div>
+          <%= form.label :name, "이름", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.text_field :name, required: true, 
+                class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm",
+                placeholder: "이름을 입력하세요" %>
+        </div>
+
+        <div>
+          <%= form.label :email, "이메일", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.email_field :email, required: true, 
+                class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm",
+                placeholder: "이메일을 입력하세요" %>
+        </div>
+
+        <div>
+          <%= form.label :phone, "전화번호", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.telephone_field :phone, required: true, 
+                class: "mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm",
+                placeholder: "010-1234-5678" %>
+        </div>
+
+        <div>
+          <%= form.label :position, "포지션", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.select :position, 
+                options_for_select([
+                  ["포지션을 선택하세요", ""],
+                  ["포인트 가드 (PG)", "PG"],
+                  ["슈팅 가드 (SG)", "SG"],
+                  ["스몰 포워드 (SF)", "SF"],
+                  ["파워 포워드 (PF)", "PF"],
+                  ["센터 (C)", "C"],
+                  ["올라운더", "ALL"]
+                ]),
+                { prompt: "포지션을 선택하세요" },
+                class: "mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= form.label :skill_level, "실력 수준", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.select :skill_level, 
+                options_for_select([
+                  ["실력을 선택하세요", ""],
+                  ["입문자", "beginner"],
+                  ["초급자", "elementary"],
+                  ["중급자", "intermediate"],
+                  ["상급자", "advanced"],
+                  ["전문가", "expert"]
+                ]),
+                { prompt: "실력을 선택하세요" },
+                class: "mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+        </div>
+
+        <div>
+          <%= form.label :bio, "자기소개", class: "block text-sm font-medium text-gray-700" %>
+          <%= form.text_area :bio, rows: 3,
+                class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                placeholder: "간단한 자기소개를 입력하세요 (선택사항)" %>
+        </div>
+      </div>
+
+      <div class="flex items-center">
+        <%= form.check_box :terms_agreed, class: "h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded" %>
+        <%= form.label :terms_agreed, class: "ml-2 block text-sm text-gray-900" do %>
+          <a href="#" class="text-orange-600 hover:text-orange-500">이용약관</a> 및 
+          <a href="#" class="text-orange-600 hover:text-orange-500">개인정보처리방침</a>에 동의합니다
+        <% end %>
+      </div>
+
+      <div>
+        <%= form.submit "회원가입", class: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500" %>
+      </div>
+    <% end %>
+    
+    <div class="text-center">
+      <p class="text-sm text-gray-600">
+        이미 계정이 있으신가요?
+        <%= link_to "로그인", login_path, class: "font-medium text-orange-600 hover:text-orange-500" %>
+      </p>
+    </div>
+  </div>
+</div>

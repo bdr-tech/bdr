@@ -1,0 +1,135 @@
+<% content_for :title, "전체 게시글 - BDR 커뮤니티" %>
+
+<div class="min-h-screen bg-gray-50">
+  <!-- 헤더 영역 -->
+  <div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="relative py-6">
+        <!-- 뒤로가기 버튼 -->
+        <div class="absolute left-0 top-1/2 transform -translate-y-1/2">
+          <%= link_to community_path, class: "text-gray-600 hover:text-gray-800 transition duration-300 flex items-center" do %>
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            <span>뒤로</span>
+          <% end %>
+        </div>
+        
+        <!-- 중앙 제목 -->
+        <div class="text-center">
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center justify-center">
+            📋
+            <span class="ml-2">전체 게시글</span>
+          </h1>
+          <p class="text-gray-600 mt-1 text-sm">모든 카테고리의 게시글을 확인하세요</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- 카테고리 필터 -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="flex flex-wrap gap-2">
+        <%= link_to "전체", posts_path, 
+              class: "px-4 py-2 rounded-lg transition duration-300 #{'bg-orange-500 text-white' if params[:category].blank?} #{'bg-gray-100 text-gray-700 hover:bg-gray-200' unless params[:category].blank?}" %>
+        <% Post::CATEGORIES.each do |category, description| %>
+          <%= link_to posts_path(category: category), 
+                class: "px-4 py-2 rounded-lg transition duration-300 inline-flex items-center #{'bg-orange-500 text-white' if params[:category] == category} #{'bg-gray-100 text-gray-700 hover:bg-gray-200' unless params[:category] == category}" do %>
+            <span class="mr-1"><%= Post.new(category: category).category_icon %></span>
+            <%= category %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 게시글 목록 -->
+    <div class="space-y-4">
+      <% if @posts.any? %>
+        <% @posts.each do |post| %>
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <%= link_to post_path(post), class: "block p-6" do %>
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <!-- 제목 -->
+                  <h3 class="text-lg font-semibold text-gray-800 hover:text-orange-600 transition duration-300 mb-2">
+                    <span class="mr-2"><%= post.category_icon %></span>
+                    <%= post.title %>
+                    <% if post.comments_count > 0 %>
+                      <span class="text-orange-500 text-sm ml-1 font-normal">[<%= post.comments_count %>]</span>
+                    <% end %>
+                  </h3>
+                  
+                  <!-- 내용 미리보기 -->
+                  <p class="text-gray-600 text-sm line-clamp-2 mb-3">
+                    <%= truncate(strip_tags(post.content), length: 150) %>
+                  </p>
+                  
+                  <!-- 메타 정보 -->
+                  <div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                    <div class="flex items-center">
+                      <span class="w-6 h-6 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xs mr-2">
+                        <%= post.user.nickname&.first || post.user.name&.first || 'U' %>
+                      </span>
+                      <span><%= post.user.nickname || post.user.name %></span>
+                    </div>
+                    <span class="text-gray-300">•</span>
+                    <span><%= time_ago_in_words(post.created_at) %>전</span>
+                    <span class="text-gray-300">•</span>
+                    <span>조회 <%= post.views_count %></span>
+                    <span class="text-gray-300">•</span>
+                    <span class="text-orange-600 font-medium"><%= post.category %></span>
+                    <% if post.has_images? %>
+                      <span class="text-gray-300">•</span>
+                      <span class="flex items-center">
+                        <svg class="w-4 h-4 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                        </svg>
+                        <span><%= post.image_count %></span>
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+                
+                <!-- 이미지 썸네일 -->
+                <% if post.has_images? %>
+                  <div class="ml-4 flex-shrink-0">
+                    <div class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% else %>
+        <!-- 게시글이 없을 때 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-16">
+          <div class="text-center">
+            <div class="text-6xl mb-4">📝</div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 게시글이 없습니다</h3>
+            <p class="text-gray-600 mb-6">첫 번째 게시글을 작성해보세요!</p>
+            <% if logged_in? %>
+              <%= link_to "첫 게시글 작성하기", new_post_path, class: "inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition duration-300" %>
+            <% else %>
+              <%= link_to "로그인하여 글 작성하기", login_path, class: "inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition duration-300" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Floating 글작성 버튼 -->
+  <% if logged_in? %>
+    <%= link_to new_post_path, class: "fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110" do %>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+    <% end %>
+  <% end %>
+</div>

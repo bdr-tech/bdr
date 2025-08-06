@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>활동 기록 - BDR</title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  <%= javascript_importmap_tags %>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- 페이지 헤더 -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-800">
+          <%= @user.nickname || @user.name %>님의 활동 기록
+        </h1>
+        <%= link_to "← 프로필로 돌아가기", profile_path, class: "text-blue-600 hover:text-blue-800 transition duration-300" %>
+      </div>
+    </div>
+
+    <!-- 통계 요약 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="text-3xl font-bold text-blue-600 mb-2"><%= @organized_games.count %></div>
+        <div class="text-gray-600">주최한 경기</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="text-3xl font-bold text-green-600 mb-2"><%= @applications.count %></div>
+        <div class="text-gray-600">참가 신청</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="text-3xl font-bold text-orange-600 mb-2">
+          <%= @applications.where(status: 'final_approved').count %>
+        </div>
+        <div class="text-gray-600">참가 완료</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="text-3xl font-bold text-purple-600 mb-2">
+          <%= @user.average_rating.round(1) %>
+        </div>
+        <div class="text-gray-600">평균 평점</div>
+      </div>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="mb-6">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+          <button onclick="showTab('organized')" id="organized-tab" class="tab-button active py-2 px-1 border-b-2 border-orange-500 font-medium text-sm text-orange-600">
+            주최한 경기
+          </button>
+          <button onclick="showTab('participated')" id="participated-tab" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            참가한 경기
+          </button>
+          <button onclick="showTab('applications')" id="applications-tab" class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            신청 내역
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- 주최한 경기 -->
+    <div id="organized-content" class="tab-content">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">주최한 경기 목록</h2>
+        <% if @organized_games.any? %>
+          <div class="space-y-4">
+            <% @organized_games.each do |game| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-300">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h4 class="font-semibold text-gray-800 mr-3">
+                        <%= link_to game.title, game_path(game), class: "hover:text-orange-600 transition duration-300" %>
+                      </h4>
+                      <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        <%= game.game_type %>
+                      </span>
+                      <% if game.status == 'completed' %>
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold ml-2">
+                          완료
+                        </span>
+                      <% elsif game.status == 'cancelled' %>
+                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-semibold ml-2">
+                          취소됨
+                        </span>
+                      <% end %>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm text-gray-600">
+                      <div class="flex items-center">
+                        <span class="text-orange-500 mr-1">📍</span>
+                        <span><%= game.court&.name || game.venue_name %></span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-blue-500 mr-1">📅</span>
+                        <span><%= game.scheduled_at.strftime("%Y년 %m월 %d일") %></span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-green-500 mr-1">👥</span>
+                        <span><%= game.confirmed_players_count %>/<%= game.max_players %>명</span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-purple-500 mr-1">💰</span>
+                        <span>
+                          <% if game.fee > 0 %>
+                            수익: <%= number_to_currency(game.expected_host_revenue, unit: '', precision: 0) %>원
+                          <% else %>
+                            무료
+                          <% end %>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">주최한 경기가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 참가한 경기 -->
+    <div id="participated-content" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">참가한 경기 목록</h2>
+        <% participated_games = @applications.where(status: 'final_approved').includes(:game).map(&:game).compact.uniq %>
+        <% if participated_games.any? %>
+          <div class="space-y-4">
+            <% participated_games.each do |game| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-300">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h4 class="font-semibold text-gray-800 mr-3">
+                        <%= link_to game.title, game_path(game), class: "hover:text-orange-600 transition duration-300" %>
+                      </h4>
+                      <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        <%= game.game_type %>
+                      </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm text-gray-600">
+                      <div class="flex items-center">
+                        <span class="text-orange-500 mr-1">📍</span>
+                        <span><%= game.court&.name || game.venue_name %></span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-blue-500 mr-1">📅</span>
+                        <span><%= game.scheduled_at.strftime("%Y년 %m월 %d일") %></span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-green-500 mr-1">🏀</span>
+                        <span>주최자: <%= game.organizer.nickname || game.organizer.name %></span>
+                      </div>
+                      <div class="flex items-center">
+                        <span class="text-purple-500 mr-1">💵</span>
+                        <span><%= game.fee_display %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">참가한 경기가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 신청 내역 -->
+    <div id="applications-content" class="tab-content hidden">
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">경기 신청 내역</h2>
+        <% valid_applications = @applications.select { |app| app.game.present? } %>
+        <% if valid_applications.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">경기명</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">날짜</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">장소</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">신청일</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <% @applications.each do |application| %>
+                  <% next unless application.game.present? %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <%= link_to application.game.title, game_path(application.game), 
+                          class: "text-blue-600 hover:text-blue-800 font-medium" %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <%= application.game.scheduled_at.strftime("%Y-%m-%d") %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <%= application.game.venue_name %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        <%= case application.status
+                            when 'pending' then 'bg-yellow-100 text-yellow-800'
+                            when 'waiting_payment' then 'bg-orange-100 text-orange-800'
+                            when 'final_approved' then 'bg-green-100 text-green-800'
+                            when 'rejected' then 'bg-red-100 text-red-800'
+                            end %>">
+                        <%= case application.status
+                            when 'pending' then '대기중'
+                            when 'waiting_payment' then '입금대기'
+                            when 'final_approved' then '참가확정'
+                            when 'rejected' then '거절됨'
+                            end %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <%= application.created_at.strftime("%Y-%m-%d") %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">신청 내역이 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabName) {
+      // 모든 탭 컨텐츠 숨기기
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // 모든 탭 버튼 스타일 초기화
+      document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-orange-500', 'text-orange-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+      });
+      
+      // 선택된 탭 컨텐츠 표시
+      document.getElementById(tabName + '-content').classList.remove('hidden');
+      
+      // 선택된 탭 버튼 스타일 적용
+      const selectedButton = document.getElementById(tabName + '-tab');
+      selectedButton.classList.remove('border-transparent', 'text-gray-500');
+      selectedButton.classList.add('border-orange-500', 'text-orange-600');
+    }
+  </script>
+</body>
+</html>

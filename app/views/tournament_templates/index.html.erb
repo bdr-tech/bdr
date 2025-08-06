@@ -1,0 +1,76 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <h1 class="text-3xl font-bold text-gray-900">대회 템플릿</h1>
+      <p class="text-gray-600 mt-2">자주 사용하는 대회 설정을 템플릿으로 저장하고 재사용하세요.</p>
+    </div>
+
+    <!-- Preset Templates -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">프리셋 템플릿</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <% @preset_templates&.each do |template| %>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition">
+            <h3 class="font-semibold text-lg mb-2"><%= template.name %></h3>
+            <p class="text-gray-600 text-sm mb-4"><%= template.preset_type&.humanize %></p>
+            <div class="flex space-x-2">
+              <%= button_to "사용하기", 
+                            use_tournament_template_path(template),
+                            method: :post,
+                            class: "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Public Templates -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">인기 템플릿</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <% @public_templates&.each do |template| %>
+          <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition">
+            <h3 class="font-semibold text-lg mb-2"><%= template.name %></h3>
+            <p class="text-gray-600 text-sm mb-2"><%= template.description %></p>
+            <p class="text-gray-500 text-xs mb-4">사용 횟수: <%= template.usage_count %></p>
+            <div class="flex space-x-2">
+              <%= button_to "사용하기", 
+                            use_tournament_template_path(template),
+                            method: :post,
+                            class: "bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600" %>
+              <%= button_to "복사하기", 
+                            duplicate_tournament_template_path(template),
+                            method: :post,
+                            class: "bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- My Templates -->
+    <% if @my_templates&.any? %>
+      <div>
+        <h2 class="text-xl font-semibold mb-4">내 템플릿</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% @my_templates.each do |template| %>
+            <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition">
+              <h3 class="font-semibold text-lg mb-2"><%= template.name %></h3>
+              <p class="text-gray-600 text-sm mb-2"><%= template.description %></p>
+              <p class="text-gray-500 text-xs mb-4">
+                <%= template.is_public? ? "공개" : "비공개" %> | 
+                사용 횟수: <%= template.usage_count %>
+              </p>
+              <div class="flex space-x-2">
+                <%= button_to "사용하기", 
+                              use_tournament_template_path(template),
+                              method: :post,
+                              class: "bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,116 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 코트 이미지 갤러리 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="aspect-w-16 aspect-h-9">
+          <%= image_tag @outdoor_court.image1, class: "w-full h-64 object-cover rounded-lg", alt: "#{@outdoor_court.title} 사진 1" %>
+        </div>
+        <div class="aspect-w-16 aspect-h-9">
+          <%= image_tag @outdoor_court.image2, class: "w-full h-64 object-cover rounded-lg", alt: "#{@outdoor_court.title} 사진 2" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 코트 정보 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= @outdoor_court.title %></h1>
+          <p class="text-gray-600 text-lg">📍 <%= @outdoor_court.address %></p>
+        </div>
+        
+        <% if @outdoor_court.user == current_user %>
+          <div class="flex space-x-2">
+            <%= link_to "수정", edit_outdoor_court_path(@outdoor_court), 
+                class: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+            <%= link_to "삭제", outdoor_court_path(@outdoor_court), 
+                data: { 
+                  turbo_method: :delete, 
+                  turbo_confirm: "정말 삭제하시겠습니까?" 
+                },
+                class: "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+          </div>
+        <% end %>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div class="flex items-center text-gray-600">
+          <span class="font-semibold mr-2">등록자:</span>
+          <%= @outdoor_court.user.nickname || @outdoor_court.user.name %>
+        </div>
+        <div class="flex items-center text-gray-600">
+          <span class="font-semibold mr-2">등록일:</span>
+          <%= @outdoor_court.created_at.strftime("%Y년 %m월 %d일") %>
+        </div>
+        <% if @distance %>
+          <div class="flex items-center text-gray-600">
+            <span class="font-semibold mr-2">현재 위치에서:</span>
+            <%= @distance %> km
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 위치 정보 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">📍 위치 정보</h2>
+      
+      <!-- 지도 표시 영역 -->
+      <div id="map" class="w-full h-64 bg-gray-200 rounded-lg mb-4">
+        <div class="flex items-center justify-center h-full text-gray-500">
+          <div class="text-center">
+            <p class="mb-2">🗺️</p>
+            <p>위도: <%= @outdoor_court.latitude %></p>
+            <p>경도: <%= @outdoor_court.longitude %></p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <a href="https://map.naver.com/v5/search/<%= CGI.escape(@outdoor_court.address) %>" 
+           target="_blank"
+           class="bg-green-500 hover:bg-green-600 text-white text-center py-2 rounded-lg transition duration-300">
+          네이버 지도로 보기
+        </a>
+        <a href="https://map.kakao.com/?q=<%= CGI.escape(@outdoor_court.address) %>" 
+           target="_blank"
+           class="bg-yellow-500 hover:bg-yellow-600 text-white text-center py-2 rounded-lg transition duration-300">
+          카카오맵으로 보기
+        </a>
+        <a href="<%= @outdoor_court.google_maps_url %>" 
+           target="_blank"
+           class="bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded-lg transition duration-300">
+          구글맵으로 보기
+        </a>
+      </div>
+    </div>
+
+    <!-- 이 코트에서 경기 만들기 -->
+    <div class="bg-orange-50 rounded-lg p-6 text-center mb-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">이 코트에서 경기를 주최하시겠습니까?</h3>
+      <p class="text-gray-600 mb-4">픽업게임이나 게스트 모집 경기를 만들어보세요!</p>
+      <%= link_to "경기 만들기", new_game_path(outdoor_court_id: @outdoor_court.id), 
+          class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300 inline-block" %>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div class="text-center">
+      <%= link_to "← 실외 코트 목록으로", outdoor_courts_path, 
+          class: "text-gray-600 hover:text-gray-800 transition duration-300" %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // GPS 위치 기반 거리 표시
+  if (navigator.geolocation && !<%= @distance.present? %>) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      // 페이지 새로고침하여 거리 표시
+      window.location.href = window.location.pathname + '?lat=' + lat + '&lng=' + lng;
+    });
+  }
+</script>

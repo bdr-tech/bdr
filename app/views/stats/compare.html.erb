@@ -1,0 +1,269 @@
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 text-center mb-2">선수 비교</h1>
+    <p class="text-gray-600 text-center">프리미엄 회원 간 상세 통계 비교</p>
+  </div>
+
+  <!-- Players Info -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <!-- User 1 -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+          <span class="text-2xl">👤</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900"><%= @user.nickname || @user.name %></h2>
+          <p class="text-gray-600"><%= @user.position_names.join(", ") %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User 2 -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <div class="flex items-center space-x-4 mb-4">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+          <span class="text-2xl">👤</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900"><%= @compare_user.nickname || @compare_user.name %></h2>
+          <p class="text-gray-600"><%= @compare_user.position_names.join(", ") %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Head to Head -->
+  <% if @head_to_head[:games_played] > 0 %>
+    <div class="bg-gradient-to-r from-blue-50 to-red-50 rounded-lg p-6 mb-8">
+      <h3 class="text-lg font-bold text-gray-900 text-center mb-4">맞대결 기록</h3>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p class="text-2xl font-bold text-blue-600"><%= @head_to_head[:user1_wins] %></p>
+          <p class="text-sm text-gray-600">승리</p>
+        </div>
+        <div>
+          <p class="text-lg font-semibold text-gray-700"><%= @head_to_head[:games_played] %></p>
+          <p class="text-sm text-gray-600">총 경기</p>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-red-600"><%= @head_to_head[:user2_wins] %></p>
+          <p class="text-sm text-gray-600">승리</p>
+        </div>
+      </div>
+      <div class="mt-4 text-center text-sm text-gray-600">
+        맞대결 평균: 
+        <span class="font-semibold text-blue-600"><%= @head_to_head[:user1_avg_points].round(1) %></span> vs 
+        <span class="font-semibold text-red-600"><%= @head_to_head[:user2_avg_points].round(1) %></span> 점
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Stats Comparison -->
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <table class="min-w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">통계</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+            <%= @user.nickname %>
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-red-50">
+            <%= @compare_user.nickname %>
+          </th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">차이</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">경기수</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-50">
+            <%= @user_stats[:games_played] %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-50">
+            <%= @compare_stats[:games_played] %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+            <%= (@user_stats[:games_played] - @compare_stats[:games_played]).abs %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">평균 득점 (PPG)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-50 <%= 'font-bold text-blue-600' if @user_stats[:points_per_game] > @compare_stats[:points_per_game] %>">
+            <%= @user_stats[:points_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-50 <%= 'font-bold text-red-600' if @compare_stats[:points_per_game] > @user_stats[:points_per_game] %>">
+            <%= @compare_stats[:points_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+            <%= (@user_stats[:points_per_game] - @compare_stats[:points_per_game]).abs.round(1) %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">평균 리바운드 (RPG)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-50 <%= 'font-bold text-blue-600' if @user_stats[:rebounds_per_game] > @compare_stats[:rebounds_per_game] %>">
+            <%= @user_stats[:rebounds_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-50 <%= 'font-bold text-red-600' if @compare_stats[:rebounds_per_game] > @user_stats[:rebounds_per_game] %>">
+            <%= @compare_stats[:rebounds_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+            <%= (@user_stats[:rebounds_per_game] - @compare_stats[:rebounds_per_game]).abs.round(1) %>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">평균 어시스트 (APG)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-50 <%= 'font-bold text-blue-600' if @user_stats[:assists_per_game] > @compare_stats[:assists_per_game] %>">
+            <%= @user_stats[:assists_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-50 <%= 'font-bold text-red-600' if @compare_stats[:assists_per_game] > @user_stats[:assists_per_game] %>">
+            <%= @compare_stats[:assists_per_game].round(1) %>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+            <%= (@user_stats[:assists_per_game] - @compare_stats[:assists_per_game]).abs.round(1) %>
+          </td>
+        </tr>
+
+        <tr class="bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">필드골 성공률 (FG%)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-100 <%= 'font-bold text-blue-600' if @user_stats[:field_goal_percentage] > @compare_stats[:field_goal_percentage] %>">
+            <%= @user_stats[:field_goal_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-100 <%= 'font-bold text-red-600' if @compare_stats[:field_goal_percentage] > @user_stats[:field_goal_percentage] %>">
+            <%= @compare_stats[:field_goal_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-gray-50">
+            <%= (@user_stats[:field_goal_percentage] - @compare_stats[:field_goal_percentage]).abs %>%
+          </td>
+        </tr>
+
+        <tr class="bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3점슛 성공률 (3P%)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-100 <%= 'font-bold text-blue-600' if @user_stats[:three_point_percentage] > @compare_stats[:three_point_percentage] %>">
+            <%= @user_stats[:three_point_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-100 <%= 'font-bold text-red-600' if @compare_stats[:three_point_percentage] > @user_stats[:three_point_percentage] %>">
+            <%= @compare_stats[:three_point_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-gray-50">
+            <%= (@user_stats[:three_point_percentage] - @compare_stats[:three_point_percentage]).abs %>%
+          </td>
+        </tr>
+
+        <tr class="bg-gray-50">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">자유투 성공률 (FT%)</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-blue-100 <%= 'font-bold text-blue-600' if @user_stats[:free_throw_percentage] > @compare_stats[:free_throw_percentage] %>">
+            <%= @user_stats[:free_throw_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-red-100 <%= 'font-bold text-red-600' if @compare_stats[:free_throw_percentage] > @user_stats[:free_throw_percentage] %>">
+            <%= @compare_stats[:free_throw_percentage] %>%
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-center bg-gray-50">
+            <%= (@user_stats[:free_throw_percentage] - @compare_stats[:free_throw_percentage]).abs %>%
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Visual Comparison Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+    <!-- Offensive Stats -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">공격 지표</h3>
+      <div class="space-y-4">
+        <div>
+          <p class="text-sm text-gray-600 mb-2">득점</p>
+          <div class="flex items-center space-x-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-full" 
+                   style="width: <%= [@user_stats[:points_per_game] / ([@user_stats[:points_per_game], @compare_stats[:points_per_game]].max.to_f) * 100, 100].min %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @user_stats[:points_per_game].round(1) %></span>
+          </div>
+          <div class="flex items-center space-x-2 mt-1">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-red-600 rounded-full" 
+                   style="width: <%= [@compare_stats[:points_per_game] / ([@user_stats[:points_per_game], @compare_stats[:points_per_game]].max.to_f) * 100, 100].min %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @compare_stats[:points_per_game].round(1) %></span>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600 mb-2">어시스트</p>
+          <div class="flex items-center space-x-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-full" 
+                   style="width: <%= [@user_stats[:assists_per_game] / ([@user_stats[:assists_per_game], @compare_stats[:assists_per_game]].max.to_f) * 100, 100].min %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @user_stats[:assists_per_game].round(1) %></span>
+          </div>
+          <div class="flex items-center space-x-2 mt-1">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-red-600 rounded-full" 
+                   style="width: <%= [@compare_stats[:assists_per_game] / ([@user_stats[:assists_per_game], @compare_stats[:assists_per_game]].max.to_f) * 100, 100].min %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @compare_stats[:assists_per_game].round(1) %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Efficiency Stats -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-900 mb-4">효율성 지표</h3>
+      <div class="space-y-4">
+        <div>
+          <p class="text-sm text-gray-600 mb-2">필드골 성공률</p>
+          <div class="flex items-center space-x-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-full" 
+                   style="width: <%= @user_stats[:field_goal_percentage] %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @user_stats[:field_goal_percentage] %>%</span>
+          </div>
+          <div class="flex items-center space-x-2 mt-1">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-red-600 rounded-full" 
+                   style="width: <%= @compare_stats[:field_goal_percentage] %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @compare_stats[:field_goal_percentage] %>%</span>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm text-gray-600 mb-2">3점슛 성공률</p>
+          <div class="flex items-center space-x-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-full" 
+                   style="width: <%= @user_stats[:three_point_percentage] %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @user_stats[:three_point_percentage] %>%</span>
+          </div>
+          <div class="flex items-center space-x-2 mt-1">
+            <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+              <div class="absolute inset-y-0 left-0 bg-red-600 rounded-full" 
+                   style="width: <%= @compare_stats[:three_point_percentage] %>%"></div>
+            </div>
+            <span class="text-sm font-medium w-12 text-right"><%= @compare_stats[:three_point_percentage] %>%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-8 text-center space-x-4">
+    <%= link_to "내 통계 보기", stats_path, 
+        class: "inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" %>
+    <%= link_to stats_path(@compare_user), 
+        class: "inline-block bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors" do %>
+      <%= @compare_user.nickname %> 통계 보기
+    <% end %>
+  </div>
+</div>

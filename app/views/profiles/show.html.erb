@@ -1,0 +1,734 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- 프로필 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
+        <!-- 프로필 이미지 -->
+        <div class="relative">
+          <div class="w-20 h-20 md:w-32 md:h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white text-2xl md:text-4xl font-bold shadow-lg">
+            <%= @user.nickname&.first&.upcase || @user.name&.first&.upcase || 'U' %>
+          </div>
+          <div class="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 bg-green-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 md:border-4 border-white flex items-center justify-center">
+            <span class="text-white text-xs">🏀</span>
+          </div>
+        </div>
+        
+        <!-- 기본 정보 -->
+        <div class="flex-1 text-center md:text-left">
+          <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= @user.nickname || @user.name || '사용자' %></h1>
+          <p class="text-gray-600 mb-2"><%= @user.position_names.join(', ') || '포지션 미설정' %> • 키 <%= @user.height || '미설정' %>cm</p>
+          <% if @user.bio.present? %>
+            <p class="text-gray-500 text-sm mb-4 italic"><%= @user.bio %></p>
+          <% end %>
+          
+          <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-6">
+            <% if @user.city && @user.district %>
+              <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
+                📍 <%= @user.city %> <%= @user.district %>
+              </span>
+            <% end %>
+            <% if @user.position_names.any? %>
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                🏀 <%= @user.position_names.first %>
+              </span>
+            <% end %>
+            <% if @user.team_name.present? %>
+              <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                🏀 <%= @user.team_name %>
+              </span>
+            <% end %>
+            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold inline-flex items-center">
+              ⭐ 평점 <%= @user.evaluation_rating_percentage %>% <span class="text-xs ml-1">(<%= @user.rating_count %>개)</span>
+            </span>
+          </div>
+          
+          <div class="flex flex-wrap justify-center md:justify-between items-end gap-3">
+            <div class="flex flex-wrap gap-3">
+              <%= link_to "프로필 수정", profile_edit_path, class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+              <%= link_to "게임 기록", profile_history_path, class: "bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+              <%= link_to "통계 보기", profile_stats_path, class: "bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+              <%= link_to "알림 설정", notification_settings_user_path(@user), class: "bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+            </div>
+            
+            <!-- 프로필 완성도 (데스크톱에서만 표시) -->
+            <div class="hidden md:block bg-gradient-to-br from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg shadow-lg">
+              <div class="text-center">
+                <div class="text-xl font-bold"><%= @profile_completion %>%</div>
+                <div class="text-xs">프로필 완성도</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 계좌 정보 (호스트용) -->
+    <% if @user.bank_name.present? && @user.account_number.present? %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">💰 호스트 계좌 정보</h2>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+              <div class="text-sm text-gray-600">은행</div>
+              <div class="font-semibold text-gray-800"><%= @user.bank_name %></div>
+            </div>
+            <div class="text-center">
+              <div class="text-sm text-gray-600">계좌번호</div>
+              <div class="font-mono font-semibold text-gray-800"><%= @user.account_number %></div>
+            </div>
+            <div class="text-center">
+              <div class="text-sm text-gray-600">예금주</div>
+              <div class="font-semibold text-gray-800"><%= @user.account_holder %></div>
+            </div>
+          </div>
+          <div class="mt-3 text-xs text-blue-600 text-center">
+            호스트로 경기 주최 시 참가비가 이 계좌로 입금됩니다
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 신청 현황 & 주최한 경기 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- 신청 현황 -->
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="mr-3">📋</span>
+          신청 현황
+        </h2>
+        
+        <% if @recent_applications.any? %>
+          <div class="space-y-4">
+            <% @recent_applications.select { |app| app.game.present? }.each do |application| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-300">
+                <div class="mb-3">
+                  <h4 class="font-semibold text-gray-800 text-base mb-1">
+                    <%= link_to application.game&.title || '경기 정보 없음', application.game ? game_path(application.game) : '#', class: "hover:text-orange-600 transition duration-300" %>
+                  </h4>
+                  <div class="text-sm text-gray-600 mb-2">
+                    📅 <%= application.applied_at.strftime("%m/%d %H:%M") %>
+                  </div>
+                  <div class="text-sm text-gray-600 mb-2">
+                    📍 <%= application.game&.court&.name || application.game&.venue_name || '장소 미정' %>
+                  </div>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                  <div class="flex flex-col space-y-1">
+                    <% if application.pending? %>
+                      <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        ⏳ 승인 대기중
+                      </span>
+                    <% elsif application.waiting_payment? %>
+                      <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        💳 입금 대기중
+                      </span>
+                      <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        ₩<%= number_with_delimiter(application.game&.fee || 0) %>
+                      </span>
+                    <% elsif application.final_approved? %>
+                      <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        ✅ 최종 승인됨
+                      </span>
+                      <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        💰 참가 확정
+                      </span>
+                    <% elsif application.rejected? %>
+                      <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">
+                        ❌ 거절됨
+                      </span>
+                    <% end %>
+                  </div>
+                  
+                  <div class="text-right">
+                    <div class="text-sm text-gray-500">
+                      <%= application.game&.confirmed_players_count || 0 %>/<%= application.game&.max_players || 0 %>명
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      <%= (application.game&.max_players || 0) - (application.game&.confirmed_players_count || 0) %>자리 남음
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 결제 카드 (waiting_payment 상태일 때만 표시) -->
+                <% if application.waiting_payment? %>
+                  <div class="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div class="flex items-center mb-2">
+                      <span class="text-orange-600 text-lg mr-2">💳</span>
+                      <span class="text-orange-800 font-semibold">결제 필요</span>
+                    </div>
+                    <div class="text-sm text-orange-700 mb-3">
+                      경기 참가가 승인되었습니다! 참가비를 결제해주세요.
+                    </div>
+                    <div class="text-lg font-bold text-gray-800 mb-3">
+                      참가비: <%= number_with_delimiter(application.game&.fee || 0) %>원
+                    </div>
+                    <button type="button" id="payment-btn-<%= application.id %>" 
+                            onclick="processPayment('<%= application.game&.game_id || '' %>', '<%= application.id %>', '<%= application.game&.fee || 0 %>', '<%= application.game&.title || '경기' %>')"
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 text-center">
+                      <span class="payment-text">💳 결제하기</span>
+                      <span class="payment-loading hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        결제 처리 중...
+                      </span>
+                    </button>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center text-gray-500 py-8">
+            <div class="text-4xl mb-3">📝</div>
+            <div class="text-lg mb-2">신청한 경기가 없습니다</div>
+            <div class="text-sm">새로운 경기에 참가해보세요!</div>
+            <%= link_to "경기 찾기", games_path, class: "inline-block mt-3 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- 주최한 경기 -->
+      <div id="hosted-games" class="bg-white rounded-lg shadow-lg p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="mr-3">🎯</span>
+          주최한 경기
+        </h2>
+        
+        <% if @organized_games.any? %>
+          <div class="space-y-4">
+            <% @organized_games.each do |game| %>
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-300">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-center mb-2">
+                      <h4 class="font-semibold text-gray-800 mr-3">
+                        <%= link_to game.title, game_path(game), class: "hover:text-orange-600 transition duration-300" %>
+                      </h4>
+                      <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        <%= game.game_type %>
+                      </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                      <div class="flex items-center">
+                        <span class="w-4 text-orange-500">📍</span>
+                        <span class="truncate"><%= game.court&.name || game.venue_name %></span>
+                      </div>
+                      
+                      <div class="flex items-center">
+                        <span class="w-4 text-blue-500">⏰</span>
+                        <span><%= game.scheduled_at.strftime("%m/%d %H:%M") %></span>
+                      </div>
+                      
+                      <div class="flex items-center">
+                        <span class="w-4 text-green-500">👥</span>
+                        <span><%= game.confirmed_players_count %>/<%= game.max_players %>명</span>
+                      </div>
+                    </div>
+                    
+                    <!-- 호스트 수익 정보 -->
+                    <% if game.fee && game.fee > 0 %>
+                      <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center justify-between text-sm">
+                          <div class="flex items-center">
+                            <span class="w-4 text-green-600">💰</span>
+                            <span class="text-green-800 font-semibold">호스트 수익</span>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-green-700">
+                              <%= game.confirmed_players_count %>명 × <%= number_with_delimiter(game.fee) %>원 = 
+                              <span class="font-bold"><%= number_with_delimiter(game.expected_host_revenue) %>원</span>
+                            </div>
+                            <div class="text-xs text-green-600 mt-1">
+                              <% if game.current_platform_fee_percentage > 0 %>
+                                (플랫폼 수수료 <%= game.current_platform_fee_percentage.to_i %>% 제외)
+                              <% end %>
+                            </div>
+                            <% if game.payment_completion_rate < 100 %>
+                              <div class="text-xs text-orange-600 mt-1">
+                                결제 완료율: <%= game.payment_completion_rate %>%
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                  
+                  <div class="text-right ml-4">
+                    <% pending_count = game.game_applications.pending.count %>
+                    <% if pending_count > 0 %>
+                      <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold mb-2">
+                        신청 대기: <%= pending_count %>명
+                      </div>
+                    <% end %>
+                    <%= link_to "상세 보기", game_path(game), class: "bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs transition duration-300" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center text-gray-500 py-8">
+            <div class="text-4xl mb-3">🏀</div>
+            <div class="text-lg">주최한 경기가 없습니다</div>
+            <div class="text-sm mt-2">새로운 경기를 만들어보세요!</div>
+            <%= link_to "새 경기 만들기", new_game_path, class: "inline-block mt-3 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+          </div>
+        <% end %>
+        
+        <%= link_to "전체 기록 보기", profile_history_path, class: "block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg transition duration-300 mt-4" %>
+      </div>
+    </div>
+
+    <!-- 평점 -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+        <span class="mr-3">🏀</span>
+        평점 및 평가
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- 전체 평점 -->
+        <div class="text-center">
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">전체 평점</h3>
+          <div class="mb-4">
+            <div class="text-5xl font-bold text-yellow-500 mb-2"><%= @user.evaluation_rating_percentage %>%</div>
+            <%= basketball_rating_display(@user.average_rating) %>
+          </div>
+          <div class="text-sm text-gray-600">총 <%= @user.rating_count %>개의 평가</div>
+          <div class="text-xs text-gray-500 mt-2">
+            실력 레벨: <%= @user.skill_level_name %> (Lv.<%= @user.skill_level %>)
+          </div>
+        </div>
+        
+        <!-- 세부 평가 항목 -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">세부 평가</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">실력</span>
+              <div class="flex items-center">
+                <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: <%= (@user.skill_level_average / 5.0 * 100).round %>%"></div>
+                </div>
+                <span class="text-sm text-gray-700"><%= @user.skill_level_average.round(1) %>/5.0</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">팀워크</span>
+              <div class="flex items-center">
+                <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-green-600 h-2 rounded-full" style="width: <%= (@user.teamwork_average / 5.0 * 100).round %>%"></div>
+                </div>
+                <span class="text-sm text-gray-700"><%= @user.teamwork_average.round(1) %>/5.0</span>
+              </div>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">매너</span>
+              <div class="flex items-center">
+                <div class="w-32 bg-gray-200 rounded-full h-2 mr-2">
+                  <div class="bg-purple-600 h-2 rounded-full" style="width: <%= (@user.manner_average / 5.0 * 100).round %>%"></div>
+                </div>
+                <span class="text-sm text-gray-700"><%= @user.manner_average.round(1) %>/5.0</span>
+              </div>
+            </div>
+            
+            <% if @user.memorable_count > 0 %>
+              <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="flex items-center">
+                  <span class="text-yellow-600 mr-2">🌟</span>
+                  <span class="text-sm text-yellow-800">
+                    <strong><%= @user.memorable_count %>명</strong>의 동료가 이 플레이어를 기억에 남는 선수로 선택했습니다!
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 평점 변동 내역 -->
+    <% if @rating_histories.any? %>
+      <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="mr-3">📊</span>
+          평점 변동 내역
+        </h2>
+        
+        <div class="space-y-4">
+          <% @rating_histories.each do |history| %>
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-300">
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center mb-2">
+                    <% if history.positive_change? %>
+                      <span class="text-2xl mr-3">📈</span>
+                      <span class="text-green-600 font-bold text-lg">+<%= history.rating_change %>%</span>
+                    <% elsif history.negative_change? %>
+                      <span class="text-2xl mr-3">📉</span>
+                      <span class="text-red-600 font-bold text-lg"><%= history.rating_change %>%</span>
+                    <% else %>
+                      <span class="text-2xl mr-3">➖</span>
+                      <span class="text-gray-600 font-bold text-lg">변동 없음</span>
+                    <% end %>
+                    
+                    <span class="mx-3 text-gray-400">→</span>
+                    <span class="text-lg font-semibold text-gray-800"><%= history.rating_after %>%</span>
+                  </div>
+                  
+                  <div class="text-sm text-gray-600">
+                    <div class="flex items-center">
+                      <span class="mr-2">🏀</span>
+                      <%= link_to history.game.title, game_path(history.game), class: "hover:text-orange-600 transition duration-300" %>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500">
+                      평가 인원: <%= history.evaluation_count %>명
+                      <% if history.positive_count > 0 %>
+                        <span class="ml-2 text-green-600">긍정 <%= history.positive_count %>명</span>
+                      <% end %>
+                      <% if history.negative_count > 0 %>
+                        <span class="ml-2 text-red-600">부정 <%= history.negative_count %>명</span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="text-right text-sm text-gray-500">
+                  <%= history.created_at.strftime("%m/%d %H:%M") %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 통계 카드들 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-3xl font-bold text-orange-500 mb-2"><%= @user.game_applications.final_approved.count %></div>
+        <div class="text-gray-600 text-sm">참가한 경기</div>
+        <div class="text-xs text-gray-400 mt-1">최종 승인된 경기만</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center hover:shadow-xl transition duration-300 cursor-pointer" onclick="scrollToSection('hosted-games')">
+        <div class="text-3xl font-bold text-green-500 mb-2"><%= @user.organized_games.count %></div>
+        <div class="text-gray-600 text-sm">주최한 게임</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+        <div class="text-3xl font-bold text-purple-500 mb-2"><%= @user.game_applications.count %></div>
+        <div class="text-gray-600 text-sm">신청 게임</div>
+      </div>
+    </div>
+
+    <!-- 업적 및 포인트 섹션 -->
+    <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+      <h2 class="text-2xl font-bold mb-6">🏆 업적 & 포인트</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- 전체 진행률 -->
+        <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+          <div class="text-sm opacity-90">전체 진행률</div>
+          <div class="text-2xl font-bold"><%= @achievement_progress %>%</div>
+          <div class="w-full bg-white/30 rounded-full h-2 mt-2">
+            <div class="bg-white rounded-full h-2" style="width: <%= @achievement_progress %>%"></div>
+          </div>
+          <div class="text-xs mt-1 opacity-90"><%= @unlocked_achievements_count %> / <%= @total_achievements_count %>개 달성</div>
+        </div>
+        
+        <!-- 총 포인트 -->
+        <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+          <div class="text-sm opacity-90">총 포인트</div>
+          <div class="text-2xl font-bold"><%= number_with_delimiter(@user.total_points || 0) %>P</div>
+          <div class="text-xs mt-1 opacity-90">이번 달: +<%= number_with_delimiter(@points_this_month || 0) %>P</div>
+        </div>
+        
+        <!-- 최근 업적 -->
+        <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+          <div class="text-sm opacity-90">최근 획득</div>
+          <% if @recent_achievement %>
+            <div class="text-lg font-bold"><%= @recent_achievement.achievement.name %></div>
+            <div class="text-xs mt-1 opacity-90"><%= @recent_achievement.created_at.strftime('%m/%d') %> 달성</div>
+          <% else %>
+            <div class="text-lg">아직 없음</div>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- 모든 업적 배지들 -->
+      <div class="bg-white/10 backdrop-blur rounded-lg p-4">
+        <% if @achievements_by_category && @achievements_by_category.any? %>
+          <% @achievements_by_category.each do |category, achievements| %>
+            <div class="mb-3">
+              <h4 class="text-xs font-semibold mb-2 opacity-90">
+                <%= achievement_category_name(category) %> 
+                <span class="opacity-70">(<%= achievements.count { |a| @unlocked_achievement_ids.include?(a.id) } %>/<%= achievements.count %>)</span>
+              </h4>
+              
+              <div class="grid grid-cols-8 md:grid-cols-12 lg:grid-cols-16 gap-1">
+                <% achievements.each do |achievement| %>
+                  <% unlocked = @unlocked_achievement_ids.include?(achievement.id) %>
+                  <div class="relative group">
+                    <div class="bg-white/20 rounded p-1 text-center transition-all duration-300 hover:bg-white/30 
+                                <%= unlocked ? '' : 'opacity-40' %>"
+                         style="<%= unlocked ? '' : 'filter: grayscale(100%);' %>">
+                      <div class="text-lg">
+                        <%= achievement.icon %>
+                      </div>
+                    </div>
+                    
+                    <!-- 호버 툴팁 -->
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 text-white text-xs rounded-lg 
+                                opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                      <p class="font-semibold mb-1"><%= achievement.name %></p>
+                      <p class="text-gray-300"><%= achievement.description %></p>
+                      <% if unlocked %>
+                        <% user_achievement = @user_achievements.find { |ua| ua.achievement_id == achievement.id } %>
+                        <p class="text-purple-300 mt-1">
+                          <%= user_achievement.created_at.strftime('%Y년 %m월 %d일') %> 달성
+                        </p>
+                      <% else %>
+                        <p class="text-gray-400 mt-1">아직 달성하지 못함</p>
+                      <% end %>
+                      <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                        <div class="border-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="text-white/70 text-center text-sm">업적 정보를 불러올 수 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 입금 정보 모달 -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-bold text-gray-800">💳 입금 정보</h3>
+      <button onclick="hidePaymentModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <h4 class="font-semibold text-orange-800 mb-2">🏦 BDR 입금 계좌</h4>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">은행명:</span>
+            <span class="font-medium">신한은행</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">계좌번호:</span>
+            <span class="font-medium">110-123-456789</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">예금주:</span>
+            <span class="font-medium">BDR 플랫폼</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">입금자명:</span>
+            <span class="font-medium"><%= current_user.name %></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 class="font-semibold text-blue-800 mb-2">📝 입금 안내</h4>
+        <ul class="text-sm text-blue-700 space-y-1">
+          <li>• 입금자명은 가입한 이름과 동일해야 합니다</li>
+          <li>• 입금 후 자동으로 확인되며 호스트에게 알림이 갑니다</li>
+          <li>• 경기 종료 2일 후 호스트에게 자동 송금됩니다</li>
+          <li>• 경기 취소 시 전액 환불됩니다</li>
+        </ul>
+      </div>
+      
+      <div class="flex justify-end space-x-3">
+        <button onclick="hidePaymentModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          닫기
+        </button>
+        <button onclick="copyAccountInfo()" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md">
+          계좌번호 복사
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 토스페이먼츠 SDK -->
+<script src="https://js.tosspayments.com/v1/payment"></script>
+
+<script>
+function scrollToSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+function showPaymentInfo(applicationId) {
+  document.getElementById('paymentModal').classList.remove('hidden');
+  document.getElementById('paymentModal').classList.add('flex');
+}
+
+function hidePaymentModal() {
+  document.getElementById('paymentModal').classList.add('hidden');
+  document.getElementById('paymentModal').classList.remove('flex');
+}
+
+// 토스페이먼츠 SDK
+const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"
+let tossPayments;
+
+// TossPayments 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, checking TossPayments...');
+  
+  // SDK 로드 확인 및 초기화
+  function initializeTossPayments() {
+    if (typeof TossPayments === 'undefined') {
+      console.log('TossPayments SDK not loaded yet, waiting...');
+      setTimeout(initializeTossPayments, 200);
+      return;
+    }
+    
+    try {
+      tossPayments = TossPayments(clientKey);
+      console.log('TossPayments initialized successfully in profile page:', tossPayments);
+      console.log('TossPayments methods:', Object.keys(tossPayments));
+    } catch (error) {
+      console.error('Failed to initialize TossPayments:', error);
+    }
+  }
+  
+  // 초기화 시작
+  initializeTossPayments();
+});
+
+// 결제 처리 함수
+function processPayment(gameId, applicationId, amount, gameName) {
+  console.log('processPayment called with:', { gameId, applicationId, amount, gameName });
+  
+  // 버튼 상태 변경
+  const paymentBtn = document.getElementById(`payment-btn-${applicationId}`);
+  const paymentText = paymentBtn.querySelector('.payment-text');
+  const paymentLoading = paymentBtn.querySelector('.payment-loading');
+  
+  // 로딩 상태 표시
+  paymentText.classList.add('hidden');
+  paymentLoading.classList.remove('hidden');
+  paymentBtn.disabled = true;
+  paymentBtn.classList.add('opacity-75', 'cursor-not-allowed');
+  
+  // 버튼 상태 복원 함수
+  function resetButton() {
+    paymentText.classList.remove('hidden');
+    paymentLoading.classList.add('hidden');
+    paymentBtn.disabled = false;
+    paymentBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+  }
+  
+  if (!tossPayments) {
+    console.error('TossPayments not initialized!');
+    resetButton();
+    alert('결제 시스템을 초기화하는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  
+  // 결제 정보 생성
+  const orderId = `BDR-${gameId}-${applicationId}-${Date.now()}`;
+  const orderName = `${gameName} 참가비`;
+  const customerName = '<%= current_user.name %>';
+  const customerEmail = '<%= current_user.email %>';
+  const baseUrl = '<%= request.protocol + request.host_with_port %>';
+  
+  console.log('Payment info:', {
+    amount: parseInt(amount),
+    orderId: orderId,
+    orderName: orderName,
+    customerName: customerName,
+    customerEmail: customerEmail,
+    successUrl: `${baseUrl}/payments/success`,
+    failUrl: `${baseUrl}/payments/fail`
+  });
+  
+  try {
+    // TossPayments에 결제 요청
+    tossPayments.requestPayment('카드', {
+      amount: parseInt(amount),
+      orderId: orderId,
+      orderName: orderName,
+      customerName: customerName,
+      customerEmail: customerEmail,
+      successUrl: `${baseUrl}/payments/success`,
+      failUrl: `${baseUrl}/payments/fail`,
+    }).catch(function (error) {
+      console.error('Payment error:', error);
+      resetButton();
+      
+      if (error.code === 'USER_CANCEL') {
+        console.log('User cancelled payment');
+        // 사용자가 취소한 경우 별도 알림 없음
+      } else {
+        alert('결제 중 오류가 발생했습니다: ' + error.message);
+      }
+    });
+  } catch (error) {
+    console.error('Payment request failed:', error);
+    resetButton();
+    alert('결제 요청 중 오류가 발생했습니다: ' + error.message);
+  }
+}
+
+// 모달 외부 클릭 시 닫기
+document.getElementById('paymentModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    hidePaymentModal();
+  }
+});
+
+// 업적 카테고리 이름 헬퍼
+function achievement_category_name(category) {
+  const names = {
+    'participation': '참가',
+    'host': '호스트',  
+    'social': '소셜',
+    'skill': '실력',
+    'special': '특별'
+  };
+  return names[category] || category;
+}
+</script>
+
+<%
+# Ruby 헬퍼 메서드
+def achievement_category_name(category)
+  {
+    'participation' => '참가',
+    'host' => '호스트',
+    'social' => '소셜', 
+    'skill' => '실력',
+    'special' => '특별'
+  }[category] || category
+end
+%>

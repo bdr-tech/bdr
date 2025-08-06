@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "BDR - Basketball Daily Routine" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps %>
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'basketball-orange': '#F97316',
+              'court-gray': '#1F2937'
+            }
+          }
+        }
+      }
+    </script>
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+    
+    <!-- Cache Buster: <%= Time.current.to_i %> -->
+  </head>
+
+  <body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Flash Messages as Toast -->
+    <% if flash.any? %>
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          <% flash.each do |type, message| %>
+            <% toast_type = case type.to_s
+                 when 'notice', 'success' then 'success'
+                 when 'alert', 'error' then 'error'
+                 when 'warning' then 'warning'
+                 else 'default'
+               end %>
+            showToast("<%= j(message) %>", "<%= toast_type %>");
+          <% end %>
+        });
+      </script>
+    <% end %>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-4">
+            <%= link_to root_path, class: "flex items-center space-x-2" do %>
+              <span class="text-2xl">🏀</span>
+              <span class="text-xl font-bold text-gray-800">BDR</span>
+            <% end %>
+          </div>
+          
+          <div class="hidden md:flex items-center space-x-6">
+            <!-- 경기 메뉴 -->
+            <div class="relative group">
+              <button class="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition duration-300 py-2">
+                <span>🏀 경기</span>
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <%= link_to "전체 경기", games_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "빠른 매칭", quick_match_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "경기 만들기", new_game_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300 border-t" %>
+              </div>
+            </div>
+            
+            <!-- 대회 메뉴 -->
+            <div class="relative group">
+              <button class="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition duration-300 py-2">
+                <span>🏆 대회</span>
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div class="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <%= link_to "대회 목록", tournaments_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "대회 알림", notifications_tournaments_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "지난 대회", past_tournaments_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <% unless current_user&.premium? %>
+                  <div class="px-4 py-3 border-t bg-yellow-50">
+                    <p class="text-xs text-yellow-800">
+                      🏆 대회 참가는 프리미엄 회원만 가능합니다. 
+                      더 큰 무대에서 실력을 겨뤄보세요!
+                    </p>
+                    <%= link_to "프리미엄 가입하기", premium_path, class: "text-xs text-yellow-600 hover:text-yellow-700 font-semibold mt-1 inline-block" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+            
+            <!-- 팀 메뉴 -->
+            <div class="relative group">
+              <button class="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition duration-300 py-2">
+                <span>👥 팀</span>
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <%= link_to "팀 소개", teams_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <% if current_user&.premium? %>
+                  <%= link_to "팀 등록", new_team_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300 border-t" %>
+                <% else %>
+                  <div class="px-4 py-3 border-t bg-yellow-50">
+                    <p class="text-xs text-yellow-800">
+                      👥 팀 등록은 프리미엄 회원만 가능합니다.
+                    </p>
+                    <%= link_to "프리미엄 가입하기", premium_path, class: "text-xs text-yellow-600 hover:text-yellow-700 font-semibold mt-1 inline-block" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+            
+            <!-- 커뮤니티 메뉴 -->
+            <div class="relative group">
+              <button class="flex items-center space-x-1 text-gray-600 hover:text-gray-800 transition duration-300 py-2">
+                <span>💬 커뮤니티</span>
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <div class="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                <%= link_to "자유게시판", community_free_board_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "중고거래", community_marketplace_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "농구코트 정보", community_courts_info_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "실외코트 등록", new_outdoor_court_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300" %>
+                <%= link_to "글 작성", community_new_post_path, class: "block px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition duration-300 border-t" %>
+              </div>
+            </div>
+          </div>
+          
+          <div class="hidden md:flex items-center space-x-3">
+            <!-- 알림 드롭다운 -->
+            <% if logged_in? %>
+              <div class="relative group">
+                <button class="relative p-2 text-gray-600 hover:text-gray-800 transition duration-300">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                  </svg>
+                  <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center <%= 'hidden' if current_user.notifications.unread_only.count == 0 %>">
+                    <span id="notification-badge-count"><%= current_user.notifications.unread_only.count %></span>
+                  </span>
+                </button>
+                
+                <!-- 알림 드롭다운 -->
+                <div class="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                  <div class="p-4 border-b">
+                    <div class="flex justify-between items-center">
+                      <h3 class="font-semibold text-gray-800">알림</h3>
+                      <% if current_user.notifications.unread_only.any? %>
+                        <button id="mark-all-read-btn" class="text-sm text-blue-600 hover:text-blue-700">
+                          모두 읽음 처리
+                        </button>
+                      <% end %>
+                    </div>
+                  </div>
+                  
+                  <div id="notifications-list" class="max-h-96 overflow-y-auto">
+                    <% if current_user.notifications.for_display.any? %>
+                      <% current_user.notifications.for_display.each do |notification| %>
+                        <div class="notification-item px-4 py-3 hover:bg-gray-50 cursor-pointer border-b <%= 'bg-blue-50' if notification.unread? %>" data-notification-id="<%= notification.id %>">
+                          <div class="flex items-start space-x-3">
+                            <span class="text-2xl"><%= notification.icon %></span>
+                            <div class="flex-1">
+                              <p class="text-sm font-semibold text-gray-900"><%= notification.title %></p>
+                              <p class="text-sm text-gray-600"><%= notification.message %></p>
+                              <p class="text-xs text-gray-400 mt-1"><%= notification.created_at.strftime('%Y-%m-%d %H:%M') %></p>
+                            </div>
+                          </div>
+                        </div>
+                      <% end %>
+                    <% else %>
+                      <div class="p-8 text-center text-gray-500">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <p>알림이 없습니다</p>
+                      </div>
+                    <% end %>
+                  </div>
+                  
+                  <div class="p-3 border-t">
+                    <%= link_to "모든 알림 보기", notifications_path, class: "block text-center text-sm text-blue-600 hover:text-blue-700 font-medium" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+            
+            <!-- 사용자 인사 및 프로핀 링크 -->
+            <% if logged_in? %>
+              <span class="text-gray-600">
+                안녕하세요,
+                <%= link_to current_user.nickname || current_user.name, profile_path, 
+                      class: "text-orange-600 hover:text-orange-700 font-bold transition duration-300" %>님!
+                <% unless current_user.admin? %>
+                  <span class="ml-2 px-2 py-1 text-xs rounded-full <%= current_user.premium? ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700' %>">
+                    <%= current_user.membership_badge_text %>
+                  </span>
+                <% end %>
+              </span>
+              <% if current_user.premium? %>
+                <%= link_to "📊 내 통계", stats_path, 
+                      class: "text-yellow-600 hover:text-yellow-700 font-semibold transition duration-300" %>
+              <% elsif !current_user.admin? %>
+                <%= link_to "⭐ 프리미엄", premium_path, 
+                      class: "text-gray-600 hover:text-yellow-600 font-semibold transition duration-300" %>
+              <% end %>
+              <% if current_user&.admin? %>
+                <%= link_to "🛠️ 관리자", admin_dashboard_path, 
+                      class: "text-red-600 hover:text-red-700 font-semibold transition duration-300" %>
+              <% end %>
+            <% end %>
+            
+            <!-- 로그인/로그아웃 버튼 -->
+            <% if logged_in? %>
+              <%= link_to "로그아웃", logout_path, 
+                    class: "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+            <% else %>
+              <%= link_to "로그인", login_path, 
+                    class: "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+            <% end %>
+          </div>
+          
+          <!-- 모바일 메뉴 버튼 -->
+          <div class="md:hidden flex items-center space-x-2">
+            <% if logged_in? %>
+              <!-- 모바일 알림 버튼 -->
+              <a href="<%= notifications_path %>" class="relative p-2 text-gray-600 hover:text-gray-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                <span id="mobile-notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center <%= 'hidden' if current_user.notifications.unread_only.count == 0 %>">
+                  <span id="mobile-notification-badge-count"><%= current_user.notifications.unread_only.count %></span>
+                </span>
+              </a>
+            <% end %>
+            
+            <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-800 focus:outline-none p-2 rounded-md hover:bg-gray-100 transition duration-200">
+              <!-- 햄버거 아이콘 -->
+              <svg id="hamburger-icon" class="w-6 h-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+              <!-- X 아이콘 -->
+              <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 모바일 메뉴 모달 -->
+        <div id="mobile-menu" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+          <div class="fixed inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl">
+            <!-- 헤더 -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-orange-500 to-orange-600">
+              <div class="flex items-center space-x-2">
+                <span class="text-2xl">🏀</span>
+                <span class="text-xl font-bold text-white">BDR</span>
+              </div>
+              <button id="mobile-menu-close" class="p-3 text-white rounded-lg touch-manipulation">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- 메뉴 내용 -->
+            <div class="flex-1 overflow-y-auto pb-4">
+              <div class="p-4 space-y-4">
+                <%= link_to today_games_path, class: "block bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-4 rounded-xl font-semibold text-center transition duration-300 shadow-md touch-manipulation" do %>
+                  <div class="flex items-center justify-center">
+                    <span class="text-lg mr-2">⚡</span>
+                    <span>빠른 매칭</span>
+                  </div>
+                <% end %>
+              </div>
+              
+              <div class="px-4 space-y-1">
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-wider px-3 mb-2">경기</p>
+                <%= link_to games_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">🏀</span>
+                  <span>전체 경기</span>
+                <% end %>
+                <%= link_to today_games_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">⏱️</span>
+                  <span>3초 룰 경기</span>
+                <% end %>
+                <%= link_to new_game_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">➕</span>
+                  <span>경기 만들기</span>
+                <% end %>
+              </div>
+              
+              <div class="px-4 space-y-1 mt-6">
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-wider px-3 mb-2 flex items-center">
+                  대회 
+                  <span class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black text-xs px-2 py-0.5 rounded-full font-bold ml-2">PRO</span>
+                </p>
+                <%= link_to tournaments_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">🏆</span>
+                  <span>대회 목록</span>
+                <% end %>
+                <%= link_to notifications_tournaments_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">🔔</span>
+                  <span>대회 알림</span>
+                <% end %>
+                <%= link_to past_tournaments_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">📅</span>
+                  <span>지난 대회</span>
+                <% end %>
+                <% unless current_user&.premium? %>
+                  <div class="mx-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                    <p class="text-xs text-gray-700 mb-2">
+                      대회 참가는 프리미엄 회원만 가능합니다
+                    </p>
+                    <%= link_to premium_path, class: "inline-flex items-center text-xs bg-yellow-500 text-white px-3 py-1.5 rounded-lg font-semibold touch-manipulation" do %>
+                      프리미엄 가입 →
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              
+              <div class="px-4 space-y-1 mt-6">
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-wider px-3 mb-2">팀</p>
+                <%= link_to teams_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">👥</span>
+                  <span>팀 소개</span>
+                <% end %>
+                <% if current_user&.premium? %>
+                  <%= link_to new_team_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                    <span class="mr-3">➕</span>
+                    <span>팀 등록</span>
+                  <% end %>
+                <% else %>
+                  <div class="mx-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                    <p class="text-xs text-gray-700 mb-2">
+                      팀 등록은 프리미엄 회원만 가능합니다
+                    </p>
+                    <%= link_to premium_path, class: "inline-flex items-center text-xs bg-yellow-500 text-white px-3 py-1.5 rounded-lg font-semibold touch-manipulation" do %>
+                      프리미엄 가입 →
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+              
+              <div class="px-4 space-y-1 mt-6">
+                <p class="text-sm font-bold text-gray-500 uppercase tracking-wider px-3 mb-2">커뮤니티</p>
+                <%= link_to community_free_board_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">💬</span>
+                  <span>자유게시판</span>
+                <% end %>
+                <%= link_to community_marketplace_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">🛍️</span>
+                  <span>중고거래</span>
+                <% end %>
+                <%= link_to community_courts_info_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">📍</span>
+                  <span>농구코트 정보</span>
+                <% end %>
+                <%= link_to new_outdoor_court_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">🗺️</span>
+                  <span>실외코트 등록</span>
+                <% end %>
+                <%= link_to community_new_post_path, class: "flex items-center px-4 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition duration-300 touch-manipulation" do %>
+                  <span class="mr-3">✏️</span>
+                  <span>글 작성</span>
+                <% end %>
+              </div>
+              
+              <% if logged_in? %>
+                <div class="space-y-2 border-t pt-4">
+                  <p class="text-base font-bold text-gray-800 px-2 py-1">
+                    안녕하세요, 
+                    <%= link_to current_user.nickname || current_user.name, profile_path,
+                          class: "text-orange-600 hover:text-orange-700" %>님!
+                  </p>
+                  <% if current_user&.admin? %>
+                    <%= link_to "🛠️ 관리자 페이지", admin_dashboard_path, 
+                          class: "block px-4 py-2 text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition duration-300 font-semibold" %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+            
+            <!-- 하단 로그인/로그아웃 -->
+            <div class="border-t p-4">
+              <% if logged_in? %>
+                <%= link_to "로그아웃", logout_path, 
+                      class: "w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg transition duration-300 block text-center font-semibold" %>
+              <% else %>
+                <%= link_to "로그인", login_path, 
+                      class: "w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg transition duration-300 block text-center font-semibold" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    
+    <script>
+      // Toast 함수 정의
+      function showToast(message, type = 'default') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden transform transition-all duration-300 ease-in-out`;
+        
+        // 타입별 색상 설정
+        const colorClasses = {
+          success: 'bg-green-50 border-green-500 text-green-800',
+          error: 'bg-red-50 border-red-500 text-red-800',
+          warning: 'bg-yellow-50 border-yellow-500 text-yellow-800',
+          default: 'bg-gray-50 border-gray-500 text-gray-800'
+        };
+        
+        toast.innerHTML = `
+          <div class="p-4 ${colorClasses[type] || colorClasses.default} border-l-4">
+            <div class="flex items-center">
+              <div class="flex-1">
+                <p class="text-sm font-medium">${message}</p>
+              </div>
+              <button onclick="this.closest('.max-w-sm').remove()" class="ml-4 inline-flex text-gray-400 hover:text-gray-500">
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        // 3초 후 자동으로 제거
+        setTimeout(() => {
+          toast.remove();
+        }, 3000);
+      }
+      
+      // 모바일 메뉴 토글 - Turbo 호환성을 위한 수정
+      function initializeMobileMenu() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+        const hamburgerIcon = document.getElementById('hamburger-icon');
+        const closeIcon = document.getElementById('close-icon');
+        
+        if (!mobileMenuButton || !mobileMenu) {
+          console.log('Mobile menu elements not found');
+          return;
+        }
+        
+        function openMobileMenu() {
+          console.log('Opening mobile menu...');
+          mobileMenu.classList.remove('hidden');
+          mobileMenu.classList.add('flex');
+          if (hamburgerIcon) hamburgerIcon.classList.add('hidden');
+          if (hamburgerIcon) hamburgerIcon.classList.remove('block');
+          if (closeIcon) closeIcon.classList.remove('hidden');
+          if (closeIcon) closeIcon.classList.add('block');
+          document.body.style.overflow = 'hidden'; // 스크롤 방지
+        }
+        
+        function closeMobileMenu() {
+          console.log('Closing mobile menu...');
+          mobileMenu.classList.add('hidden');
+          mobileMenu.classList.remove('flex');
+          if (hamburgerIcon) hamburgerIcon.classList.remove('hidden');
+          if (hamburgerIcon) hamburgerIcon.classList.add('block');
+          if (closeIcon) closeIcon.classList.add('hidden');
+          if (closeIcon) closeIcon.classList.remove('block');
+          document.body.style.overflow = ''; // 스크롤 복원
+        }
+        
+        // 기존 이벤트 리스너 제거 (중복 방지)
+        mobileMenuButton.removeEventListener('click', window.mobileMenuToggle);
+        
+        // 새 이벤트 리스너 추가
+        window.mobileMenuToggle = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Mobile menu button clicked');
+          
+          const isHidden = mobileMenu.classList.contains('hidden');
+          
+          if (isHidden) {
+            openMobileMenu();
+          } else {
+            closeMobileMenu();
+          }
+        };
+        
+        mobileMenuButton.addEventListener('click', window.mobileMenuToggle);
+        
+        // 모달 내부 닫기 버튼 클릭 이벤트
+        if (mobileMenuClose) {
+          mobileMenuClose.removeEventListener('click', window.mobileMenuCloseHandler);
+          window.mobileMenuCloseHandler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeMobileMenu();
+          };
+          mobileMenuClose.addEventListener('click', window.mobileMenuCloseHandler);
+        }
+        
+        // 모달 배경 클릭 시 닫기
+        mobileMenu.removeEventListener('click', window.mobileMenuBackgroundClick);
+        window.mobileMenuBackgroundClick = function(e) {
+          if (e.target === mobileMenu) {
+            closeMobileMenu();
+          }
+        };
+        mobileMenu.addEventListener('click', window.mobileMenuBackgroundClick);
+        
+        // 메뉴 항목 클릭 시 모달 닫기
+        const menuLinks = mobileMenu.querySelectorAll('a');
+        menuLinks.forEach(link => {
+          link.addEventListener('click', function() {
+            closeMobileMenu();
+          });
+        });
+        
+        // ESC 키로 모달 닫기 (전역 이벤트이므로 한 번만 등록)
+        if (!window.mobileMenuEscapeHandler) {
+          window.mobileMenuEscapeHandler = function(e) {
+            if (e.key === 'Escape') {
+              const mobileMenu = document.getElementById('mobile-menu');
+              if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                closeMobileMenu();
+              }
+            }
+          };
+          document.addEventListener('keydown', window.mobileMenuEscapeHandler);
+        }
+      }
+      
+      // DOMContentLoaded와 turbo:load 이벤트 모두에서 초기화
+      document.addEventListener('DOMContentLoaded', initializeMobileMenu);
+      document.addEventListener('turbo:load', initializeMobileMenu);
+      
+      // 페이지 이동 시 모달 닫기
+      document.addEventListener('turbo:before-visit', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+          mobileMenu.classList.add('hidden');
+          mobileMenu.classList.remove('flex');
+          document.body.style.overflow = '';
+        }
+      });
+    </script>
+
+    <!-- Flash Messages (이제 Toast로 표시됨) -->
+
+    <!-- Main Content -->
+    <main class="flex-1">
+      <%= yield %>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-auto">
+      <div class="max-w-6xl mx-auto px-4 text-center">
+        <div class="flex items-center justify-center space-x-2 mb-4">
+          <span class="text-2xl">🏀</span>
+          <span class="text-xl font-bold">BDR - Basketball Daily Routine</span>
+        </div>
+        <p class="text-gray-400">농구를 사랑하는 사람들을 위한 3초 룰 기반 매칭 플랫폼</p>
+      </div>
+    </footer>
+    
+    <!-- 시스템 건의사항 플로팅 버튼 (관리자 페이지 제외) -->
+    <% unless controller_name == 'admin' %>
+      <button id="suggestion-btn" class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 z-40 flex items-center space-x-2 group">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+        </svg>
+        <span class="hidden group-hover:inline-block pr-2">시스템 건의사항</span>
+      </button>
+    <% end %>
+    
+    <!-- 건의사항 모달 -->
+    <div id="suggestion-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">시스템 건의사항</h3>
+            <button id="close-suggestion-modal" class="text-gray-400 hover:text-gray-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <%= form_with url: suggestions_path, local: false, id: "suggestion-form", class: "space-y-4" do |form| %>
+            <div>
+              <%= form.label :title, "제목", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= form.text_field :title, required: true, 
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "건의사항 제목을 입력하세요" %>
+            </div>
+            
+            <div>
+              <%= form.label :content, "내용", class: "block text-sm font-medium text-gray-700 mb-1" %>
+              <%= form.text_area :content, required: true, rows: 5,
+                    class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                    placeholder: "건의사항 내용을 자세히 작성해주세요" %>
+              <p class="text-xs text-gray-500 mt-1">최소 10자 이상, 최대 1000자까지 작성 가능합니다</p>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4">
+              <button type="button" id="cancel-suggestion" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-md transition duration-200">
+                취소
+              </button>
+              <%= form.submit "제출하기", class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition duration-200" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const suggestionBtn = document.getElementById('suggestion-btn');
+        const suggestionModal = document.getElementById('suggestion-modal');
+        const closeSuggestionModal = document.getElementById('close-suggestion-modal');
+        const cancelSuggestion = document.getElementById('cancel-suggestion');
+        const suggestionForm = document.getElementById('suggestion-form');
+        
+        if (suggestionBtn && suggestionModal) {
+          // 건의사항 버튼 클릭
+          suggestionBtn.addEventListener('click', function() {
+            suggestionModal.classList.remove('hidden');
+            suggestionModal.classList.add('flex');
+          });
+          
+          // 모달 닫기
+          function closeModal() {
+            suggestionModal.classList.add('hidden');
+            suggestionModal.classList.remove('flex');
+            suggestionForm.reset();
+          }
+          
+          closeSuggestionModal.addEventListener('click', closeModal);
+          cancelSuggestion.addEventListener('click', closeModal);
+          
+          // 배경 클릭 시 닫기
+          suggestionModal.addEventListener('click', function(e) {
+            if (e.target === suggestionModal) {
+              closeModal();
+            }
+          });
+          
+          // ESC 키로 닫기
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !suggestionModal.classList.contains('hidden')) {
+              closeModal();
+            }
+          });
+          
+          // 폼 제출 처리
+          suggestionForm.addEventListener('ajax:success', function(event) {
+            closeModal();
+            // 성공 메시지 표시
+            const notice = document.createElement('div');
+            notice.className = 'bg-green-100 border border-green-400 text-green-700 px-4 py-3 max-w-6xl mx-auto mt-4 rounded fixed top-4 left-1/2 transform -translate-x-1/2 z-50';
+            notice.textContent = '건의사항이 성공적으로 접수되었습니다.';
+            document.body.appendChild(notice);
+            
+            setTimeout(() => {
+              notice.remove();
+            }, 3000);
+          });
+          
+          suggestionForm.addEventListener('ajax:error', function(event) {
+            const errors = event.detail[0];
+            alert('건의사항 제출 중 오류가 발생했습니다. 다시 시도해주세요.');
+          });
+        }
+      });
+      
+      // Notification click handlers
+      document.addEventListener('DOMContentLoaded', function() {
+        // Handle mark all as read button
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
+        if (markAllReadBtn) {
+          markAllReadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('/notifications/mark_all_as_read', {
+              method: 'PATCH',
+              headers: {
+                'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+              }
+            }).then(response => {
+              if (response.ok) {
+                // Remove all unread styling
+                document.querySelectorAll('.notification-item.bg-blue-50').forEach(item => {
+                  item.classList.remove('bg-blue-50');
+                });
+                
+                // Hide badges
+                const badge = document.getElementById('notification-badge');
+                const mobileBadge = document.getElementById('mobile-notification-badge');
+                if (badge) badge.classList.add('hidden');
+                if (mobileBadge) mobileBadge.classList.add('hidden');
+                
+                // Hide the mark all as read button
+                markAllReadBtn.style.display = 'none';
+              }
+            });
+          });
+        }
+        
+        // Handle notification item clicks
+        document.addEventListener('click', function(e) {
+          const notificationItem = e.target.closest('.notification-item');
+          if (notificationItem) {
+            const notificationId = notificationItem.dataset.notificationId;
+            const wasUnread = notificationItem.classList.contains('bg-blue-50');
+            
+            // Mark as read via AJAX
+            fetch('/notifications/' + notificationId + '/mark_as_read', {
+              method: 'PATCH',
+              headers: {
+                'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+                'Content-Type': 'application/json'
+              }
+            }).then(response => {
+              if (response.ok && wasUnread) {
+                // Remove unread styling
+                notificationItem.classList.remove('bg-blue-50');
+                
+                // Update badge counts
+                const badge = document.getElementById('notification-badge');
+                const badgeCount = document.getElementById('notification-badge-count');
+                const mobileBadge = document.getElementById('mobile-notification-badge');
+                const mobileBadgeCount = document.getElementById('mobile-notification-badge-count');
+                
+                if (badgeCount) {
+                  const currentCount = parseInt(badgeCount.textContent) || 0;
+                  const newCount = Math.max(0, currentCount - 1);
+                  
+                  if (newCount === 0) {
+                    if (badge) badge.classList.add('hidden');
+                    if (mobileBadge) mobileBadge.classList.add('hidden');
+                  } else {
+                    badgeCount.textContent = newCount;
+                    if (mobileBadgeCount) mobileBadgeCount.textContent = newCount;
+                  }
+                }
+              }
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

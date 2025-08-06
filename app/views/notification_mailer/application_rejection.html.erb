@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 5px 5px; }
+      .rejection-box { background-color: #f8d7da; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #f5c6cb; }
+      .game-info { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+      .suggestions { background-color: #e8f4f8; padding: 20px; margin: 20px 0; border-radius: 5px; }
+      .button { display: inline-block; padding: 12px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 10px 5px; }
+      .info-row { margin: 10px 0; }
+      .label { font-weight: bold; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>경기 참가 신청 결과</h1>
+      </div>
+      
+      <div class="content">
+        <p>안녕하세요, <%= @user.nickname || @user.name %>님</p>
+        
+        <div class="rejection-box">
+          <h3 style="color: #721c24; margin-top: 0;">죄송합니다</h3>
+          <p style="color: #721c24; margin-bottom: 0;">
+            신청하신 <strong><%= @game.title %></strong> 경기 참가가 승인되지 않았습니다.
+          </p>
+        </div>
+        
+        <div class="game-info">
+          <h3>신청했던 경기 정보</h3>
+          <div class="info-row">
+            <span class="label">경기명:</span> <%= @game.title %>
+          </div>
+          <div class="info-row">
+            <span class="label">일시:</span> <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+          <div class="info-row">
+            <span class="label">장소:</span> <%= @game.venue_name %> (<%= @game.city %> <%= @game.district %>)
+          </div>
+          <div class="info-row">
+            <span class="label">주최자:</span> <%= @game.organizer.nickname || @game.organizer.name %>
+          </div>
+        </div>
+        
+        <p>
+          참가 승인이 거절되는 경우는 다음과 같습니다:
+        </p>
+        <ul>
+          <li>이미 정원이 마감된 경우</li>
+          <li>경기 레벨이 맞지 않는 경우</li>
+          <li>팀 구성상의 이유</li>
+          <li>기타 주최자의 판단</li>
+        </ul>
+        
+        <div class="suggestions">
+          <h3>다른 경기를 찾아보세요!</h3>
+          <p>BDR에는 다양한 레벨과 지역의 경기가 매일 등록됩니다.</p>
+          
+          <div style="text-align: center; margin: 20px 0;">
+            <%= link_to "다른 경기 찾아보기", games_url, class: "button" %>
+            <%= link_to "오늘의 경기 보기", today_games_url, class: "button", style: "background-color: #28a745;" %>
+          </div>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          * 이 결정은 주최자의 판단에 따른 것이며, BDR은 중개 플랫폼입니다.<br>
+          * 더 나은 매칭을 위해 프로필을 업데이트해보세요.<br>
+          * 문의사항이 있으시면 고객센터로 연락주시기 바랍니다.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

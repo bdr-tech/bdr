@@ -1,0 +1,348 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-2">
+            🏀 <%= @court.name %> 실시간 현황
+          </h1>
+          <p class="text-gray-600"><%= @court.address %></p>
+        </div>
+        <%= link_to "← 코트 정보", court_path(@court), 
+            class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+      </div>
+      
+      <!-- 실시간 혼잡도 -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-<%= @court.occupancy_color %>-50 border-2 border-<%= @court.occupancy_color %>-200 rounded-lg p-6 text-center">
+          <div class="text-4xl font-bold text-<%= @court.occupancy_color %>-600 mb-2">
+            <%= @court.current_occupancy %>/<%= @court.capacity %>
+          </div>
+          <div class="text-<%= @court.occupancy_color %>-800 font-semibold">
+            <%= case @court.occupancy_level
+                when 'empty' then '비어있음'
+                when 'low' then '여유'
+                when 'moderate' then '보통'
+                when 'busy' then '혼잡'
+                when 'full' then '만원'
+                end %>
+          </div>
+          <% if @court.estimated_wait_time > 0 %>
+            <div class="text-sm text-<%= @court.occupancy_color %>-600 mt-2">
+              예상 대기: <%= @court.estimated_wait_time %>분
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="bg-blue-50 rounded-lg p-6 text-center">
+          <div class="text-3xl mb-2">⏰</div>
+          <div class="text-lg font-semibold text-blue-800">피크 타임</div>
+          <div class="text-blue-600"><%= @today_stats[:peak_time] %></div>
+        </div>
+        
+        <div class="bg-purple-50 rounded-lg p-6 text-center">
+          <div class="text-3xl mb-2">👥</div>
+          <div class="text-lg font-semibold text-purple-800">오늘 방문</div>
+          <div class="text-2xl text-purple-600"><%= @today_stats[:total_players] %>명</div>
+        </div>
+        
+        <div class="bg-yellow-50 rounded-lg p-6 text-center">
+          <div class="text-3xl mb-2">📊</div>
+          <div class="text-lg font-semibold text-yellow-800">최다 시간</div>
+          <div class="text-yellow-600"><%= @today_stats[:busiest_hour] %>시</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 액션 버튼들 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">🎯 실시간 상태 업데이트</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 체크인 -->
+        <div class="text-center">
+          <button onclick="checkIn()" 
+                  class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-lg transition duration-300">
+            <span class="text-2xl mb-2 block">✅</span>
+            체크인
+          </button>
+          <p class="text-sm text-gray-600 mt-2">코트에 도착했어요</p>
+        </div>
+        
+        <!-- 경기 리포트 -->
+        <div class="text-center">
+          <button onclick="showReportModal()" 
+                  class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg transition duration-300">
+            <span class="text-2xl mb-2 block">📢</span>
+            현재 상황 리포트
+          </button>
+          <p class="text-sm text-gray-600 mt-2">현재 인원수를 알려주세요</p>
+        </div>
+        
+        <!-- 체크아웃 -->
+        <div class="text-center">
+          <button onclick="checkOut()" 
+                  class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition duration-300">
+            <span class="text-2xl mb-2 block">👋</span>
+            체크아웃
+          </button>
+          <p class="text-sm text-gray-600 mt-2">코트를 떠났어요</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 피크 시간 그래프 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">📈 시간대별 평균 인원</h2>
+      <div class="h-64 relative">
+        <canvas id="peakHoursChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- 현재 활동 중인 사용자 -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          👑 현재 활동 중 (<%= @active_users&.count || 0 %>명)
+        </h2>
+        
+        <% if @active_users&.any? %>
+          <div class="space-y-3">
+            <% @active_users.each do |user| %>
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                  <%= user.nickname&.first&.upcase || user.name&.first&.upcase || 'U' %>
+                </div>
+                <div>
+                  <div class="font-semibold text-gray-800">
+                    <%= user.nickname || user.name %>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <%= user.evaluation_rating_percentage %>% 평점
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">현재 체크인한 사용자가 없습니다</p>
+        <% end %>
+      </div>
+      
+      <!-- 최근 활동 내역 -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">📋 최근 활동 내역</h2>
+        
+        <% if @recent_activities.any? %>
+          <div class="space-y-3 max-h-96 overflow-y-auto">
+            <% @recent_activities.each do |activity| %>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="text-2xl">
+                    <%= case activity.activity_type
+                        when 'check_in' then '✅'
+                        when 'check_out' then '👋'
+                        when 'game_report' then '📢'
+                        else '📍'
+                        end %>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-gray-800">
+                      <%= activity.user.nickname || activity.user.name %>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      <%= CourtActivity::ACTIVITY_TYPES[activity.activity_type] %>
+                      <% if activity.player_count > 1 %>
+                        (<%= activity.player_count %>명)
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-500">
+                  <%= time_ago_in_words(activity.recorded_at) %> 전
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">아직 활동 내역이 없습니다</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 리포트 모달 -->
+<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">🏀 현재 코트 상황</h3>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">현재 인원수</label>
+        <input type="number" id="playerCount" min="0" max="<%= @court.capacity %>" 
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               placeholder="현재 코트에 있는 인원수">
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">경기 유형 (선택)</label>
+        <select id="gameType" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">선택하세요</option>
+          <option value="3vs3">3대3</option>
+          <option value="4vs4">4대4</option>
+          <option value="5vs5">5대5</option>
+          <option value="practice">개인 연습</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">메모 (선택)</label>
+        <textarea id="notes" rows="3" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="추가 정보가 있다면 남겨주세요"></textarea>
+      </div>
+    </div>
+    
+    <div class="flex justify-end space-x-3 mt-6">
+      <button onclick="hideReportModal()" 
+              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+        취소
+      </button>
+      <button onclick="submitReport()" 
+              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+        리포트 제출
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// 피크 시간 차트
+const peakHoursData = <%= @court.peak_hours.to_json %>;
+const ctx = document.getElementById('peakHoursChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: Array.from({length: 24}, (_, i) => `${i}시`),
+    datasets: [{
+      label: '평균 인원',
+      data: Array.from({length: 24}, (_, i) => peakHoursData[i.toString()] || 0),
+      backgroundColor: 'rgba(59, 130, 246, 0.5)',
+      borderColor: 'rgba(59, 130, 246, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true
+      }
+    }
+  }
+});
+
+// 체크인
+function checkIn() {
+  if (confirm('체크인 하시겠습니까?')) {
+    fetch('<%= check_in_court_court_activities_path(@court) %>', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({
+        player_count: 1
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('체크인에 실패했습니다: ' + data.errors.join(', '));
+      }
+    });
+  }
+}
+
+// 체크아웃
+function checkOut() {
+  if (confirm('체크아웃 하시겠습니까?')) {
+    fetch('<%= check_out_court_court_activities_path(@court) %>', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({
+        player_count: 1
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('체크아웃에 실패했습니다: ' + data.errors.join(', '));
+      }
+    });
+  }
+}
+
+// 리포트 모달
+function showReportModal() {
+  document.getElementById('reportModal').classList.remove('hidden');
+  document.getElementById('reportModal').classList.add('flex');
+}
+
+function hideReportModal() {
+  document.getElementById('reportModal').classList.add('hidden');
+  document.getElementById('reportModal').classList.remove('flex');
+}
+
+// 리포트 제출
+function submitReport() {
+  const playerCount = document.getElementById('playerCount').value;
+  if (!playerCount || playerCount < 0) {
+    alert('인원수를 입력해주세요');
+    return;
+  }
+  
+  fetch('<%= report_court_court_activities_path(@court) %>', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+      player_count: playerCount,
+      game_type: document.getElementById('gameType').value,
+      notes: document.getElementById('notes').value
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      hideReportModal();
+      location.reload();
+    } else {
+      alert('리포트 제출에 실패했습니다: ' + data.errors.join(', '));
+    }
+  });
+}
+
+// 30초마다 페이지 새로고침 (실시간 업데이트)
+setInterval(() => {
+  if (document.visibilityState === 'visible') {
+    location.reload();
+  }
+}, 30000);
+</script>

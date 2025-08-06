@@ -1,0 +1,102 @@
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">지난 대회</h1>
+    <p class="text-gray-600 mt-2">완료된 대회 기록을 확인하세요</p>
+  </div>
+
+  <% if @tournaments.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @tournaments.each do |tournament| %>
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          <div class="p-6">
+            <!-- Tournament Status Badge -->
+            <div class="flex items-center justify-between mb-3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                완료
+              </span>
+              <span class="text-sm text-gray-500">
+                <%= tournament.tournament_end_at.strftime("%Y년 %m월") %>
+              </span>
+            </div>
+            
+            <!-- Tournament Info -->
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+              <%= link_to tournament.name, tournament_path(tournament), 
+                  class: "hover:text-blue-600" %>
+            </h3>
+            
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+              <%= tournament.description %>
+            </p>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div class="text-center p-2 bg-gray-50 rounded">
+                <p class="text-2xl font-bold text-gray-900">
+                  <%= tournament.tournament_teams.approved.count %>
+                </p>
+                <p class="text-xs text-gray-600">참가팀</p>
+              </div>
+              <div class="text-center p-2 bg-gray-50 rounded">
+                <p class="text-2xl font-bold text-gray-900">
+                  <%= tournament.tournament_matches.completed.count %>
+                </p>
+                <p class="text-xs text-gray-600">경기수</p>
+              </div>
+            </div>
+            
+            <!-- Winner -->
+            <% winner = tournament.tournament_teams.find_by(final_rank: 1) %>
+            <% if winner %>
+              <div class="border-t pt-4">
+                <p class="text-sm text-gray-600 mb-1">우승팀</p>
+                <p class="font-semibold text-yellow-600 flex items-center">
+                  <span class="text-lg mr-2">🏆</span>
+                  <%= winner.team_name %>
+                </p>
+              </div>
+            <% end %>
+            
+            <!-- Location & Date -->
+            <div class="mt-4 pt-4 border-t">
+              <p class="text-sm text-gray-600">
+                <span class="font-medium">장소:</span> <%= tournament.location_name %>
+              </p>
+              <p class="text-sm text-gray-600 mt-1">
+                <%= tournament.tournament_start_at.strftime("%Y.%m.%d") %> - 
+                <%= tournament.tournament_end_at.strftime("%Y.%m.%d") %>
+              </p>
+            </div>
+          </div>
+          
+          <!-- View Details -->
+          <div class="bg-gray-50 px-6 py-3">
+            <%= link_to tournament_path(tournament), 
+                class: "text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center justify-center" do %>
+              대회 결과 보기
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="mt-8">
+      <%= paginate @tournaments %>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+      <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">완료된 대회가 없습니다</h3>
+      <p class="text-gray-500">아직 종료된 대회가 없습니다.</p>
+    </div>
+  <% end %>
+</div>

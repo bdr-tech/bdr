@@ -1,0 +1,402 @@
+<div class="min-h-screen bg-gray-50 py-12">
+  <div class="max-w-7xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">🌟 BDR 프리미엄 멤버십</h1>
+      <p class="text-xl text-gray-600">더 많은 기능과 혜택을 누리세요</p>
+      
+      <!-- 현재 회원 상태 표시 -->
+      <% if current_user %>
+        <div class="mt-6 inline-block">
+          <div class="bg-white rounded-lg shadow-md px-6 py-3 border-2 <%= current_user.premium? ? 'border-purple-500' : 'border-gray-300' %>">
+            <p class="text-sm text-gray-600">현재 당신의 플랜</p>
+            <p class="text-2xl font-bold <%= current_user.premium? ? 'text-purple-600' : 'text-gray-800' %>">
+              <%= current_user.membership_badge_text %>
+            </p>
+            <% if current_user.premium? && current_user.premium_expires_at %>
+              <p class="text-sm text-gray-500 mt-1">
+                <%= current_user.premium_expires_at.strftime('%Y년 %m월 %d일') %>까지
+              </p>
+              <%= link_to "구독 관리", premium_manage_path, 
+                  class: "text-sm text-blue-500 hover:text-blue-600 mt-2 inline-block" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- 요금제 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <!-- 일반 회원 -->
+      <div class="bg-white rounded-lg shadow-lg p-8 relative">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">일반 회원</h2>
+          <p class="text-4xl font-bold text-gray-800">무료</p>
+          <p class="text-gray-600">기본 기능</p>
+        </div>
+        
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            매칭 참여
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            커뮤니티 활동
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            기본 프로필
+          </li>
+          <li class="flex items-center text-gray-400">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+            </svg>
+            광고 표시
+          </li>
+          <li class="flex items-center text-gray-400">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"/>
+            </svg>
+            대회 정보 상세 열람
+          </li>
+        </ul>
+        
+        <% if current_user && !current_user.premium? %>
+          <button class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold" disabled>
+            현재 플랜
+          </button>
+        <% end %>
+      </div>
+      
+      <!-- 프로 회원 -->
+      <div class="bg-white rounded-lg shadow-lg p-8 relative border-2 border-blue-500">
+        <div class="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg">
+          인기
+        </div>
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-blue-600 mb-2">프로 회원</h2>
+          <p class="text-4xl font-bold text-gray-800">₩3,900<span class="text-lg font-normal">/월</span></p>
+          <p class="text-gray-600">대회 정보 + 통계</p>
+        </div>
+        
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            일반 회원 모든 기능
+          </li>
+          <li class="flex items-center font-semibold text-blue-600">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            대회 정보 상세 열람
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            대회 참가 신청
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            개인 통계 분석
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            매칭 우선 순위
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            광고 50% 감소
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            프로 뱃지
+          </li>
+        </ul>
+        
+        <% if current_user && !current_user.admin? %>
+          <% if current_user.is_pro_member? %>
+            <button class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold" disabled>
+              현재 플랜
+            </button>
+          <% else %>
+            <%= link_to "프로 회원 시작하기", "#", 
+                class: "block w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold text-center transition duration-300",
+                onclick: "handleProSubscription(); return false;" %>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- 프리미엄 회원 -->
+      <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg p-8 relative text-white">
+        <div class="absolute top-0 right-0 bg-yellow-400 text-gray-800 px-4 py-1 rounded-bl-lg font-semibold">
+          대회 개최
+        </div>
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold mb-2">프리미엄 회원</h2>
+          <p class="text-4xl font-bold">₩149,000<span class="text-lg font-normal">/년</span></p>
+          <p class="text-sm text-purple-200">(월 12,417원)</p>
+          <p class="text-purple-100">대회 개최 + 전체 기능</p>
+        </div>
+        
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            프로 회원 모든 기능
+          </li>
+          <li class="flex items-center font-semibold text-yellow-300">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            대회 개최 권한
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            대회 관리 도구
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            대회 기록 앱 제공
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            전담 매니저 지원
+          </li>
+          <li class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-300 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            프리미엄 뱃지
+          </li>
+        </ul>
+        
+        <% if current_user && !current_user.admin? %>
+          <% if current_user.is_premium_member? %>
+            <button class="w-full bg-white/20 text-white py-3 rounded-lg font-semibold backdrop-blur" disabled>
+              현재 플랜
+            </button>
+          <% else %>
+            <%= link_to "프리미엄 시작하기", "#", 
+                class: "block w-full bg-white text-purple-600 hover:bg-gray-100 py-3 rounded-lg font-semibold text-center transition duration-300",
+                onclick: "handlePremiumSubscription(); return false;" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- 기능 비교표 -->
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">상세 기능 비교</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b">
+              <th class="text-left py-3 px-4">기능</th>
+              <th class="text-center py-3 px-4">일반</th>
+              <th class="text-center py-3 px-4 text-blue-600">프로<br><span class="text-xs font-normal">₩2,900/월</span></th>
+              <th class="text-center py-3 px-4 text-purple-600">프리미엄<br><span class="text-xs font-normal">₩190,000/월</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 기본 기능 -->
+            <tr class="border-b bg-gray-50">
+              <td class="py-3 px-4 font-semibold" colspan="4">기본 기능</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">매칭 참여</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">커뮤니티 활동</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            
+            <!-- 대회 기능 -->
+            <tr class="border-b bg-gray-50">
+              <td class="py-3 px-4 font-semibold" colspan="4">대회 기능</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">대회 목록 보기</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">대회 정보 상세 열람</td>
+              <td class="text-center">❌</td>
+              <td class="text-center text-blue-600">✅</td>
+              <td class="text-center text-purple-600">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">대회 참가 신청</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">대회 개최</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">❌</td>
+              <td class="text-center text-purple-600">✅</td>
+            </tr>
+            
+            <!-- 통계 기능 -->
+            <tr class="border-b bg-gray-50">
+              <td class="py-3 px-4 font-semibold" colspan="4">통계 & 분석</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">기본 통계</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">상세 개인 통계</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">대회 참가자 통계 리포트</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">팀 통계 분석</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+            </tr>
+            
+            <!-- 편의 기능 -->
+            <tr class="border-b bg-gray-50">
+              <td class="py-3 px-4 font-semibold" colspan="4">편의 기능</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">광고</td>
+              <td class="text-center">표시</td>
+              <td class="text-center">50% 감소</td>
+              <td class="text-center">제거</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">매칭 우선권</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">프로필 커스터마이징</td>
+              <td class="text-center">기본</td>
+              <td class="text-center">확장</td>
+              <td class="text-center">전체</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">전담 매니저 지원</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">✅</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 px-4">특별 뱃지</td>
+              <td class="text-center">❌</td>
+              <td class="text-center">🏀</td>
+              <td class="text-center">👑</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- 추가 혜택 설명 -->
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-blue-50 rounded-lg p-8">
+        <h3 class="text-xl font-bold text-blue-700 mb-4">🔵 프로 회원 혜택 상세</h3>
+        <ul class="space-y-2 text-gray-700">
+          <li>• <strong>매칭 우선 순위</strong> - 인기 시간대 매칭 우선 배정</li>
+          <li>• <strong>대회 참가자 통계</strong> - 대회 참가 시 개인 상세 통계 리포트 제공</li>
+          <li>• <strong>월간 성장 리포트</strong> - 실력 향상 추이 분석</li>
+          <li>• <strong>프로필 배경</strong> - 커스텀 배경 이미지 설정</li>
+          <li>• <strong>매칭 알림</strong> - 우선 알림 발송</li>
+          <li>• <strong>커뮤니티 노출</strong> - 게시글 상단 노출 기회</li>
+        </ul>
+      </div>
+      
+      <div class="bg-purple-50 rounded-lg p-8">
+        <h3 class="text-xl font-bold text-purple-700 mb-4">👑 프리미엄 회원 혜택 상세</h3>
+        <ul class="space-y-2 text-gray-700">
+          <li>• <strong>대회 개최</strong> - 무제한 대회 개최 및 수익 창출</li>
+          <li>• <strong>대회 관리 도구</strong> - 참가자 관리, 대진표 자동 생성</li>
+          <li>• <strong>기록 앱 제공</strong> - 실시간 점수/통계 기록 앱</li>
+          <li>• <strong>팀 분석</strong> - 팀 단위 상세 통계 분석</li>
+          <li>• <strong>1:1 매니저</strong> - 대회 운영 전담 지원</li>
+          <li>• <strong>홍보 지원</strong> - BDR 공식 채널 홍보</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- 자주 묻는 질문 -->
+    <div class="mt-12 bg-white rounded-lg shadow-lg p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">자주 묻는 질문</h2>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold text-gray-800 mb-2">Q. 프로 회원으로 대회 참가 시 어떤 통계를 볼 수 있나요?</h4>
+          <p class="text-gray-600">A. 개인 득점, 리바운드, 어시스트, 슈팅 성공률, 플러스/마이너스 등 상세 통계와 함께 경기별 성장 추이를 확인할 수 있습니다.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold text-gray-800 mb-2">Q. 프리미엄 회원의 대회 기록 앱은 무엇인가요?</h4>
+          <p class="text-gray-600">A. 대회 진행 시 실시간으로 점수와 선수별 통계를 기록할 수 있는 전용 모바일 앱을 제공합니다. 기록원이 쉽게 사용할 수 있도록 설계되었습니다.</p>
+        </div>
+        <div>
+          <h4 class="font-semibold text-gray-800 mb-2">Q. 멤버십은 언제든 해지할 수 있나요?</h4>
+          <p class="text-gray-600">A. 네, 언제든지 해지 가능합니다. 해지 시 다음 결제일부터 요금이 청구되지 않으며, 남은 기간 동안은 혜택을 이용할 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function handleProSubscription() {
+  if (confirm('프로 회원(월 3,900원)으로 업그레이드하시겠습니까?\n\n✅ 대회 정보 상세 열람\n✅ 대회 참가 신청\n✅ 개인 통계 분석\n✅ 매칭 우선 순위\n✅ 광고 50% 감소\n✅ 프로 뱃지')) {
+    // 프로 회원 결제 처리
+    window.location.href = '/premium/subscribe?type=monthly';
+  }
+}
+
+function handlePremiumSubscription() {
+  if (confirm('프리미엄 회원(연 149,000원)으로 업그레이드하시겠습니까?\n\n✅ 대회 개최 권한\n✅ 대회 관리 도구\n✅ 대회 기록 앱 제공\n✅ 팀 통계 분석\n✅ 전담 매니저 지원\n✅ 프리미엄 뱃지')) {
+    // 프리미엄 회원 결제 처리
+    window.location.href = '/premium/subscribe?type=yearly';
+  }
+}
+</script>

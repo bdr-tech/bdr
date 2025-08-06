@@ -1,0 +1,123 @@
+<div class="max-w-2xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">환불 신청</h1>
+    
+    <!-- 경기 정보 -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+      <h3 class="font-semibold text-gray-700 mb-2">경기 정보</h3>
+      <div class="text-sm text-gray-600 space-y-1">
+        <p><span class="font-medium">경기명:</span> <%= @game.title %></p>
+        <p><span class="font-medium">일시:</span> <%= @game.start_time.strftime('%Y년 %m월 %d일 %H:%M') %></p>
+        <p><span class="font-medium">장소:</span> <%= @game.venue_name %></p>
+        <p><span class="font-medium">결제 금액:</span> <%= number_to_currency(@payment.amount) %></p>
+        <p><span class="font-medium">결제일:</span> <%= @payment.created_at.strftime('%Y년 %m월 %d일') %></p>
+      </div>
+    </div>
+    
+    <!-- 환불 정책 안내 -->
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+      <h3 class="font-semibold text-gray-700 mb-2">환불 정책</h3>
+      <ul class="text-sm text-gray-600 space-y-1">
+        <li>• 경기 7일 전: <span class="font-semibold text-green-600">100% 환불</span></li>
+        <li>• 경기 3-7일 전: <span class="font-semibold text-yellow-600">80% 환불</span></li>
+        <li>• 경기 1-3일 전: <span class="font-semibold text-orange-600">50% 환불</span></li>
+        <li>• 경기 24시간 이내: <span class="font-semibold text-red-600">환불 불가</span></li>
+      </ul>
+    </div>
+    
+    <!-- 환불 금액 표시 -->
+    <div class="mb-6 p-4 bg-green-50 rounded-lg">
+      <h3 class="font-semibold text-gray-700 mb-2">환불 예정 금액</h3>
+      <p class="text-2xl font-bold text-green-600">
+        <%= number_to_currency(@refund_amount) %>
+        <% refund_rate = (@refund_amount.to_f / @payment.amount * 100).round %>
+        <span class="text-sm text-gray-600 font-normal">(<%= refund_rate %>%)</span>
+      </p>
+      <% if refund_rate < 100 %>
+        <p class="text-sm text-gray-500 mt-1">
+          * 환불 정책에 따라 <%= 100 - refund_rate %>%의 취소 수수료가 발생합니다.
+        </p>
+      <% end %>
+    </div>
+    
+    <%= form_with url: game_payment_refunds_path(@game, @payment), method: :post, local: true do |form| %>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">환불 사유</label>
+        <% @refund_reasons.each_with_index do |reason, index| %>
+          <div class="mb-2">
+            <label class="flex items-center cursor-pointer">
+              <%= radio_button_tag 'refund[refund_reason]', reason, index == 0, 
+                  class: "mr-2", required: true %>
+              <span class="text-gray-700"><%= reason %></span>
+            </label>
+          </div>
+        <% end %>
+        
+        <!-- 기타 사유 입력 -->
+        <div id="other-reason-input" class="mt-3 hidden">
+          <%= text_area_tag 'refund[other_reason]', nil, 
+              class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500", 
+              rows: 3,
+              placeholder: "기타 사유를 입력해주세요" %>
+        </div>
+      </div>
+      
+      <!-- 주의사항 동의 -->
+      <div class="mb-6">
+        <label class="flex items-start cursor-pointer">
+          <%= check_box_tag 'refund[agree]', '1', false, 
+              class: "mr-2 mt-1", required: true %>
+          <span class="text-sm text-gray-600">
+            환불 정책을 확인했으며, 환불 신청 후 취소가 불가능함을 이해했습니다.
+            또한 주간 3회 이상 취소 시 일주일간 경기 신청이 제한될 수 있음을 확인했습니다.
+          </span>
+        </label>
+      </div>
+      
+      <div class="flex justify-between items-center">
+        <%= link_to "취소", game_path(@game), 
+            class: "text-gray-600 hover:text-gray-800" %>
+        <%= submit_tag "환불 신청", 
+            class: "bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300",
+            data: { confirm: "정말로 환불을 신청하시겠습니까? 환불 후에는 다시 참가 신청을 해야 합니다." } %>
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- 취소 기록 경고 -->
+  <% if current_user.user_cancellation&.weekly_cancellations.to_i >= 2 %>
+    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+      <p class="text-sm text-yellow-800">
+        <strong>⚠️ 주의:</strong> 이번 주에 이미 <%= current_user.user_cancellation.weekly_cancellations %>회 취소하셨습니다.
+        3회 이상 취소 시 일주일간 경기 신청이 제한됩니다.
+      </p>
+    </div>
+  <% end %>
+</div>
+
+<script>
+// 기타 사유 선택 시 입력 필드 표시
+document.addEventListener('DOMContentLoaded', function() {
+  const radioButtons = document.querySelectorAll('input[name="refund[refund_reason]"]');
+  const otherReasonInput = document.getElementById('other-reason-input');
+  const otherTextArea = document.querySelector('#other-reason-input textarea');
+  
+  radioButtons.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      if (this.value === '기타') {
+        otherReasonInput.classList.remove('hidden');
+        otherTextArea.required = true;
+      } else {
+        otherReasonInput.classList.add('hidden');
+        otherTextArea.required = false;
+        otherTextArea.value = '';
+      }
+    });
+  });
+});
+
+// 숫자 포맷팅 헬퍼
+function number_to_currency(amount) {
+  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + "원";
+}
+</script>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #2196F3; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 5px 5px; }
+      .success-box { background-color: #d4edda; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #c3e6cb; text-align: center; }
+      .game-info { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+      .payment-details { background-color: #e8f4f8; padding: 20px; margin: 20px 0; border-radius: 5px; }
+      .button { display: inline-block; padding: 12px 30px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+      .info-row { margin: 10px 0; }
+      .label { font-weight: bold; color: #666; }
+      .checkmark { color: #4CAF50; font-size: 48px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>입금 확인 완료</h1>
+      </div>
+      
+      <div class="content">
+        <div class="success-box">
+          <div class="checkmark">✓</div>
+          <h2 style="color: #155724; margin: 10px 0;">참가비 입금이 확인되었습니다!</h2>
+          <p style="color: #155724; margin: 0;">경기 참가가 최종 확정되었습니다.</p>
+        </div>
+        
+        <p>안녕하세요, <%= @user.nickname || @user.name %>님!</p>
+        <p><strong><%= @game.title %></strong> 경기 참가비 입금이 확인되어 참가가 최종 확정되었음을 알려드립니다.</p>
+        
+        <div class="payment-details">
+          <h3>결제 정보</h3>
+          <div class="info-row">
+            <span class="label">입금액:</span> <%= number_to_currency(@payment.amount, unit: "₩", precision: 0) %>
+          </div>
+          <div class="info-row">
+            <span class="label">입금 확인 시간:</span> <%= @payment.paid_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+          <div class="info-row">
+            <span class="label">결제 번호:</span> #<%= @payment.id %>
+          </div>
+        </div>
+        
+        <div class="game-info">
+          <h3>참가 확정 경기 정보</h3>
+          <div class="info-row">
+            <span class="label">경기명:</span> <%= @game.title %>
+          </div>
+          <div class="info-row">
+            <span class="label">일시:</span> <strong><%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %H:%M") %></strong>
+          </div>
+          <div class="info-row">
+            <span class="label">장소:</span> <%= @game.venue_name %>
+          </div>
+          <div class="info-row">
+            <span class="label">주소:</span> <%= @game.venue_address %>
+          </div>
+          <div class="info-row">
+            <span class="label">주최자:</span> <%= @game.organizer.nickname || @game.organizer.name %>
+          </div>
+          <div class="info-row">
+            <span class="label">유니폼 색상:</span> <%= @game.uniform_colors.try(:join, ', ') || '추후 공지' %>
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <%= link_to "경기 상세 정보 보기", game_url(@game), class: "button" %>
+        </div>
+        
+        <div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border: 1px solid #ffeaa7;">
+          <h4 style="margin-top: 0;">참가 취소 및 환불 안내</h4>
+          <ul style="margin: 5px 0;">
+            <li>경기 시작 24시간 전까지: 100% 환불</li>
+            <li>경기 시작 24시간 이내: 환불 불가</li>
+            <li>주최자의 경기 취소 시: 100% 환불</li>
+          </ul>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          * 이 이메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.<br>
+          * 결제 관련 문의사항은 고객센터로 연락주시기 바랍니다.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

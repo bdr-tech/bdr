@@ -1,0 +1,125 @@
+<%# 경기 신청 Dialog 모달 %>
+<div data-controller="dialog" 
+     id="game-apply-dialog-<%= game.id %>"
+     class="hidden fixed inset-0 z-50">
+  
+  <!-- 오버레이 -->
+  <div data-dialog-target="overlay" 
+       data-action="click->dialog#closeOnOverlay"
+       class="fixed inset-0 bg-black/50 opacity-0 transition-opacity duration-300">
+  </div>
+  
+  <!-- 모달 컨텐츠 -->
+  <div class="fixed inset-0 flex items-center justify-center p-4">
+    <div data-dialog-target="content"
+         class="bg-white rounded-lg shadow-xl w-full max-w-lg transform opacity-0 scale-95 transition-all duration-300">
+      
+      <!-- 헤더 -->
+      <div class="border-b p-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold">경기 신청하기</h2>
+          <button data-action="click->dialog#close" 
+                  class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 바디 -->
+      <div class="p-6 space-y-4">
+        <!-- 경기 정보 요약 -->
+        <div class="bg-gray-50 rounded-lg p-4 space-y-2">
+          <h3 class="font-semibold text-lg"><%= game.title %></h3>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span class="text-gray-600">📅 일시:</span>
+              <span class="font-medium"><%= game.scheduled_at.strftime("%m/%d") %> <%= game.start_time.strftime("%H:%M") %></span>
+            </div>
+            <div>
+              <span class="text-gray-600">📍 장소:</span>
+              <span class="font-medium"><%= game.venue_name %></span>
+            </div>
+            <div>
+              <span class="text-gray-600">💰 참가비:</span>
+              <span class="font-medium <%= 'text-orange-500' if game.fee > 0 %>"><%= game.fee_display %></span>
+            </div>
+            <div>
+              <span class="text-gray-600">👥 잔여:</span>
+              <span class="font-medium <%= game.available_spots > 0 ? 'text-green-500' : 'text-red-500' %>">
+                <%= game.available_spots %>자리
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 유니폼 정보 -->
+        <% if game.uniform_colors.present? %>
+          <div class="border-l-4 border-orange-500 pl-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">👕 유니폼 색상</p>
+            <div class="flex gap-3">
+              <% game.uniform_colors.each do |color| %>
+                <div class="flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full border-2 border-gray-300" 
+                        style="background-color: <%= game.color_hex(color) %>"></span>
+                  <span class="text-sm"><%= UNIFORM_COLORS[color] || color %></span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+        <!-- 주의사항 -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 class="font-medium text-yellow-800 mb-2">⚠️ 신청 전 확인사항</h4>
+          <ul class="text-sm text-yellow-700 space-y-1">
+            <li>• 신청 후 호스트 승인이 필요합니다</li>
+            <% if game.fee > 0 %>
+              <li>• 승인 후 24시간 내 참가비를 송금해주세요</li>
+              <li>• 플랫폼 수수료 <%= game.current_platform_fee_percentage %>%가 포함됩니다</li>
+            <% end %>
+            <li>• 취소는 경기 24시간 전까지 가능합니다</li>
+          </ul>
+        </div>
+        
+        <!-- 프로필 완성도 체크 -->
+        <% if defined?(current_user) && current_user %>
+          <% profile_completion = current_user.profile_completion_percentage %>
+          <% if profile_completion < 70 %>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p class="text-sm text-red-700">
+                프로필 완성도가 <%= profile_completion %>%입니다. 
+                경기 신청을 위해서는 70% 이상 완성해야 합니다.
+              </p>
+              <%= link_to "프로필 완성하기", profile_edit_path, 
+                          class: "text-red-600 underline text-sm font-medium" %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+      
+      <!-- 푸터 -->
+      <div class="border-t p-6">
+        <div class="flex gap-3 justify-end">
+          <%= render ButtonComponent.new(variant: :outline, data: { action: "click->dialog#close" }) do %>
+            취소
+          <% end %>
+          
+          <% if defined?(current_user) && current_user && current_user.can_participate_in_games? %>
+            <%= form_with url: apply_game_path(game), method: :post, local: true do |f| %>
+              <%= render ButtonComponent.new(variant: :primary, type: "submit") do %>
+                경기 신청하기
+              <% end %>
+            <% end %>
+          <% else %>
+            <%= render ButtonComponent.new(variant: :primary, disabled: true) do %>
+              신청 불가
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

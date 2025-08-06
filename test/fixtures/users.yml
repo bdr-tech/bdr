@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: Test User One
+  email: user1@example.com
+  phone: "010-1234-5678"
+  old_position: Forward
+  old_skill_level: 3
+  old_location: Seoul
+  nickname: testuser1
+  real_name: Test User One
+  height: 180
+  weight: 75
+  positions: ["포워드"]
+  city: "서울"
+  district: "강남구"
+  profile_completed: true
+
+two:
+  name: Test User Two
+  email: user2@example.com
+  phone: "010-2345-6789"
+  old_position: Guard
+  old_skill_level: 2
+  old_location: Busan
+  nickname: testuser2
+  real_name: Test User Two
+  height: 175
+  weight: 70
+  positions: ["가드"]
+  city: "부산"
+  district: "해운대구"
+  profile_completed: true

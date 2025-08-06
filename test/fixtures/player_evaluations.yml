@@ -1,0 +1,25 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  game: one
+  evaluator: one
+  evaluator_type: Evaluator
+  evaluated_user: one
+  skill_level: 1
+  teamwork: 1
+  manner: 1
+  memorable: false
+  comment: MyText
+  evaluated_at: 2025-07-21 15:38:39
+
+two:
+  game: two
+  evaluator: two
+  evaluator_type: Evaluator
+  evaluated_user: two
+  skill_level: 1
+  teamwork: 1
+  manner: 1
+  memorable: false
+  comment: MyText
+  evaluated_at: 2025-07-21 15:38:39

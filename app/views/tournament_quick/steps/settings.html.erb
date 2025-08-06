@@ -1,0 +1,224 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- 진행 상태 표시 -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4">
+        <%= render 'tournament_quick/shared/progress_bar', wizard: @wizard %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 설정 -->
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= form_with url: tournament_quick_path, method: :patch, local: true do |f| %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+          상세 설정
+        </h2>
+
+        <div class="space-y-6">
+          <!-- 경기 방식 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              경기 방식
+            </label>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="block">
+                <input type="radio" 
+                       name="wizard[game_type]" 
+                       value="5x5"
+                       class="sr-only peer"
+                       <%= 'checked' if @wizard.wizard_data['game_type'] != '3x3' %>>
+                <div class="border-2 rounded-lg p-4 cursor-pointer text-center
+                            border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                  <span class="text-2xl">5️⃣</span>
+                  <p class="mt-1 font-medium">5대5</p>
+                </div>
+              </label>
+              
+              <label class="block">
+                <input type="radio" 
+                       name="wizard[game_type]" 
+                       value="3x3"
+                       class="sr-only peer"
+                       <%= 'checked' if @wizard.wizard_data['game_type'] == '3x3' %>>
+                <div class="border-2 rounded-lg p-4 cursor-pointer text-center
+                            border-gray-200 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                  <span class="text-2xl">3️⃣</span>
+                  <p class="mt-1 font-medium">3대3</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 대진 방식 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              대진 방식
+            </label>
+            <select name="wizard[tournament_type]" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="single_elimination" <%= 'selected' if @wizard.wizard_data['tournament_type'] == 'single_elimination' %>>
+                싱글 엘리미네이션 (토너먼트)
+              </option>
+              <option value="round_robin" <%= 'selected' if @wizard.wizard_data['tournament_type'] == 'round_robin' %>>
+                라운드 로빈 (풀리그)
+              </option>
+              <option value="group_stage" <%= 'selected' if @wizard.wizard_data['tournament_type'] == 'group_stage' %>>
+                조별 리그
+              </option>
+            </select>
+          </div>
+
+          <!-- 상품 설정 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              상품 정보
+            </label>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">1등 상품</label>
+                <input type="text" 
+                       name="wizard[prizes_info][first_place]" 
+                       value="<%= @wizard.wizard_data.dig('prizes_info', 'first_place') %>"
+                       placeholder="예: 상금 10만원 또는 치킨 기프티콘"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">2등 상품</label>
+                <input type="text" 
+                       name="wizard[prizes_info][second_place]" 
+                       value="<%= @wizard.wizard_data.dig('prizes_info', 'second_place') %>"
+                       placeholder="예: 커피 쿠폰"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">참가상</label>
+                <input type="text" 
+                       name="wizard[prizes_info][participation]" 
+                       value="<%= @wizard.wizard_data.dig('prizes_info', 'participation') %>"
+                       placeholder="예: 음료수"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- 특별 이벤트 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              특별 이벤트
+            </label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[special_events][]" 
+                       value="three_point_contest"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       <%= 'checked' if @wizard.wizard_data['special_events']&.include?('three_point_contest') %>>
+                <span>3점 슛 콘테스트</span>
+              </label>
+              
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[special_events][]" 
+                       value="mvp_vote"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       <%= 'checked' if @wizard.wizard_data['special_events']&.include?('mvp_vote') %>>
+                <span>MVP 투표</span>
+              </label>
+              
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[special_events][]" 
+                       value="lucky_draw"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       <%= 'checked' if @wizard.wizard_data['special_events']&.include?('lucky_draw') %>>
+                <span>행운권 추첨</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 추가 옵션 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              추가 옵션
+            </label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[generate_poster]" 
+                       value="true"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       checked>
+                <span>자동으로 포스터 생성</span>
+              </label>
+              
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[enable_live_score]" 
+                       value="true"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       checked>
+                <span>실시간 점수 업데이트 활성화</span>
+              </label>
+              
+              <label class="flex items-center">
+                <input type="checkbox" 
+                       name="wizard[send_reminders]" 
+                       value="true"
+                       class="mr-2 rounded text-blue-600 focus:ring-blue-500"
+                       checked>
+                <span>참가자에게 경기 알림 발송</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 예산 설정 -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="font-medium text-gray-900 mb-3">예상 비용</h3>
+            <div class="space-y-2 text-sm">
+              <div>
+                <label class="block text-gray-600 mb-1">코트 대여비</label>
+                <input type="number" 
+                       name="wizard[court_fee]" 
+                       value="<%= @wizard.wizard_data['court_fee'] || 50000 %>"
+                       step="10000"
+                       class="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-gray-600 mb-1">상품 예산</label>
+                <input type="number" 
+                       name="wizard[prize_budget]" 
+                       value="<%= @wizard.wizard_data['prize_budget'] || 50000 %>"
+                       step="10000"
+                       class="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-gray-600 mb-1">간식/음료 예산</label>
+                <input type="number" 
+                       name="wizard[refreshment_budget]" 
+                       value="<%= @wizard.wizard_data['refreshment_budget'] || 30000 %>"
+                       step="10000"
+                       class="w-full px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 버튼 영역 -->
+        <div class="mt-8 flex justify-between">
+          <%= link_to "이전", previous_tournament_quick_path, 
+                      method: :patch,
+                      class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+          
+          <%= f.submit "다음", 
+                       class: "px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

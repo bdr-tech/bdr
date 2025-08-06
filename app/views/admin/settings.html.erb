@@ -1,0 +1,207 @@
+<% content_for :title, "설정" %>
+
+<!-- 페이지 제목 -->
+<div class="mb-8">
+  <h2 class="text-3xl font-bold text-gray-800 mb-2">⚙️ 시스템 설정</h2>
+  <p class="text-gray-600">플랫폼 설정을 관리하고 구성하세요</p>
+</div>
+
+<!-- 설정 섹션들 -->
+<div class="space-y-8">
+  <!-- 일반 설정 -->
+  <% if @settings['general']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🔧 일반 설정</h3>
+      <div class="space-y-4">
+        <% @settings['general'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 결제 설정 -->
+  <% if @settings['payment']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">💳 결제 설정</h3>
+      <div class="space-y-4">
+        <% @settings['payment'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 알림 설정 -->
+  <% if @settings['notification']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🔔 알림 설정</h3>
+      <div class="space-y-4">
+        <% @settings['notification'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 게임 설정 -->
+  <% if @settings['game']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🏀 게임 설정</h3>
+      <div class="space-y-4">
+        <% @settings['game'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 사용자 설정 -->
+  <% if @settings['user']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">👤 사용자 설정</h3>
+      <div class="space-y-4">
+        <% @settings['user'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 시스템 설정 -->
+  <% if @settings['system']&.any? %>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">🛠️ 시스템 설정</h3>
+      <div class="space-y-4">
+        <% @settings['system'].each do |setting| %>
+          <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= setting.key %></div>
+              <div class="text-sm text-gray-500"><%= setting.description %></div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <%= form_with model: setting, url: admin_update_setting_path(setting), method: :patch, local: true, class: "flex items-center space-x-2" do |f| %>
+                <% if setting.value.in?(['true', 'false']) %>
+                  <%= f.check_box :value, { checked: setting.value == 'true', class: "rounded border-gray-300 text-blue-600 focus:ring-blue-500" }, 'true', 'false' %>
+                <% elsif setting.value.match?(/^\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% elsif setting.value.match?(/^\d+\.\d+$/) %>
+                  <%= f.number_field :value, value: setting.value, step: 0.01, class: "w-20 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% else %>
+                  <%= f.text_field :value, value: setting.value, class: "w-40 px-2 py-1 border border-gray-300 rounded text-sm" %>
+                <% end %>
+                <%= f.submit "저장", class: "bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- 빈 설정 안내 -->
+<% if @settings.empty? %>
+  <div class="bg-white rounded-lg shadow-md p-8 text-center">
+    <div class="text-gray-500">
+      <div class="text-4xl mb-4">⚙️</div>
+      <p class="text-lg">설정 항목이 없습니다.</p>
+      <p class="text-sm text-gray-400 mt-2">시스템 설정을 초기화하려면 관리자에게 문의하세요.</p>
+    </div>
+  </div>
+<% end %>

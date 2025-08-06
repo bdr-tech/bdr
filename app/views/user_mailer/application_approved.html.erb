@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #1a73e8; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px; }
+      .button { display: inline-block; padding: 12px 24px; background-color: #1a73e8; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+      .info-box { background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e0; }
+      .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+    </style>
+  </head>
+  
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏀 BDR - Basketball Daily Routine</h1>
+      </div>
+      
+      <div class="content">
+        <h2>안녕하세요, <%= @user.display_name %>님!</h2>
+        
+        <p>축하합니다! 경기 신청이 <strong>승인</strong>되었습니다.</p>
+        
+        <div class="info-box">
+          <h3>경기 정보</h3>
+          <p>
+            <strong>경기명:</strong> <%= @game.title %><br>
+            <strong>일시:</strong> <%= @game.start_time.strftime('%Y년 %m월 %d일 %H:%M') %><br>
+            <strong>장소:</strong> <%= @game.venue_name %><br>
+            <strong>주소:</strong> <%= @game.venue_address %><br>
+            <strong>참가비:</strong> <%= number_to_currency(@game.fee) %>
+          </p>
+        </div>
+        
+        <% if @game.fee > 0 %>
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+            <h3 style="color: #856404; margin-top: 0;">⚠️ 결제 안내</h3>
+            <p style="color: #856404; margin-bottom: 0;">
+              경기 참가를 확정하려면 <strong><%= @application.payment_deadline.strftime('%Y년 %m월 %d일 %H:%M') %></strong>까지 
+              참가비를 결제해주세요. 기한 내 미결제 시 자동으로 취소됩니다.
+            </p>
+          </div>
+          
+          <center>
+            <%= link_to "결제하러 가기", new_game_game_application_payment_url(@game, @application), class: "button" %>
+          </center>
+        <% else %>
+          <p style="color: #28a745; font-weight: bold;">
+            ✅ 무료 경기이므로 별도의 결제 없이 참가가 확정되었습니다!
+          </p>
+        <% end %>
+        
+        <h3>경기 전 준비사항</h3>
+        <ul>
+          <li>운동복과 농구화를 준비해주세요</li>
+          <li>충분한 수분 섭취를 위한 물을 지참해주세요</li>
+          <li>경기 10분 전까지 도착해주세요</li>
+          <li>부상 방지를 위해 충분한 스트레칭을 해주세요</li>
+        </ul>
+        
+        <center>
+          <%= link_to "홈으로 가기", root_url, class: "button", style: "background-color: #6c757d;" %>
+        </center>
+      </div>
+      
+      <div class="footer">
+        <p>이 메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.</p>
+        <p>문의사항이 있으시면 support@bdr-platform.com으로 연락주세요.</p>
+        <p>&copy; <%= Date.current.year %> BDR Platform. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>

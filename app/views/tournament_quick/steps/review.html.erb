@@ -1,0 +1,182 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- 진행 상태 표시 -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4">
+        <%= render 'tournament_quick/shared/progress_bar', wizard: @wizard %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 최종 확인 -->
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= form_with url: tournament_quick_path, method: :patch, local: true do |f| %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+          최종 확인
+        </h2>
+
+        <div class="space-y-6">
+          <!-- 대회 정보 요약 -->
+          <div class="bg-gray-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">대회 정보</h3>
+            
+            <dl class="space-y-3">
+              <div class="flex justify-between">
+                <dt class="text-gray-600">대회명</dt>
+                <dd class="font-medium text-gray-900"><%= @wizard.wizard_data['name'] || '미입력' %></dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">일시</dt>
+                <dd class="font-medium text-gray-900">
+                  <%= DateTime.parse(@wizard.wizard_data['start_datetime']).strftime('%Y년 %m월 %d일 %H:%M') rescue '미입력' %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">장소</dt>
+                <dd class="font-medium text-gray-900"><%= @wizard.wizard_data['venue_name'] || '미입력' %></dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">참가 팀</dt>
+                <dd class="font-medium text-gray-900">
+                  <%= @wizard.wizard_data['min_teams'] %>~<%= @wizard.wizard_data['max_teams'] %>팀
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">참가비</dt>
+                <dd class="font-medium text-gray-900">
+                  <%= number_to_currency(@wizard.wizard_data['entry_fee']) %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">경기 방식</dt>
+                <dd class="font-medium text-gray-900">
+                  <%= @wizard.wizard_data['game_type'] == '3x3' ? '3대3' : '5대5' %>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- 예상 수익/비용 -->
+          <div class="bg-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">예상 수익/비용</h3>
+            
+            <dl class="space-y-3">
+              <div class="flex justify-between">
+                <dt class="text-gray-600">예상 수입</dt>
+                <dd class="font-medium text-gray-900">
+                  <%= number_to_currency(@wizard.wizard_data['max_teams'].to_i * @wizard.wizard_data['entry_fee'].to_i) %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">플랫폼 수수료 (5%)</dt>
+                <dd class="font-medium text-red-600">
+                  -<%= number_to_currency(@wizard.wizard_data['max_teams'].to_i * @wizard.wizard_data['entry_fee'].to_i * 0.05) %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">코트 대여비</dt>
+                <dd class="font-medium text-red-600">
+                  -<%= number_to_currency(@wizard.wizard_data['court_fee'] || 50000) %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">상품비</dt>
+                <dd class="font-medium text-red-600">
+                  -<%= number_to_currency(@wizard.wizard_data['prize_budget'] || 50000) %>
+                </dd>
+              </div>
+              
+              <div class="flex justify-between">
+                <dt class="text-gray-600">간식/음료</dt>
+                <dd class="font-medium text-red-600">
+                  -<%= number_to_currency(@wizard.wizard_data['refreshment_budget'] || 30000) %>
+                </dd>
+              </div>
+              
+              <div class="border-t pt-3 flex justify-between">
+                <dt class="text-gray-900 font-semibold">예상 순수익</dt>
+                <dd class="font-bold text-gray-900">
+                  <% net_profit = (@wizard.wizard_data['max_teams'].to_i * @wizard.wizard_data['entry_fee'].to_i * 0.95) - 
+                                  (@wizard.wizard_data['court_fee'].to_i + 
+                                   @wizard.wizard_data['prize_budget'].to_i + 
+                                   @wizard.wizard_data['refreshment_budget'].to_i) %>
+                  <%= number_to_currency(net_profit) %>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- 선택한 옵션 -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">선택한 옵션</h3>
+            <ul class="space-y-2 text-gray-700">
+              <% if @wizard.wizard_data['generate_poster'] == 'true' %>
+                <li class="flex items-center">
+                  <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  자동 포스터 생성
+                </li>
+              <% end %>
+              
+              <% if @wizard.wizard_data['enable_live_score'] == 'true' %>
+                <li class="flex items-center">
+                  <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  실시간 점수 업데이트
+                </li>
+              <% end %>
+              
+              <% if @wizard.wizard_data['special_events']&.any? %>
+                <li class="flex items-center">
+                  <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  특별 이벤트: <%= @wizard.wizard_data['special_events'].join(', ') %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+
+          <!-- 안내 메시지 -->
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                  대회 생성 후에도 발행 전까지는 모든 내용을 수정할 수 있습니다.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 버튼 영역 -->
+        <div class="mt-8 flex justify-between">
+          <%= link_to "이전", previous_tournament_quick_path, 
+                      method: :patch,
+                      class: "px-4 py-2 text-gray-700 hover:text-gray-900" %>
+          
+          <%= f.submit "대회 만들기", 
+                       name: "commit",
+                       value: "다음",
+                       class: "px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

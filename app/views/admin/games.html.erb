@@ -1,0 +1,180 @@
+<% content_for :title, "경기 관리" %>
+
+<!-- 페이지 제목 -->
+<div class="mb-8">
+  <h2 class="text-3xl font-bold text-gray-800 mb-2">🏀 경기 관리</h2>
+  <p class="text-gray-600">등록된 경기들을 관리하고 모니터링하세요</p>
+</div>
+
+<!-- 필터 및 검색 -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-6">
+  <%= form_with url: admin_games_path, method: :get, local: true, class: "flex flex-wrap gap-4 items-end" do |form| %>
+    <div class="flex-1 min-w-64">
+      <%= form.text_field :search, placeholder: "경기명, 경기ID 검색", 
+                          value: params[:search], 
+                          class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+    </div>
+    <div>
+      <%= form.select :status, 
+                      options_for_select([
+                        ['전체 상태', ''],
+                        ['활성', 'active'],
+                        ['완료', 'completed'],
+                        ['취소', 'cancelled'],
+                        ['진행중', 'in_progress']
+                      ], params[:status]), 
+                      {}, 
+                      { class: "px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" } %>
+    </div>
+    <div class="flex gap-2">
+      <%= form.submit "검색", class: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+      <%= link_to "초기화", admin_games_path, class: "bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- 경기 목록 -->
+<div class="bg-white rounded-lg shadow-md overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">경기 정보</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">호스트</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">참가자</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">수익</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">일정</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <% @games.each do |game| %>
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <div class="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold">
+                    🏀
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= link_to game.title, game_path(game), class: "text-blue-600 hover:text-blue-800" %>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    ID: <%= game.game_id %>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <%= game.game_type %> • <%= game.court&.name || game.venue_name %>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">
+                <%= game.organizer.name %>
+              </div>
+              <div class="text-sm text-gray-500">
+                <%= game.organizer.email %>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <% case game.status %>
+              <% when 'active' %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  활성
+                </span>
+              <% when 'completed' %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  완료
+                </span>
+              <% when 'cancelled' %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  취소
+                </span>
+              <% when 'in_progress' %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  진행중
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  <%= game.status %>
+                </span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <div class="flex items-center">
+                <div class="text-sm font-medium text-gray-900">
+                  <%= game.confirmed_players_count %>/<%= game.max_players %>
+                </div>
+              </div>
+              <div class="text-xs text-gray-500">
+                신청: <%= game.game_applications.count %>건
+              </div>
+              <div class="text-xs text-gray-500">
+                대기: <%= game.game_applications.pending.count %>건
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <% if game.fee && game.fee > 0 %>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= number_to_currency(game.fee, unit: '₩', precision: 0) %> × <%= game.confirmed_players_count %>
+                </div>
+                <div class="text-xs text-green-600">
+                  총 <%= number_to_currency(game.confirmed_players_count * game.fee, unit: '₩', precision: 0) %>
+                </div>
+              <% else %>
+                <span class="text-gray-400">무료</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <div class="text-sm font-medium text-gray-900">
+                <%= game.scheduled_at.strftime("%Y-%m-%d") %>
+              </div>
+              <div class="text-xs text-gray-500">
+                <%= game.scheduled_at.strftime("%H:%M") %>
+              </div>
+              <div class="text-xs text-gray-400">
+                <%= time_ago_in_words(game.created_at) %> 전 생성
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <%= link_to "상세", game_path(game), class: "text-blue-600 hover:text-blue-800" %>
+                
+                <% if game.status == 'active' %>
+                  <%= form_with url: admin_game_action_path(game), method: :post, local: true, class: "inline" do |f| %>
+                    <%= f.hidden_field :action_type, value: 'cancel' %>
+                    <%= f.submit "취소", class: "bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs", 
+                                 confirm: "정말로 이 경기를 취소하시겠습니까?" %>
+                  <% end %>
+                <% elsif game.status == 'cancelled' %>
+                  <%= form_with url: admin_game_action_path(game), method: :post, local: true, class: "inline" do |f| %>
+                    <%= f.hidden_field :action_type, value: 'activate' %>
+                    <%= f.submit "활성화", class: "bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs", 
+                                 confirm: "이 경기를 다시 활성화하시겠습니까?" %>
+                  <% end %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% if @games.empty? %>
+  <div class="bg-white rounded-lg shadow-md p-8 text-center">
+    <div class="text-gray-500">
+      <div class="text-4xl mb-4">🏀</div>
+      <p class="text-lg">조건에 맞는 경기가 없습니다.</p>
+    </div>
+  </div>
+<% else %>
+  <!-- 페이지네이션 -->
+  <div class="mt-6 flex justify-center">
+    <%= paginate @games %>
+  </div>
+<% end %>

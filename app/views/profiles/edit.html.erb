@@ -1,0 +1,241 @@
+<% content_for :title, "프로필 수정 - BDR" %>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-md">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">프로필 수정</h1>
+      <p class="text-sm text-gray-600 mt-1">경기 참여를 위해 프로필을 완성해주세요</p>
+      
+      <!-- Progress Bar -->
+      <div class="mt-4">
+        <div class="flex justify-between text-sm text-gray-600 mb-2">
+          <span>프로필 완성도</span>
+          <span><%= @user.profile_completion_percentage %>%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+               style="width: <%= @user.profile_completion_percentage %>%"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <%= form_with model: @user, url: profile_update_path, local: true, class: "space-y-6" do |form| %>
+        
+        <!-- 기본 정보 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <%= form.label :name, "이름", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :name, 
+                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+          </div>
+          
+          <div>
+            <%= form.label :nickname, "닉네임 *", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :nickname, required: true,
+                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+          </div>
+          
+          <div>
+            <%= form.label :real_name, "실명 *", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.text_field :real_name, required: true,
+                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+          </div>
+          
+          <div>
+            <%= form.label :email, "이메일", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.email_field :email, 
+                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" %>
+          </div>
+          
+          <div>
+            <%= form.label :phone, "전화번호 *", class: "block text-sm font-medium text-gray-700" %>
+            <%= form.telephone_field :phone, required: true,
+                  class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                  placeholder: "010-1234-5678" %>
+          </div>
+        </div>
+        
+        <!-- 신체 정보 -->
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">신체 정보</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <%= form.label :height, "키 (cm) *", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.number_field :height, required: true,
+                    class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                    placeholder: "180" %>
+            </div>
+            
+            <div>
+              <%= form.label :weight, "몸무게 (kg) *", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.number_field :weight, required: true,
+                    class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                    placeholder: "75" %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 농구 정보 -->
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">농구 정보</h3>
+          <div class="space-y-4">
+            <div>
+              <%= form.label :positions, "포지션 *", class: "block text-sm font-medium text-gray-700" %>
+              <div class="mt-2 space-y-2">
+                <% User::POSITIONS.each do |position| %>
+                  <div class="flex items-center">
+                    <%= check_box_tag "user[positions][]", position, 
+                          (@user.positions&.include?(position) || false),
+                          class: "h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded" %>
+                    <%= label_tag "user[positions][]", position, class: "ml-2 text-sm text-gray-700" %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 지역 정보 -->
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">지역 정보</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <%= form.label :city, "시/도 *", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.select :city, options_for_select([
+                    ['서울특별시', '서울특별시'],
+                    ['부산광역시', '부산광역시'],
+                    ['대구광역시', '대구광역시'],
+                    ['인천광역시', '인천광역시'],
+                    ['광주광역시', '광주광역시'],
+                    ['대전광역시', '대전광역시'],
+                    ['울산광역시', '울산광역시'],
+                    ['세종특별자치시', '세종특별자치시'],
+                    ['경기도', '경기도'],
+                    ['강원도', '강원도'],
+                    ['충청북도', '충청북도'],
+                    ['충청남도', '충청남도'],
+                    ['전라북도', '전라북도'],
+                    ['전라남도', '전라남도'],
+                    ['경상북도', '경상북도'],
+                    ['경상남도', '경상남도'],
+                    ['제주특별자치도', '제주특별자치도']
+                  ], @user.city), 
+                  { prompt: "시/도를 선택하세요" },
+                  { class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm" } %>
+            </div>
+            
+            <div>
+              <%= form.label :district, "구/군 *", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_field :district, required: true,
+                    class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                    placeholder: "강남구" %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 추가 정보 -->
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">추가 정보</h3>
+          <div class="space-y-4">
+            <div>
+              <%= form.label :team_name, "소속 팀", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_field :team_name, 
+                    class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                    placeholder: "소속 팀이 있다면 입력하세요" %>
+            </div>
+            
+            <div>
+              <%= form.label :bio, "자기소개", class: "block text-sm font-medium text-gray-700" %>
+              <%= form.text_area :bio, rows: 4,
+                    class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm",
+                    placeholder: "자신의 농구 경력이나 플레이 스타일을 소개해주세요" %>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 계좌 정보 -->
+        <div class="border-t pt-6">
+          <h3 class="text-lg font-medium text-gray-900 mb-4">💰 계좌 정보</h3>
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-6 shadow-sm">
+            <div class="flex items-start">
+              <div class="text-blue-500 text-xl mr-3">ℹ️</div>
+              <div class="text-sm text-blue-700">
+                <p class="font-semibold mb-1">호스트 전용 계좌 정보</p>
+                <p>경기를 주최할 때 게스트들로부터 참가비를 받을 계좌입니다.</p>
+                <p>참가비는 결제 완료 후 7일 이내에 입금됩니다.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-5">
+            <div>
+              <%= form.label :bank_name, "은행명", class: "block text-sm font-semibold text-gray-700 mb-2" %>
+              <div class="relative">
+                <%= form.select :bank_name, options_for_select([
+                      ['선택하세요', ''],
+                      ['국민은행', '국민은행'],
+                      ['신한은행', '신한은행'],
+                      ['우리은행', '우리은행'],
+                      ['하나은행', '하나은행'],
+                      ['농협은행', '농협은행'],
+                      ['기업은행', '기업은행'],
+                      ['SC제일은행', 'SC제일은행'],
+                      ['씨티은행', '씨티은행'],
+                      ['경남은행', '경남은행'],
+                      ['광주은행', '광주은행'],
+                      ['대구은행', '대구은행'],
+                      ['부산은행', '부산은행'],
+                      ['전북은행', '전북은행'],
+                      ['제주은행', '제주은행'],
+                      ['카카오뱅크', '카카오뱅크'],
+                      ['케이뱅크', '케이뱅크'],
+                      ['토스뱅크', '토스뱅크']
+                    ], @user.bank_name),
+                    { class: "appearance-none block w-full px-4 py-3 pr-8 border-2 border-gray-300 rounded-lg bg-white text-gray-700 font-medium shadow-sm hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200" } %>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                  <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <%= form.label :account_number, "계좌번호", class: "block text-sm font-semibold text-gray-700 mb-2" %>
+              <div class="relative">
+                <%= form.text_field :account_number, 
+                      class: "block w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700 font-medium shadow-sm hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200",
+                      placeholder: "'-' 없이 숫자만 입력하세요" %>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <%= form.label :account_holder, "예금주", class: "block text-sm font-semibold text-gray-700 mb-2" %>
+              <div class="relative">
+                <%= form.text_field :account_holder, 
+                      class: "block w-full px-4 py-3 border-2 border-gray-300 rounded-lg bg-white text-gray-700 font-medium shadow-sm hover:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200",
+                      placeholder: "예금주 이름을 입력하세요" %>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-6 border-t">
+          <%= link_to "취소", profile_path, class: "px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50" %>
+          <%= form.submit "프로필 저장", class: "px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md text-sm font-medium" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  court: one
+  organizer_id: 1
+  scheduled_at: 2025-07-17 12:19:47
+  status: MyString
+  max_players: 1
+
+two:
+  court: two
+  organizer_id: 1
+  scheduled_at: 2025-07-17 12:19:47
+  status: MyString
+  max_players: 1

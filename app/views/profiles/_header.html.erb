@@ -1,0 +1,62 @@
+<% cache ["profile_header", user, user.updated_at, profile_completion] do %>
+<div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+  <div class="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
+    <!-- 프로필 이미지 -->
+    <div class="relative">
+      <div class="w-20 h-20 md:w-32 md:h-32 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white text-2xl md:text-4xl font-bold shadow-lg">
+        <%= user.nickname&.first&.upcase || user.name&.first&.upcase || 'U' %>
+      </div>
+      <div class="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 bg-green-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-2 md:border-4 border-white flex items-center justify-center">
+        <span class="text-white text-xs">🏀</span>
+      </div>
+    </div>
+    
+    <!-- 기본 정보 -->
+    <div class="flex-1 text-center md:text-left">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= user.nickname || user.name || '사용자' %></h1>
+      <p class="text-gray-600 mb-2"><%= user.position_names.join(', ') || '포지션 미설정' %> • 키 <%= user.height || '미설정' %>cm</p>
+      <% if user.bio.present? %>
+        <p class="text-gray-500 text-sm mb-4 italic"><%= user.bio %></p>
+      <% end %>
+      
+      <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-6">
+        <% if user.city && user.district %>
+          <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold">
+            📍 <%= user.city %> <%= user.district %>
+          </span>
+        <% end %>
+        <% if user.position_names.any? %>
+          <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+            🏀 <%= user.position_names.first %>
+          </span>
+        <% end %>
+        <% if user.team_name.present? %>
+          <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+            🏀 <%= user.team_name %>
+          </span>
+        <% end %>
+        <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold inline-flex items-center">
+          ⭐ <%= user_rating_summary(user) %>
+        </span>
+      </div>
+      
+      <div class="flex flex-wrap justify-center md:justify-between items-end gap-3">
+        <div class="flex flex-wrap gap-3">
+          <%= link_to "프로필 수정", profile_edit_path, class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+          <%= link_to "게임 기록", profile_history_path, class: "bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+          <%= link_to "통계 보기", profile_stats_path, class: "bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+          <%= link_to "알림 설정", notification_settings_user_path(user), class: "bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+        </div>
+        
+        <!-- 프로필 완성도 (데스크톱에서만 표시) -->
+        <div class="hidden md:block bg-gradient-to-br from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div class="text-center">
+            <div class="text-xl font-bold"><%= profile_completion %>%</div>
+            <div class="text-xs">프로필 완성도</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>

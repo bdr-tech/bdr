@@ -1,0 +1,94 @@
+<% content_for :title, "결제 확인 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="text-center">
+        <div class="text-6xl mb-4">💳</div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">결제 정보 등록 완료</h1>
+        <p class="text-gray-600">입금 확인 후 경기 참가가 최종 확정됩니다</p>
+      </div>
+    </div>
+
+    <!-- 결제 상태 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">📋 결제 상태</h2>
+      
+      <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center">
+          <div class="text-2xl mr-3">⏳</div>
+          <div>
+            <div class="text-orange-800 font-semibold">입금 확인 대기중</div>
+            <div class="text-sm text-orange-600">
+              입금 후 1-2시간 내에 확인됩니다
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-600">결제 방법</span>
+          <span class="text-gray-800">🏦 계좌이체</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">금액</span>
+          <span class="text-gray-800 font-semibold"><%= @payment.amount.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %>원</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">등록일시</span>
+          <span class="text-gray-800"><%= @payment.created_at.strftime("%Y년 %m월 %d일 %H:%M") %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 입금 정보 재확인 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">🏦 입금 정보</h2>
+      
+      <% bdr_info = JSON.parse(@payment.bdr_account_info) %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-600">은행</span>
+            <span class="font-semibold"><%= bdr_info['bank_name'] %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">계좌번호</span>
+            <span class="font-mono font-semibold text-lg"><%= bdr_info['account_number'] %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">예금주</span>
+            <span class="font-semibold"><%= bdr_info['account_holder'] %></span>
+          </div>
+          <hr class="my-3">
+          <div class="flex justify-between text-lg">
+            <span class="text-gray-800 font-semibold">입금 금액</span>
+            <span class="text-orange-600 font-bold"><%= @payment.amount.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse %>원</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 안내 메시지 -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+      <div class="text-green-800 font-semibold mb-2">✅ 다음 단계</div>
+      <ul class="text-green-700 text-sm space-y-1">
+        <li>• 위 계좌로 정확한 금액을 입금해주세요</li>
+        <li>• 입금자명은 신청시 사용한 이름으로 해주세요</li>
+        <li>• 입금 확인 후 자동으로 경기 참가가 확정됩니다</li>
+        <li>• 확정 알림은 프로필 페이지에서 확인하실 수 있습니다</li>
+      </ul>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div class="space-y-3">
+      <%= link_to "🏀 경기 상세로 돌아가기", @game, 
+            class: "w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+      
+      <%= link_to "📱 내 프로필 보기", profile_path, 
+            class: "w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center block" %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,119 @@
+<% content_for :title, "분석" %>
+
+<!-- 페이지 제목 -->
+<div class="mb-8">
+  <h2 class="text-3xl font-bold text-gray-800 mb-2">📊 분석</h2>
+  <p class="text-gray-600">플랫폼 성과와 통계를 분석하세요</p>
+</div>
+
+<!-- 사용자 통계 -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+  <h3 class="text-xl font-semibold text-gray-800 mb-4">👥 사용자 통계</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-blue-600"><%= @user_stats[:total_users] %></div>
+      <div class="text-sm text-gray-600">전체 사용자</div>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-green-600"><%= @user_stats[:active_users] %></div>
+      <div class="text-sm text-gray-600">활성 사용자</div>
+    </div>
+    <div class="bg-orange-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-orange-600"><%= @user_stats[:new_users_today] %></div>
+      <div class="text-sm text-gray-600">오늘 가입자</div>
+    </div>
+    <div class="bg-purple-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-purple-600"><%= @user_stats[:new_users_this_week] %></div>
+      <div class="text-sm text-gray-600">이번주 가입자</div>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-yellow-600"><%= @user_stats[:avg_profile_completion] %>%</div>
+      <div class="text-sm text-gray-600">평균 프로필 완성도</div>
+    </div>
+  </div>
+</div>
+
+<!-- 경기 통계 -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+  <h3 class="text-xl font-semibold text-gray-800 mb-4">🏀 경기 통계</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-blue-600"><%= @game_stats[:total_games] %></div>
+      <div class="text-sm text-gray-600">전체 경기</div>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-green-600"><%= @game_stats[:active_games] %></div>
+      <div class="text-sm text-gray-600">활성 경기</div>
+    </div>
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-blue-600"><%= @game_stats[:completed_games] %></div>
+      <div class="text-sm text-gray-600">완료된 경기</div>
+    </div>
+    <div class="bg-red-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-red-600"><%= @game_stats[:cancelled_games] %></div>
+      <div class="text-sm text-gray-600">취소된 경기</div>
+    </div>
+    <div class="bg-orange-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-orange-600"><%= @game_stats[:avg_applications].round(1) %></div>
+      <div class="text-sm text-gray-600">평균 신청자 수</div>
+    </div>
+    <div class="bg-purple-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-purple-600"><%= (@game_stats[:avg_completion_rate] * 100).round(1) %>%</div>
+      <div class="text-sm text-gray-600">평균 완료율</div>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-green-600"><%= number_to_currency(@game_stats[:total_revenue], unit: '₩', precision: 0) %></div>
+      <div class="text-sm text-gray-600">총 수익</div>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-yellow-600"><%= @game_stats[:avg_rating].round(1) %></div>
+      <div class="text-sm text-gray-600">평균 평점</div>
+    </div>
+  </div>
+</div>
+
+<!-- 결제 통계 -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+  <h3 class="text-xl font-semibold text-gray-800 mb-4">💳 결제 통계</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-blue-600"><%= @payment_stats[:total_payments] %></div>
+      <div class="text-sm text-gray-600">전체 결제</div>
+    </div>
+    <div class="bg-green-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-green-600"><%= @payment_stats[:completed_payments] %></div>
+      <div class="text-sm text-gray-600">완료된 결제</div>
+    </div>
+    <div class="bg-red-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-red-600"><%= @payment_stats[:refunded_payments] %></div>
+      <div class="text-sm text-gray-600">환불된 결제</div>
+    </div>
+    <div class="bg-purple-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-purple-600"><%= number_to_currency(@payment_stats[:total_revenue], unit: '₩', precision: 0) %></div>
+      <div class="text-sm text-gray-600">총 결제 금액</div>
+    </div>
+    <div class="bg-orange-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-orange-600"><%= number_to_currency(@payment_stats[:avg_payment_amount], unit: '₩', precision: 0) %></div>
+      <div class="text-sm text-gray-600">평균 결제 금액</div>
+    </div>
+    <div class="bg-yellow-50 p-4 rounded-lg">
+      <div class="text-2xl font-bold text-yellow-600">
+        <%= @payment_stats[:total_payments] > 0 ? ((@payment_stats[:completed_payments].to_f / @payment_stats[:total_payments]) * 100).round(1) : 0 %>%
+      </div>
+      <div class="text-sm text-gray-600">결제 성공률</div>
+    </div>
+  </div>
+</div>
+
+<!-- 지역별 통계 -->
+<div class="bg-white rounded-lg shadow-md p-6">
+  <h3 class="text-xl font-semibold text-gray-800 mb-4">🌍 지역별 사용자 분포</h3>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @user_stats[:top_cities].each do |city, count| %>
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="text-lg font-bold text-gray-800"><%= city || '지역 미설정' %></div>
+        <div class="text-sm text-gray-600"><%= count %>명</div>
+      </div>
+    <% end %>
+  </div>
+</div>

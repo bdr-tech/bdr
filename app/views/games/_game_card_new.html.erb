@@ -1,0 +1,138 @@
+<div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+  <!-- 헤더 -->
+  <div class="flex justify-between items-start mb-4">
+    <div class="flex-1">
+      <h3 class="text-lg font-bold text-gray-800 mb-1">
+        <%= link_to game.title, game_path(game), class: "hover:text-orange-600 transition-colors" %>
+      </h3>
+      <p class="text-sm text-gray-600">
+        <span class="inline-flex items-center">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          <%= game.venue_name %>
+        </span>
+      </p>
+    </div>
+    
+    <!-- 상태 배지 -->
+    <div class="flex flex-col items-end gap-2">
+      <span class="px-3 py-1 rounded-full text-xs font-semibold <%= game.game_type_badge_class %>">
+        <%= game.game_type %>
+      </span>
+      
+      <% if game.confirmed_players_count < game.max_players %>
+        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+          참가 가능
+        </span>
+      <% else %>
+        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">
+          마감
+        </span>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- 경기 정보 -->
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="flex items-center text-sm">
+      <span class="text-orange-500 mr-2">📅</span>
+      <div>
+        <p class="font-semibold text-gray-700"><%= game.start_time.strftime("%m/%d %a") %></p>
+        <p class="text-xs text-gray-500"><%= game.start_time.strftime("%H:%M") %> - <%= game.end_time.strftime("%H:%M") %></p>
+      </div>
+    </div>
+    
+    <div class="flex items-center text-sm">
+      <span class="text-blue-500 mr-2">👥</span>
+      <div>
+        <p class="font-semibold text-gray-700">
+          <%= game.confirmed_players_count %> / <%= game.max_players %>명
+        </p>
+        <p class="text-xs text-gray-500">
+          <%= game.max_players - game.confirmed_players_count %>자리 남음
+        </p>
+      </div>
+    </div>
+    
+    <div class="flex items-center text-sm">
+      <span class="text-purple-500 mr-2">📍</span>
+      <div>
+        <p class="font-semibold text-gray-700"><%= game.city %></p>
+        <p class="text-xs text-gray-500"><%= game.district %></p>
+      </div>
+    </div>
+    
+    <div class="flex items-center text-sm">
+      <span class="text-green-500 mr-2">💰</span>
+      <div>
+        <p class="font-semibold text-gray-700">
+          <% if game.fee > 0 %>
+            <%= number_to_currency(game.fee) %>
+          <% else %>
+            무료
+          <% end %>
+        </p>
+        <p class="text-xs text-gray-500">참가비</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 추가 정보 -->
+  <div class="border-t pt-3 mb-4">
+    <div class="flex items-center justify-between text-sm">
+      <div class="flex items-center">
+        <span class="text-yellow-500 mr-2">⚡</span>
+        <span class="text-gray-600">레벨: <span class="font-semibold"><%= game.level_text %></span></span>
+      </div>
+      
+      <% if game.uniform_colors.present? %>
+        <div class="flex items-center gap-1">
+          <span class="text-xs text-gray-500">유니폼:</span>
+          <% game.uniform_colors.first(2).each do |color| %>
+            <span class="w-4 h-4 rounded-full border border-gray-300" 
+                  style="background-color: <%= get_uniform_color_code(color) %>"
+                  title="<%= color %>"></span>
+          <% end %>
+          <% if game.uniform_colors.size > 2 %>
+            <span class="text-xs text-gray-500">+<%= game.uniform_colors.size - 2 %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- 참가율 프로그레스 바 -->
+  <div class="mb-4">
+    <div class="flex justify-between text-xs text-gray-600 mb-1">
+      <span>참가율</span>
+      <span><%= ((game.confirmed_players_count.to_f / game.max_players) * 100).round %>%</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2">
+      <div class="bg-gradient-to-r from-orange-400 to-orange-600 h-2 rounded-full transition-all duration-300" 
+           style="width: <%= ((game.confirmed_players_count.to_f / game.max_players) * 100).round %>%"></div>
+    </div>
+  </div>
+  
+  <!-- 호스트 정보 & 액션 버튼 -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center text-sm text-gray-600">
+      <img src="https://ui-avatars.com/api/?name=<%= URI.encode_www_form_component(game.organizer.display_name) %>&background=F97316&color=fff&size=32&rounded=true" 
+           alt="호스트" class="w-8 h-8 rounded-full mr-2">
+      <div>
+        <p class="font-medium"><%= game.organizer.display_name %></p>
+        <p class="text-xs text-gray-500">호스트</p>
+      </div>
+    </div>
+    
+    <% if game.confirmed_players_count < game.max_players && game.start_time > Time.current %>
+      <%= link_to "참가하기", game_path(game), 
+          class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition duration-300" %>
+    <% else %>
+      <span class="bg-gray-300 text-gray-600 px-6 py-2 rounded-lg font-medium">
+        <%= game.start_time < Time.current ? '종료' : '마감' %>
+      </span>
+    <% end %>
+  </div>
+</div>

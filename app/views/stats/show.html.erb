@@ -1,0 +1,175 @@
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- Player Header -->
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+    <div class="flex items-start justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
+          <span class="text-3xl">👤</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900"><%= @user.nickname || @user.name %></h1>
+          <p class="text-gray-600">
+            <%= @user.position_names.join(", ") %> | 
+            <%= @user.height %>cm | 
+            <%= @user.skill_level_name %>
+          </p>
+          <p class="text-sm text-gray-500"><%= @user.location_full_name %></p>
+        </div>
+      </div>
+      <% if @user.premium? %>
+        <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+          프리미엄
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Career Stats Summary -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+      <p class="text-gray-500 text-sm">경기수</p>
+      <p class="text-2xl font-bold text-gray-900"><%= @career_stats[:games_played] %></p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+      <p class="text-gray-500 text-sm">평균 득점</p>
+      <p class="text-2xl font-bold text-blue-600"><%= @career_stats[:points_per_game].round(1) %></p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+      <p class="text-gray-500 text-sm">평균 리바운드</p>
+      <p class="text-2xl font-bold text-green-600"><%= @career_stats[:rebounds_per_game].round(1) %></p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4 text-center">
+      <p class="text-gray-500 text-sm">평균 어시스트</p>
+      <p class="text-2xl font-bold text-purple-600"><%= @career_stats[:assists_per_game].round(1) %></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Current Season -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">현재 시즌 (<%= @current_season.season_name %>)</h2>
+      
+      <% if @current_season.games_played > 0 %>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">경기</span>
+            <span class="font-semibold"><%= @current_season.games_played %> (<%= @current_season.wins %>승 <%= @current_season.losses %>패)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">PPG</span>
+            <span class="font-semibold"><%= @current_season.points_per_game.round(1) %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">RPG</span>
+            <span class="font-semibold"><%= @current_season.rebounds_per_game.round(1) %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">APG</span>
+            <span class="font-semibold"><%= @current_season.assists_per_game.round(1) %></span>
+          </div>
+          <div class="border-t pt-3">
+            <div class="flex justify-between">
+              <span class="text-gray-600">FG%</span>
+              <span class="font-semibold"><%= @current_season.field_goal_percentage.round(1) %>%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">3P%</span>
+              <span class="font-semibold"><%= @current_season.three_point_percentage.round(1) %>%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">FT%</span>
+              <span class="font-semibold"><%= @current_season.free_throw_percentage.round(1) %>%</span>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <p class="text-gray-500">이번 시즌 경기 기록이 없습니다.</p>
+      <% end %>
+    </div>
+
+    <!-- Shooting Chart -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">슈팅 차트</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm text-gray-600">필드골</span>
+            <span class="text-sm font-semibold"><%= @career_stats[:field_goal_percentage] %>%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-blue-600 h-3 rounded-full" style="width: <%= @career_stats[:field_goal_percentage] %>%"></div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm text-gray-600">3점슛</span>
+            <span class="text-sm font-semibold"><%= @career_stats[:three_point_percentage] %>%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-red-600 h-3 rounded-full" style="width: <%= @career_stats[:three_point_percentage] %>%"></div>
+          </div>
+        </div>
+        
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-sm text-gray-600">자유투</span>
+            <span class="text-sm font-semibold"><%= @career_stats[:free_throw_percentage] %>%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div class="bg-green-600 h-3 rounded-full" style="width: <%= @career_stats[:free_throw_percentage] %>%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Games -->
+  <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-4">최근 경기</h2>
+    
+    <% if @recent_games.any? %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead>
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">경기장</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">PTS</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">REB</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">AST</th>
+              <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">+/-</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @recent_games.each do |stat| %>
+              <tr>
+                <td class="px-3 py-2 text-sm"><%= stat.game.scheduled_at.strftime("%m/%d") %></td>
+                <td class="px-3 py-2 text-sm"><%= stat.game.court.name %></td>
+                <td class="px-3 py-2 text-sm text-center font-medium"><%= stat.points %></td>
+                <td class="px-3 py-2 text-sm text-center"><%= stat.total_rebounds %></td>
+                <td class="px-3 py-2 text-sm text-center"><%= stat.assists %></td>
+                <td class="px-3 py-2 text-sm text-center">
+                  <span class="<%= stat.plus_minus >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= stat.plus_minus > 0 ? '+' : '' %><%= stat.plus_minus %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-gray-500">최근 경기 기록이 없습니다.</p>
+    <% end %>
+  </div>
+
+  <!-- Compare Button -->
+  <% if current_user.premium? && current_user != @user %>
+    <div class="mt-8 text-center">
+      <%= link_to "내 통계와 비교하기", compare_stats_path(user_id: @user.id), 
+          class: "inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors" %>
+    </div>
+  <% end %>
+</div>

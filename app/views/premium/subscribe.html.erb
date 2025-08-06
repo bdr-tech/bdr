@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">프리미엄 구독 결제</h1>
+      
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4">선택한 플랜</h2>
+        <div class="bg-gray-100 p-6 rounded-lg">
+          <% case @plan_type %>
+          <% when 'monthly' %>
+            <h3 class="text-lg font-bold">월간 이용권</h3>
+            <p class="text-gray-600">매월 자동 갱신</p>
+            <p class="text-3xl font-bold text-orange-600 mt-2">₩3,900<span class="text-sm font-normal">/월</span></p>
+          <% when 'yearly' %>
+            <h3 class="text-lg font-bold">연간 이용권</h3>
+            <p class="text-gray-600">1년 이용권 (특별 할인)</p>
+            <p class="text-3xl font-bold text-orange-600 mt-2">₩149,000<span class="text-sm font-normal">/년</span></p>
+          <% when 'lifetime' %>
+            <h3 class="text-lg font-bold">평생 이용권</h3>
+            <p class="text-gray-600">한 번 결제로 평생 이용</p>
+            <p class="text-3xl font-bold text-orange-600 mt-2">₩290,000</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4">결제 정보</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+            <input type="email" value="<%= current_user.email %>" readonly 
+                   class="w-full px-4 py-2 border rounded-lg bg-gray-50">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+            <input type="text" value="<%= current_user.name %>" readonly 
+                   class="w-full px-4 py-2 border rounded-lg bg-gray-50">
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <button id="payment-button" 
+                class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300">
+          결제하기
+        </button>
+        <p class="text-sm text-gray-600 mt-4">
+          결제 진행 시 <a href="#" class="text-blue-500 underline">이용약관</a> 및 
+          <a href="#" class="text-blue-500 underline">개인정보처리방침</a>에 동의하는 것으로 간주됩니다.
+        </p>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg text-left">
+          <p class="text-sm font-semibold text-blue-700 mb-2">테스트 카드 정보</p>
+          <p class="text-xs text-blue-600">카드번호: 4242-4242-4242-4242</p>
+          <p class="text-xs text-blue-600">유효기간: 12/30</p>
+          <p class="text-xs text-blue-600">CVC: 123</p>
+          <p class="text-xs text-blue-600">생년월일: 901213</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TossPayments SDK -->
+<script src="https://js.tosspayments.com/v1/payment"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const clientKey = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
+    const tossPayments = TossPayments(clientKey);
+    const customerKey = '<%= BillingKey.generate_customer_key(current_user.id) %>';
+    
+    const button = document.getElementById('payment-button');
+    
+    button.addEventListener('click', function() {
+      // 빌링키 발급을 위한 카드 등록
+      const baseUrl = window.location.origin;
+      const successUrl = `${baseUrl}/premium/billing/success`;
+      const failUrl = `${baseUrl}/premium/fail`;
+      
+      console.log('Success URL:', successUrl);
+      console.log('Customer Key:', customerKey);
+      console.log('Plan Type:', '<%= @plan_type %>');
+      
+      // 세션에 필요한 정보 저장
+      sessionStorage.setItem('premium_plan_type', '<%= @plan_type %>');
+      sessionStorage.setItem('premium_customer_key', customerKey);
+      
+      tossPayments.requestBillingAuth('카드', {
+        customerKey: customerKey,
+        successUrl: successUrl,
+        failUrl: failUrl,
+        customerName: '<%= current_user.name %>',
+        customerEmail: '<%= current_user.email %>'
+      });
+    });
+  });
+</script>

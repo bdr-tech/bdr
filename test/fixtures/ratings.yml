@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  game: one
+  rated_user: one
+  rating: 1
+  comment: MyText
+  rating_type: MyString
+
+two:
+  user: two
+  game: two
+  rated_user: two
+  rating: 1
+  comment: MyText
+  rating_type: MyString

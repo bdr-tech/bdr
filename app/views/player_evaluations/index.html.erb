@@ -1,0 +1,133 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">🌟 경기 평가</h1>
+        <%= link_to "← 경기로 돌아가기", @game, class: "text-blue-600 hover:text-blue-800" %>
+      </div>
+      
+      <div class="bg-blue-50 rounded-lg p-4">
+        <p class="text-blue-800 font-semibold mb-2">💭 기억에 남는 동료 선수에 대한 평가를 해주세요!</p>
+        <p class="text-sm text-blue-600">함께 플레이한 동료들의 실력, 팀워크, 매너를 평가해주세요. 여러분의 평가가 더 나은 농구 문화를 만듭니다.</p>
+        
+        <% if @evaluation_deadline %>
+          <div class="mt-3 text-sm">
+            <% if @evaluation_deadline.expired? %>
+              <p class="text-red-600">⏰ 평가 기간이 종료되었습니다.</p>
+            <% else %>
+              <p class="text-blue-700">
+                ⏰ 평가 마감: <%= @evaluation_deadline.deadline.strftime("%m월 %d일 %H:%M") %>
+                <span class="text-xs">(<%= distance_of_time_in_words_to_now(@evaluation_deadline.deadline) %> 남음)</span>
+              </p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- 참가자 목록 -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-6">참가자 평가하기</h2>
+      
+      <% if @participants.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% @participants.each do |participant| %>
+            <div class="border rounded-lg p-4 hover:shadow-md transition duration-300">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-semibold text-gray-800">
+                    <%= participant.nickname || participant.name %>
+                    <% if participant == @game.organizer %>
+                      <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded ml-2">호스트</span>
+                    <% end %>
+                  </h3>
+                  <p class="text-sm text-gray-600 mt-1">
+                    포지션: <%= participant.position || "미정" %>
+                  </p>
+                </div>
+                
+                <% if current_user.evaluated_user_in_game?(participant, @game) %>
+                  <span class="text-green-600 text-sm">✅ 평가 완료</span>
+                <% elsif @evaluation_deadline&.expired? %>
+                  <span class="text-gray-400 text-sm">평가 종료</span>
+                <% else %>
+                  <%= link_to "평가하기", new_game_player_evaluation_path(@game, user_id: participant.id),
+                      class: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition duration-300" %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500 text-center py-8">평가할 수 있는 참가자가 없습니다.</p>
+      <% end %>
+    </div>
+    
+    <!-- 내가 한 평가 목록 -->
+    <% if @evaluations_given.any? %>
+      <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">내가 작성한 평가</h2>
+        
+        <div class="space-y-4">
+          <% @evaluations_given.each do |evaluation| %>
+            <div class="border rounded-lg p-4 bg-gray-50">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="font-semibold text-gray-800">
+                  <%= evaluation.evaluated_user.nickname || evaluation.evaluated_user.name %>
+                </h3>
+                <% if evaluation.memorable? %>
+                  <span class="text-yellow-500">⭐ 기억에 남는 선수</span>
+                <% end %>
+              </div>
+              
+              <div class="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p class="text-gray-600">실력</p>
+                  <div class="flex items-center mt-1">
+                    <% (evaluation.skill_level || 0).times do %>
+                      <span class="text-orange-500">★</span>
+                    <% end %>
+                    <% (5 - (evaluation.skill_level || 0)).times do %>
+                      <span class="text-gray-300">★</span>
+                    <% end %>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-gray-600">팀워크</p>
+                  <div class="flex items-center mt-1">
+                    <% (evaluation.teamwork || 0).times do %>
+                      <span class="text-blue-500">★</span>
+                    <% end %>
+                    <% (5 - (evaluation.teamwork || 0)).times do %>
+                      <span class="text-gray-300">★</span>
+                    <% end %>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-gray-600">매너</p>
+                  <div class="flex items-center mt-1">
+                    <% (evaluation.manner || 0).times do %>
+                      <span class="text-green-500">★</span>
+                    <% end %>
+                    <% (5 - (evaluation.manner || 0)).times do %>
+                      <span class="text-gray-300">★</span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+              
+              <% if evaluation.comment.present? %>
+                <p class="text-sm text-gray-700 mt-3 italic">"<%= evaluation.comment %>"</p>
+              <% end %>
+              
+              <p class="text-xs text-gray-500 mt-3">
+                평가일: <%= evaluation.evaluated_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

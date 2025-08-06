@@ -1,0 +1,82 @@
+{
+  "name": "BDR Platform MCP Configuration",
+  "version": "1.0.0",
+  "description": "MCP (Model Context Protocol) tools configuration for BDR project",
+  "servers": {
+    "tosspayments-integration-guide": {
+      "description": "TossPayments 결제 시스템 통합을 위한 가이드 및 도구",
+      "purpose": "결제 API 통합, 결제 플로우 구현, 에러 처리",
+      "usage": [
+        "결제 시스템 구현 시 참고",
+        "결제 관련 문제 해결",
+        "TossPayments API 사용법"
+      ],
+      "package": "@tosspayments/integration-guide-mcp@latest"
+    },
+    "sequential-thinking": {
+      "description": "복잡한 문제를 단계별로 분석하고 해결하는 도구",
+      "purpose": "체계적인 문제 해결, 논리적 사고 과정 기록",
+      "usage": [
+        "복잡한 기능 구현 계획",
+        "버그 원인 분석 및 해결",
+        "아키텍처 설계 및 리팩토링",
+        "요구사항 분석 및 검증"
+      ],
+      "package": "@modelcontextprotocol/server-sequential-thinking"
+    }
+  },
+  "recommended_tools": {
+    "future": [
+      {
+        "name": "database-analyzer",
+        "description": "데이터베이스 스키마 분석 및 최적화 도구",
+        "reason": "복잡한 데이터베이스 구조 관리"
+      },
+      {
+        "name": "test-runner",
+        "description": "테스트 실행 및 커버리지 분석",
+        "reason": "자동화된 테스트 관리"
+      },
+      {
+        "name": "performance-monitor",
+        "description": "애플리케이션 성능 모니터링",
+        "reason": "실시간 성능 최적화"
+      }
+    ]
+  },
+  "project_context": {
+    "type": "web_application",
+    "framework": "Ruby on Rails",
+    "database": "SQLite3/PostgreSQL",
+    "payment": "TossPayments",
+    "authentication": "Session-based"
+  },
+  "usage_guidelines": {
+    "sequential_thinking": {
+      "when_to_use": [
+        "새로운 기능 설계 시",
+        "복잡한 버그 해결 시",
+        "아키텍처 개선 작업 시",
+        "요구사항과 구현 매칭 검증 시"
+      ],
+      "how_to_use": [
+        "문제를 명확히 정의",
+        "단계별로 사고 과정 기록",
+        "각 단계에서 대안 고려",
+        "최종 해결책 도출"
+      ]
+    },
+    "tosspayments": {
+      "when_to_use": [
+        "결제 기능 구현 시",
+        "결제 오류 해결 시",
+        "결제 플로우 개선 시"
+      ],
+      "important_notes": [
+        "테스트 키와 실제 키 구분",
+        "콜백 URL 설정 확인",
+        "에러 핸들링 구현 필수"
+      ]
+    }
+  }
+}

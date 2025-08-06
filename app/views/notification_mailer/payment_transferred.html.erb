@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #28a745; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 5px 5px; }
+      .transfer-box { background-color: #d4edda; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #c3e6cb; text-align: center; }
+      .game-info { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+      .payment-breakdown { background-color: #e8f4f8; padding: 20px; margin: 20px 0; border-radius: 5px; }
+      .button { display: inline-block; padding: 12px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+      .info-row { margin: 10px 0; }
+      .label { font-weight: bold; color: #666; }
+      .amount { font-size: 24px; color: #28a745; font-weight: bold; }
+      .breakdown-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 8px 0; border-bottom: 1px solid #dee2e6; }
+      .total-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 12px 0; border-top: 2px solid #333; font-weight: bold; font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💰 경기 참가비 송금 완료</h1>
+      </div>
+      
+      <div class="content">
+        <h2>안녕하세요, <%= @host.nickname || @host.name %>님!</h2>
+        
+        <div class="transfer-box">
+          <p style="margin: 0; color: #155724; font-size: 18px;">
+            <strong><%= @game.title %></strong><br>
+            경기 참가비가 계좌로 송금되었습니다.
+          </p>
+          <div class="amount" style="margin: 15px 0;">
+            <%= number_to_currency(@host_amount, unit: "₩", precision: 0) %>
+          </div>
+        </div>
+        
+        <div class="game-info">
+          <h3>경기 정보</h3>
+          <div class="info-row">
+            <span class="label">경기명:</span> <%= @game.title %>
+          </div>
+          <div class="info-row">
+            <span class="label">경기 일시:</span> <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+          <div class="info-row">
+            <span class="label">경기 상태:</span> <%= @game.status == 'completed' ? '완료' : '진행중' %>
+          </div>
+          <div class="info-row">
+            <span class="label">송금 일시:</span> <%= @payment.transferred_to_host_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+          </div>
+          <div class="info-row">
+            <span class="label">송금 계좌:</span> <%= @host.bank_name %> <%= @host.bank_account %>
+          </div>
+        </div>
+        
+        <div class="payment-breakdown">
+          <h3>정산 내역</h3>
+          <div class="breakdown-row">
+            <span>참가비 총액</span>
+            <span><%= number_to_currency(@total_amount, unit: "₩", precision: 0) %></span>
+          </div>
+          <div class="breakdown-row">
+            <span>플랫폼 수수료 (<%= (@payment.platform_fee_percentage || 10) %>%)</span>
+            <span style="color: #dc3545;">- <%= number_to_currency(@platform_fee, unit: "₩", precision: 0) %></span>
+          </div>
+          <div class="total-row">
+            <span>실 수령액</span>
+            <span style="color: #28a745;"><%= number_to_currency(@host_amount, unit: "₩", precision: 0) %></span>
+          </div>
+        </div>
+        
+        <div style="background-color: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border: 1px solid #ffeaa7;">
+          <h4 style="margin-top: 0;">안내사항</h4>
+          <ul style="margin: 5px 0;">
+            <li>경기 완료 후 2영업일 이내에 자동으로 송금됩니다.</li>
+            <li>송금 내역은 마이페이지 > 정산 내역에서 확인 가능합니다.</li>
+            <li>세금계산서가 필요한 경우 고객센터로 문의해주세요.</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <%= link_to "정산 내역 확인하기", payments_url, class: "button" %>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          * 이 이메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.<br>
+          * 정산 관련 문의사항은 고객센터로 연락주시기 바랍니다.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

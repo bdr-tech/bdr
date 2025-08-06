@@ -1,0 +1,502 @@
+<div class="notification-settings-container">
+  <div class="settings-header">
+    <h1 class="settings-title">알림 설정</h1>
+    <p class="settings-subtitle">원하는 알림을 선택하여 받아보세요</p>
+  </div>
+
+  <%= form_with model: @user, url: update_notification_settings_user_path(@user), local: false, class: "notification-form" do |form| %>
+    <!-- 기본 알림 채널 설정 -->
+    <div class="settings-section">
+      <h2 class="section-title">알림 수신 방법</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>이메일 알림</h3>
+          <p>중요한 알림을 이메일로 받습니다</p>
+        </div>
+        <label class="toggle-switch">
+          <%= form.check_box :email_notifications, class: "toggle-input", data: { notification_type: "email" } %>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>SMS 알림</h3>
+          <p>긴급한 알림을 문자로 받습니다</p>
+        </div>
+        <label class="toggle-switch">
+          <%= form.check_box :sms_notifications, class: "toggle-input", data: { notification_type: "sms" } %>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>푸시 알림</h3>
+          <p>앱 푸시 알림을 받습니다</p>
+        </div>
+        <label class="toggle-switch">
+          <%= form.check_box :push_notifications, class: "toggle-input", data: { notification_type: "push" } %>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 세부 알림 설정 -->
+    <div class="settings-section">
+      <h2 class="section-title">알림 종류별 설정</h2>
+      
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>게임 초대</h3>
+          <p>새로운 게임 초대를 받았을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="game_invitation" 
+                 <%= 'checked' if @notification_preferences['game_invitation'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>게임 리마인더</h3>
+          <p>참가 예정인 게임 시작 전 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="game_reminder" 
+                 <%= 'checked' if @notification_preferences['game_reminder'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>게임 취소</h3>
+          <p>참가 예정인 게임이 취소되었을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="game_cancellation" 
+                 <%= 'checked' if @notification_preferences['game_cancellation'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>신청 상태 변경</h3>
+          <p>게임 신청이 승인/거절되었을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="game_application_status" 
+                 <%= 'checked' if @notification_preferences['game_application_status'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>결제 확인</h3>
+          <p>결제 완료 및 환불 관련 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="payment_confirmation" 
+                 <%= 'checked' if @notification_preferences['payment_confirmation'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>커뮤니티 멘션</h3>
+          <p>누군가 나를 언급했을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="community_mention" 
+                 <%= 'checked' if @notification_preferences['community_mention'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>댓글 답변</h3>
+          <p>내 게시글이나 댓글에 답변이 달렸을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="community_reply" 
+                 <%= 'checked' if @notification_preferences['community_reply'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>평가 받음</h3>
+          <p>다른 사용자가 나를 평가했을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="rating_received" 
+                 <%= 'checked' if @notification_preferences['rating_received'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>업적 달성</h3>
+          <p>새로운 업적을 달성했을 때 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="achievement_unlocked" 
+                 <%= 'checked' if @notification_preferences['achievement_unlocked'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <h3>마케팅 알림</h3>
+          <p>이벤트, 프로모션 등 마케팅 정보 알림</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" class="toggle-input preference-toggle" 
+                 data-preference="marketing" 
+                 <%= 'checked' if @notification_preferences['marketing'] %>>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <%= link_to "프로필로 돌아가기", profile_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .notification-settings-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .settings-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+  }
+
+  .settings-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+
+  .settings-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  .setting-item:last-child {
+    border-bottom: none;
+  }
+
+  .setting-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .setting-info p {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 0;
+  }
+
+  /* Toggle Switch Styles */
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    height: 28px;
+  }
+
+  .toggle-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 28px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  .toggle-input:checked + .toggle-slider {
+    background-color: #FF6B35;
+  }
+
+  .toggle-input:checked + .toggle-slider:before {
+    transform: translateX(28px);
+  }
+
+  .toggle-input:disabled + .toggle-slider {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+  }
+
+  /* Hover effect */
+  .toggle-switch:hover .toggle-slider {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .form-actions {
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background-color: #FF6B35;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #ff5522;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  }
+
+  .btn-secondary {
+    background-color: #f0f0f0;
+    color: #333;
+  }
+
+  .btn-secondary:hover {
+    background-color: #e0e0e0;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .notification-settings-container {
+      padding: 15px;
+    }
+
+    .settings-section {
+      padding: 20px;
+    }
+
+    .settings-title {
+      font-size: 1.6rem;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+    }
+
+    .setting-item {
+      padding: 15px 0;
+    }
+
+    .setting-info h3 {
+      font-size: 1rem;
+    }
+
+    .setting-info p {
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Toast notification style */
+  .toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+  }
+
+  .toast-notification.success {
+    background-color: #4CAF50;
+  }
+
+  .toast-notification.error {
+    background-color: #f44336;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle main notification channel toggles
+  const channelToggles = document.querySelectorAll('[data-notification-type]');
+  channelToggles.forEach(toggle => {
+    toggle.addEventListener('change', function() {
+      updateNotificationSetting(
+        'users/<%= @user.id %>/update_notification_settings',
+        null,
+        null,
+        true
+      );
+    });
+  });
+
+  // Handle individual preference toggles
+  const preferenceToggles = document.querySelectorAll('.preference-toggle');
+  preferenceToggles.forEach(toggle => {
+    toggle.addEventListener('change', function() {
+      const preference = this.dataset.preference;
+      const enabled = this.checked;
+      
+      updateNotificationSetting(
+        '<%= update_notification_settings_user_path(@user) %>',
+        preference,
+        enabled,
+        false
+      );
+    });
+  });
+
+  function updateNotificationSetting(url, notificationType, enabled, isFormSubmit) {
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    
+    if (isFormSubmit) {
+      // For main channel toggles, submit the form
+      document.querySelector('.notification-form').requestSubmit();
+      return;
+    }
+    
+    // For individual preferences, use AJAX
+    fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        notification_type: notificationType,
+        enabled: enabled
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      showToast(data.message, data.success ? 'success' : 'error');
+    })
+    .catch(error => {
+      showToast('알림 설정 업데이트 중 오류가 발생했습니다.', 'error');
+      console.error('Error:', error);
+    });
+  }
+
+  function showToast(message, type) {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Show toast
+    setTimeout(() => {
+      toast.style.display = 'block';
+    }, 10);
+    
+    // Hide toast after 3 seconds
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }, 3000);
+  }
+});
+</script>

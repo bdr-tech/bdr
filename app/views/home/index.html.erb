@@ -1,0 +1,112 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white py-20">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <h1 class="text-5xl font-bold mb-6">🏀 BDR - Basketball Daily Routine</h1>
+      <p class="text-xl mb-8">농구를 사랑하는 사람들을 위한 3초 룰 기반 매칭 플랫폼</p>
+      
+      <!-- 3-Second Rule CTA -->
+      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
+        <h2 class="text-2xl font-semibold mb-4">⚡ 3초 룰 매칭</h2>
+        <p class="mb-6">3번의 클릭으로 농구 게임 참가 완료!</p>
+        <%= link_to "빠른 매칭 시작", quick_match_path, 
+            class: "bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-8 rounded-lg text-lg transition duration-300 transform hover:scale-105" %>
+      </div>
+      
+      <!-- Quick Stats -->
+      <% cache ["home_quick_stats", @quick_stats] do %>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div class="text-2xl font-bold"><%= @quick_stats[:total_games] %></div>
+          <div class="text-sm">전체 게임</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div class="text-2xl font-bold"><%= @quick_stats[:active_players] %></div>
+          <div class="text-sm">활성 플레이어</div>
+        </div>
+        <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+          <div class="text-2xl font-bold"><%= @quick_stats[:courts_available] %></div>
+          <div class="text-sm">이용 가능한 코트</div>
+        </div>
+      </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Upcoming Games Section -->
+  <% cache ["home_upcoming_games", @upcoming_games.map(&:cache_key_with_version)] do %>
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <h2 class="text-3xl font-bold text-gray-800 mb-8">🔥 곧 시작되는 게임</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <% @upcoming_games.each do |game| %>
+        <% cache ["home_game_card", game, game.confirmed_players_count] do %>
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-lg font-semibold text-gray-800"><%= game.court&.name || game.venue_name || game.title %></h3>
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+              <%= game.status.capitalize %>
+            </span>
+          </div>
+          
+          <div class="text-gray-600 mb-4">
+            <p class="mb-2">📍 <%= game.court&.address || game.venue_address || '장소 미정' %></p>
+            <p class="mb-2">⏰ <%= game.scheduled_at.strftime("%m/%d") %> <%= game.start_time&.strftime("%H:%M") || game.scheduled_at.strftime("%H:%M") %> ~ <%= game.end_time&.strftime("%H:%M") || (game.scheduled_at + 2.hours).strftime("%H:%M") %></p>
+            <p class="mb-2">👥 <%= game.confirmed_players_count %>/<%= game.max_players %>명</p>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <%= link_to "게임 보기", game_path(game), 
+                class: "bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+            <% if game.confirmed_players_count < game.max_players %>
+              <%= link_to "⚡ 빠른 참가", quick_join_path(game), 
+                  class: "bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+            <% else %>
+              <span class="text-gray-500 text-sm">정원 마감</span>
+            <% end %>
+          </div>
+        </div>
+        <% end %>
+      <% end %>
+    </div>
+    
+    <div class="text-center">
+      <%= link_to "모든 게임 보기", games_path, 
+          class: "bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition duration-300" %>
+    </div>
+  </div>
+  <% end %>
+
+  <!-- Features Section -->
+  <div class="bg-gray-100 py-12">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">🎯 BDR 특징</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-orange-500 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">⚡</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">3초 룰</h3>
+          <p class="text-gray-600">3번의 클릭으로 모든 주요 기능 완료</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-orange-500 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">📍</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">위치 기반</h3>
+          <p class="text-gray-600">내 주변 농구장과 게임 자동 매칭</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-orange-500 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl">🏆</span>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">실력별 매칭</h3>
+          <p class="text-gray-600">나와 비슷한 실력의 플레이어와 매칭</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

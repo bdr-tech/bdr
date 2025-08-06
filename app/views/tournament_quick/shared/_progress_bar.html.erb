@@ -1,0 +1,51 @@
+<div class="flex items-center justify-between">
+  <div class="flex items-center flex-1">
+    <% TournamentWizard::STEPS.each_with_index do |step, index| %>
+      <% is_current = wizard.step == step %>
+      <% is_completed = wizard.current_step_index > index %>
+      
+      <div class="flex items-center">
+        <!-- 단계 표시 -->
+        <div class="relative">
+          <div class="<%= is_completed ? 'bg-blue-600' : (is_current ? 'bg-blue-600' : 'bg-gray-300') %> 
+                      w-10 h-10 rounded-full flex items-center justify-center">
+            <% if is_completed %>
+              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            <% else %>
+              <span class="text-white font-medium"><%= index + 1 %></span>
+            <% end %>
+          </div>
+          
+          <!-- 단계 이름 -->
+          <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+            <span class="text-xs <%= is_current ? 'text-blue-600 font-medium' : 'text-gray-500' %>">
+              <%= step_name(step) %>
+            </span>
+          </div>
+        </div>
+        
+        <!-- 연결선 -->
+        <% if index < TournamentWizard::STEPS.length - 1 %>
+          <div class="w-16 h-1 <%= is_completed ? 'bg-blue-600' : 'bg-gray-300' %> mx-2"></div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- 진행률 표시 -->
+  <div class="ml-8 text-sm text-gray-600">
+    <%= wizard.progress_percentage %>% 완료
+  </div>
+</div>
+
+<% def step_name(step)
+  names = {
+    'template_selection' => '템플릿 선택',
+    'basic_info' => '기본 정보',
+    'settings' => '상세 설정',
+    'review' => '최종 확인'
+  }
+  names[step] || step
+end %>

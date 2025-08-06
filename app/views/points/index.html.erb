@@ -1,0 +1,173 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <!-- 헤더 -->
+  <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+    <h1 class="text-3xl font-bold mb-4">💎 포인트 내역</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">총 포인트</div>
+        <div class="text-2xl font-bold"><%= number_with_delimiter(@total_points) %>P</div>
+      </div>
+      
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">내 순위</div>
+        <div class="text-2xl font-bold">#<%= @user_rank %></div>
+      </div>
+      
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">이번 달 획득</div>
+        <div class="text-2xl font-bold">+<%= number_with_delimiter(@monthly_stats.last[:points]) %>P</div>
+      </div>
+      
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">평균 월 획득</div>
+        <% avg_points = @monthly_stats.sum { |s| s[:points] } / @monthly_stats.size %>
+        <div class="text-2xl font-bold"><%= number_with_delimiter(avg_points) %>P</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- 포인트 내역 -->
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+          <h2 class="text-xl font-bold text-gray-800">포인트 획득 내역</h2>
+        </div>
+        
+        <div class="p-6">
+          <% if @points.any? %>
+            <div class="space-y-3">
+              <% @points.each do |point| %>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                  <div class="flex-1">
+                    <div class="font-semibold text-gray-800"><%= point.reason %></div>
+                    <div class="text-sm text-gray-500"><%= point.earned_at.strftime('%Y년 %m월 %d일 %H:%M') %></div>
+                  </div>
+                  <div class="text-lg font-bold <%= point.points > 0 ? 'text-green-600' : 'text-red-600' %>">
+                    <%= point.points > 0 ? '+' : '' %><%= number_with_delimiter(point.points) %>P
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            
+            <!-- 페이지네이션 -->
+            <div class="mt-6">
+              <%= paginate @points %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-8">아직 포인트 내역이 없습니다.</p>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- 월별 통계 차트 -->
+      <div class="bg-white rounded-lg shadow mt-8">
+        <div class="p-6 border-b">
+          <h2 class="text-xl font-bold text-gray-800">월별 포인트 획득 추이</h2>
+        </div>
+        
+        <div class="p-6">
+          <canvas id="monthlyChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 사이드바 -->
+    <div class="space-y-6">
+      <!-- 포인트 순위 -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+          <h3 class="text-lg font-bold text-gray-800">🏆 포인트 랭킹 TOP 10</h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-3">
+            <% @top_users.each_with_index do |user, index| %>
+              <div class="flex items-center <%= current_user == user ? 'bg-blue-50 -mx-4 px-4 py-2 rounded' : '' %>">
+                <div class="w-8 text-center font-bold <%= index < 3 ? 'text-yellow-500' : 'text-gray-500' %>">
+                  <%= index + 1 %>
+                </div>
+                <div class="flex-1 ml-3">
+                  <div class="font-semibold text-gray-800">
+                    <%= user.display_name %>
+                    <% if current_user == user %>
+                      <span class="text-xs text-blue-600 ml-1">(나)</span>
+                    <% end %>
+                  </div>
+                  <div class="text-sm text-gray-500"><%= number_with_delimiter(user.total_points) %>P</div>
+                </div>
+                <% if index == 0 %>
+                  <span class="text-2xl">🥇</span>
+                <% elsif index == 1 %>
+                  <span class="text-2xl">🥈</span>
+                <% elsif index == 2 %>
+                  <span class="text-2xl">🥉</span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 포인트 획득 방법 -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+          <h3 class="text-lg font-bold text-gray-800">💡 포인트 획득 방법</h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="space-y-3">
+            <% @point_rules.each do |action, points| %>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-700"><%= action %></span>
+                <span class="font-semibold text-green-600">+<%= points %>P</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// 월별 차트
+const ctx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = <%= @monthly_stats.to_json.html_safe %>;
+
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: monthlyData.map(d => d.month),
+    datasets: [{
+      label: '획득 포인트',
+      data: monthlyData.map(d => d.points),
+      borderColor: 'rgb(59, 130, 246)',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      tension: 0.3,
+      fill: true
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString() + 'P';
+          }
+        }
+      }
+    }
+  }
+});
+</script>

@@ -1,0 +1,280 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- 헤더 -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-6 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">
+            💰 예산 관리
+          </h1>
+          <p class="mt-1 text-gray-600">
+            <%= @tournament.name %>
+          </p>
+        </div>
+        
+        <div class="space-x-2">
+          <%= link_to "새 항목 추가", 
+                      new_tournament_budget_path(@tournament),
+                      class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" %>
+          
+          <%= link_to "리포트", 
+                      report_tournament_budgets_path(@tournament),
+                      class: "bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- 예산 요약 카드 -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <!-- 예상 수입 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">예상 수입</p>
+            <p class="text-2xl font-bold text-gray-900">
+              <%= number_to_currency(@expected_income) %>
+            </p>
+          </div>
+          <div class="bg-blue-100 p-3 rounded-full">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          최대 <%= @tournament.max_teams %>팀 × <%= number_to_currency(@tournament.entry_fee) %>
+        </p>
+      </div>
+      
+      <!-- 실제 수입 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">실제 수입</p>
+            <p class="text-2xl font-bold text-green-600">
+              <%= number_to_currency(@actual_income) %>
+            </p>
+          </div>
+          <div class="bg-green-100 p-3 rounded-full">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          <%= (@actual_income.to_f / @expected_income * 100).round %>% 달성
+        </p>
+      </div>
+      
+      <!-- 총 지출 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">총 지출</p>
+            <p class="text-2xl font-bold text-red-600">
+              <%= number_to_currency(@expenses.sum(:amount)) %>
+            </p>
+          </div>
+          <div class="bg-red-100 p-3 rounded-full">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          플랫폼 수수료 포함
+        </p>
+      </div>
+      
+      <!-- 예상 순수익 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600">예상 순수익</p>
+            <p class="text-2xl font-bold <%= @balance >= 0 ? 'text-gray-900' : 'text-red-600' %>">
+              <%= number_to_currency(@balance) %>
+            </p>
+          </div>
+          <div class="bg-gray-100 p-3 rounded-full">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">
+          수입 - 지출 - 플랫폼 수수료
+        </p>
+      </div>
+    </div>
+
+    <!-- 지출 내역 차트 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- 카테고리별 지출 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+          카테고리별 지출
+        </h2>
+        
+        <div class="space-y-4">
+          <% @expenses_by_category.each do |category, amount| %>
+            <div>
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-sm text-gray-600">
+                  <%= category_name(category) %>
+                </span>
+                <span class="text-sm font-medium text-gray-900">
+                  <%= number_to_currency(amount) %>
+                </span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" 
+                     style="width: <%= (amount.to_f / @expenses.sum(:amount) * 100).round %>%">
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- 예산 vs 실제 비교 -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+          예산 vs 실제
+        </h2>
+        
+        <div class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm text-gray-600">수입</span>
+              <span class="text-sm text-gray-500">
+                <%= @actual_income %> / <%= @expected_income %>
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-green-600 h-2 rounded-full" 
+                   style="width: <%= [@actual_income.to_f / @expected_income * 100, 100].min.round %>%">
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm text-gray-600">지출</span>
+              <span class="text-sm text-gray-500">
+                <%= @expenses.sum(:amount) %> / <%= @tournament.budget_settings['total_budget'] || 0 %>
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div class="bg-red-600 h-2 rounded-full" 
+                   style="width: <%= [(@expenses.sum(:amount).to_f / (@tournament.budget_settings['total_budget'] || 1) * 100), 100].min.round %>%">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 거래 내역 -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">
+          거래 내역
+        </h2>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                날짜
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                카테고리
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                설명
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                금액
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                영수증
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                관리
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @budgets.recent.each do |budget| %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= budget.transaction_date&.strftime('%Y-%m-%d') || budget.created_at.strftime('%Y-%m-%d') %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                               <%= budget.is_income? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+                    <%= category_name(budget.category) %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <%= budget.description %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium 
+                           <%= budget.is_income? ? 'text-green-600' : 'text-red-600' %>">
+                  <%= budget.is_income? ? '+' : '-' %><%= number_to_currency(budget.amount) %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                  <% if budget.receipt_url.present? %>
+                    <%= link_to "보기", budget.receipt_url, 
+                                target: "_blank",
+                                class: "text-blue-600 hover:text-blue-900" %>
+                  <% else %>
+                    <span class="text-gray-400">-</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                  <%= link_to "수정", edit_tournament_budget_path(@tournament, budget), 
+                              class: "text-indigo-600 hover:text-indigo-900 mr-2" %>
+                  <%= link_to "삭제", tournament_budget_path(@tournament, budget), 
+                              method: :delete,
+                              data: { confirm: "정말 삭제하시겠습니까?" },
+                              class: "text-red-600 hover:text-red-900" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 정산 버튼 -->
+    <% if @tournament.completed? && !@tournament.budget_settings['settled_at'] %>
+      <div class="mt-8 text-center">
+        <%= link_to "자동 정산 실행", 
+                    settlement_tournament_budgets_path(@tournament),
+                    method: :post,
+                    data: { confirm: "정산을 진행하시겠습니까? 정산 후에는 수정할 수 없습니다." },
+                    class: "bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 font-semibold" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% def category_name(category)
+  names = {
+    'income' => '수입',
+    'court_fee' => '코트 대여비',
+    'prize' => '상품비',
+    'refreshment' => '간식/음료',
+    'platform_fee' => '플랫폼 수수료',
+    'equipment' => '장비',
+    'staff' => '운영진',
+    'marketing' => '홍보',
+    'other' => '기타'
+  }
+  names[category] || category
+end %>

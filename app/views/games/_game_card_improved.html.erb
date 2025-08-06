@@ -1,0 +1,105 @@
+<%# shadcn 스타일이 적용된 개선된 게임 카드 %>
+<%= render CardComponent.new(class: "hover:shadow-lg transition-shadow duration-200") do |card| %>
+  <% card.with_header do %>
+    <div class="flex justify-between items-start">
+      <div>
+        <h3 class="text-lg font-semibold leading-none tracking-tight">
+          <%= link_to game.title, game_path(game), class: "hover:text-orange-500 transition-colors" %>
+        </h3>
+        <p class="text-sm text-muted-foreground mt-1">
+          <%= game.court&.name || game.venue_name %>
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <% badge_variant = case game.game_type
+           when '픽업게임' then :secondary
+           when '게스트모집' then :info  
+           when 'TvT연습경기' then :warning
+           else :default
+           end %>
+        <%= render BadgeComponent.new(variant: badge_variant) do %>
+          <%= game.game_type %>
+        <% end %>
+        <% if game.fee > 0 %>
+          <%= render BadgeComponent.new(variant: :warning) do %>
+            <%= number_to_currency(game.fee, unit: "₩", precision: 0) %>
+          <% end %>
+        <% else %>
+          <%= render BadgeComponent.new(variant: :success) do %>
+            무료
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <!-- 경기 정보 그리드 -->
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <p class="text-muted-foreground">📅 일시</p>
+        <p class="font-medium"><%= game.scheduled_at.strftime("%m/%d") %> <%= game.start_time.strftime("%H:%M") %></p>
+      </div>
+      <div>
+        <p class="text-muted-foreground">👥 참가자</p>
+        <p class="font-medium">
+          <span class="<%= game.confirmed_players_count >= game.max_players ? 'text-red-500' : 'text-green-500' %>">
+            <%= game.confirmed_players_count %>
+          </span>
+          / <%= game.max_players %>명
+        </p>
+      </div>
+      <div>
+        <p class="text-muted-foreground">📍 지역</p>
+        <p class="font-medium"><%= game.city %> <%= game.district %></p>
+      </div>
+      <div>
+        <p class="text-muted-foreground">🏀 레벨</p>
+        <p class="font-medium"><%= game.level_name %></p>
+      </div>
+    </div>
+
+    <!-- 유니폼 색상 -->
+    <% if game.uniform_colors.present? %>
+      <div>
+        <p class="text-sm text-muted-foreground mb-2">👕 유니폼</p>
+        <div class="flex gap-2">
+          <% game.uniform_colors.each do |color| %>
+            <div class="flex items-center gap-1">
+              <span class="w-4 h-4 rounded-full border" style="background-color: <%= game.color_hex(color) %>"></span>
+              <span class="text-sm"><%= color %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 액션 버튼 -->
+    <div class="flex gap-2 pt-2">
+      <%= link_to game_path(game) do %>
+        <%= render ButtonComponent.new(variant: :default, size: :sm, class: "flex-1") do %>
+          상세보기
+        <% end %>
+      <% end %>
+      
+      <% if defined?(current_user) && current_user && game.confirmed_players_count < game.max_players %>
+        <%= link_to apply_game_path(game), method: :post, data: { turbo_method: :post } do %>
+          <%= render ButtonComponent.new(variant: :secondary, size: :sm, class: "flex-1") do %>
+            신청하기
+          <% end %>
+        <% end %>
+      <% elsif game.confirmed_players_count >= game.max_players %>
+        <%= render ButtonComponent.new(variant: :outline, size: :sm, class: "flex-1", disabled: true) do %>
+          마감
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  
+  <% card.with_footer do %>
+    <div class="flex items-center justify-between w-full text-sm text-muted-foreground">
+      <span>호스트: <%= game.host.nickname %></span>
+      <span><%= time_ago_in_words(game.created_at) %>전</span>
+    </div>
+  <% end %>
+<% end %>

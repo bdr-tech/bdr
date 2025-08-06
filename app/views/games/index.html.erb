@@ -1,0 +1,231 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- 게임 목록 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🏀 경기 목록</h1>
+        <p class="text-gray-600">참가할 농구 경기를 찾아보세요</p>
+      </div>
+    </div>
+
+    <!-- 필터 섹션 (모바일: 버튼, 데스크톱: 인라인) -->
+    <div class="bg-white rounded-lg shadow-lg p-4 mb-6">
+      <!-- 모바일 필터 버튼 -->
+      <div class="md:hidden">
+        <button onclick="window.filterSheet && window.filterSheet.open()"
+                class="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <span>필터 설정</span>
+        </button>
+        <% if params[:date_filter].present? || params[:city].present? || params[:game_type].present? %>
+          <div class="mt-2 text-sm text-gray-600">
+            필터 적용 중: 
+            <%= params[:date_filter] if params[:date_filter].present? %>
+            <%= params[:city] if params[:city].present? %>
+            <%= params[:game_type] if params[:game_type].present? %>
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- 데스크톱 필터 (기존 유지) -->
+      <div class="hidden md:block">
+        <%= form_with url: games_path, method: :get, local: true, id: "filter-form" do |f| %>
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- 날짜 필터 -->
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-xs font-medium text-gray-700 mb-1">날짜</label>
+              <select name="date_filter" class="w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500">
+                <option value="">전체</option>
+                <option value="today" <%= 'selected' if params[:date_filter] == 'today' %>>오늘</option>
+                <option value="tomorrow" <%= 'selected' if params[:date_filter] == 'tomorrow' %>>내일</option>
+                <option value="week" <%= 'selected' if params[:date_filter] == 'week' %>>이번 주</option>
+              </select>
+            </div>
+            
+            <!-- 특별시/광역시/도 필터 -->
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-xs font-medium text-gray-700 mb-1">특별시/광역시/도</label>
+              <%= f.select :city,
+                    options_for_select([["전체", ""]] + @cities.map { |city| [city, city] }, params[:city]),
+                    {},
+                    { 
+                      class: "w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      id: "filter-city",
+                      onchange: "updateFilterDistricts()"
+                    } %>
+            </div>
+            
+            <!-- 시/군/구 필터 -->
+            <div class="flex-1 min-w-[150px]">
+              <label class="block text-xs font-medium text-gray-700 mb-1">시/군/구</label>
+              <%= f.select :district,
+                    [["전체", ""]],
+                    {},
+                    { 
+                      class: "w-full border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      id: "filter-district"
+                    } %>
+            </div>
+            
+            <%= f.submit "필터 적용", class: "bg-orange-500 hover:bg-orange-600 text-white px-4 py-1 rounded-md text-sm transition duration-300" %>
+            
+            <!-- 과거 경기 보기 체크박스 -->
+            <div class="flex items-center ml-4">
+              <%= f.check_box :show_past, 
+                    { checked: params[:show_past] == 'true', 
+                      class: "w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500" },
+                    'true', '' %>
+              <%= f.label :show_past, "과거경기 보기", class: "ml-2 text-sm font-medium text-gray-700 cursor-pointer" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- 필터 Sheet 렌더링 -->
+    <%= render 'filter_sheet', cities: @cities %>
+
+    <!-- 게임 통계 -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-lg font-bold text-orange-500"><%= @games.count %></div>
+        <div class="text-gray-600 text-xs">전체 경기</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-lg font-bold text-green-500">
+          <%= @games.select { |g| g.confirmed_players_count < g.max_players }.count %>
+        </div>
+        <div class="text-gray-600 text-xs">참가 가능</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-lg font-bold text-yellow-500">
+          <%= @games.select { |g| g.scheduled_at.to_date == Date.current }.count %>
+        </div>
+        <div class="text-gray-600 text-xs">오늘 경기</div>
+      </div>
+      
+      <div class="bg-white rounded-lg shadow p-3 text-center">
+        <div class="text-lg font-bold text-blue-500">
+          <%= @games.select { |g| g.fee == 0 }.count %>
+        </div>
+        <div class="text-gray-600 text-xs">무료 경기</div>
+      </div>
+    </div>
+
+    <!-- 게임 목록 -->
+    <% if @games.any? %>
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="divide-y divide-gray-200">
+          <% @games.each do |game| %>
+            <%= link_to game, class: "block hover:bg-gray-50 transition duration-150 ease-in-out" do %>
+              <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3">
+                      <h3 class="text-lg font-medium text-gray-900 truncate">
+                        <%= game.title %>
+                      </h3>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= game.game_type_badge_class %>">
+                        <%= game.game_type %>
+                      </span>
+                    </div>
+                    <div class="mt-2 flex items-center text-sm text-gray-500 gap-4">
+                      <span class="flex items-center">
+                        <svg class="mr-1 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <%= game.scheduled_at.strftime("%m/%d") %>
+                      </span>
+                      <span class="flex items-center">
+                        <svg class="mr-1 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <%= game.start_time.strftime("%H:%M") %> - <%= game.end_time.strftime("%H:%M") %>
+                      </span>
+                      <span class="flex items-center">
+                        <svg class="mr-1 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <%= game.city %> <%= game.district %>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ml-5 flex-shrink-0">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <div class="text-center py-12">
+        <p class="text-gray-500 text-lg mb-4">현재 등록된 경기가 없습니다.</p>
+        <%= link_to "경기 만들기", new_game_path, class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+      </div>
+    <% end %>
+      
+      <!-- 페이지네이션 (필요시) -->
+      <div class="mt-8 flex justify-center">
+        <div class="flex space-x-2">
+          <button class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">이전</button>
+          <button class="px-3 py-2 bg-orange-500 text-white rounded-lg">1</button>
+          <button class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">2</button>
+          <button class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">3</button>
+          <button class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-300">다음</button>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script>
+  // 지역 데이터
+  const locationData = <%= raw @locations.to_json %>;
+  
+  // 구/군 선택 업데이트
+  function updateFilterDistricts() {
+    const citySelect = document.getElementById('filter-city');
+    const districtSelect = document.getElementById('filter-district');
+    const selectedCity = citySelect.value;
+    const currentDistrict = '<%= params[:district] %>';
+    
+    // 구/군 선택 초기화
+    districtSelect.innerHTML = '';
+    
+    // 기본 옵션 추가
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = '전체';
+    districtSelect.appendChild(defaultOption);
+    
+    if (selectedCity && locationData[selectedCity]) {
+      // 선택된 시/도의 구/군 목록 추가
+      const districts = locationData[selectedCity].map(location => location.district).sort();
+      
+      districts.forEach(district => {
+        const option = document.createElement('option');
+        option.value = district;
+        option.textContent = district;
+        if (district === currentDistrict) {
+          option.selected = true;
+        }
+        districtSelect.appendChild(option);
+      });
+    }
+  }
+  
+  // 페이지 로드 시 초기화
+  document.addEventListener('DOMContentLoaded', function() {
+    <% if params[:city].present? %>
+      updateFilterDistricts();
+    <% end %>
+  });
+</script>

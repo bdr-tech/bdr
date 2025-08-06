@@ -1,0 +1,226 @@
+<% content_for :title, "실외 코트 등록 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 뒤로 가기 -->
+    <div class="mb-6">
+      <%= link_to "← 커뮤니티로 돌아가기", community_path, class: "text-orange-600 hover:text-orange-800 transition duration-300 flex items-center" %>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🏀 실외 코트 등록</h1>
+        <p class="text-gray-600">GPS 위치 정보와 함께 새로운 실외 농구 코트를 등록하세요</p>
+      </div>
+    </div>
+
+    <%= form_with model: @outdoor_court, local: true, class: "space-y-6" do |form| %>
+      
+      <% if @outdoor_court.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h3 class="text-red-800 font-semibold mb-3">오류가 발생했습니다:</h3>
+          <ul class="text-red-700 space-y-1">
+            <% @outdoor_court.errors.full_messages.each do |message| %>
+              <li>• <%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- 기본 정보 -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+            기본 정보
+          </h2>
+          
+          <div class="space-y-6">
+            <!-- 코트 제목 -->
+            <div>
+              <%= form.label :title, "코트 제목", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field :title, 
+                    class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                    placeholder: "예: 한강공원 농구장 A코트 (5-100자)",
+                    required: true %>
+            </div>
+            
+            <!-- 주소 -->
+            <div>
+              <%= form.label :address, "코트 주소", class: "block text-sm font-medium text-gray-700 mb-2" %>
+              <%= form.text_field :address, 
+                    class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                    placeholder: "상세 주소를 입력하세요 (10-200자)",
+                    required: true %>
+            </div>
+            
+            <!-- 이미지 업로드 -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <%= form.label :image1, "코트 사진 1", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.url_field :image1, 
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      placeholder: "이미지 URL 1 (필수)",
+                      required: true %>
+              </div>
+              
+              <div>
+                <%= form.label :image2, "코트 사진 2", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.url_field :image2, 
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      placeholder: "이미지 URL 2 (필수)",
+                      required: true %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPS 위치 정보 -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+            GPS 위치 정보
+          </h2>
+          
+          <div class="space-y-6">
+            <!-- GPS 좌표 -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <%= form.label :latitude, "위도 (Latitude)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.number_field :latitude, 
+                      step: :any,
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      placeholder: "예: 37.5665",
+                      required: true %>
+              </div>
+              
+              <div>
+                <%= form.label :longitude, "경도 (Longitude)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                <%= form.number_field :longitude, 
+                      step: :any,
+                      class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                      placeholder: "예: 126.9780",
+                      required: true %>
+              </div>
+            </div>
+            
+            <!-- GPS 위치 가져오기 버튼 -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 class="font-semibold text-blue-800 mb-2">🌍 현재 위치 가져오기</h3>
+              <p class="text-blue-700 text-sm mb-4">GPS를 사용하여 현재 위치의 좌표를 자동으로 가져올 수 있습니다.</p>
+              <button type="button" onclick="getCurrentLocation()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300">
+                📍 현재 위치 가져오기
+              </button>
+            </div>
+            
+            <!-- 지도 미리보기 -->
+            <div class="bg-gray-100 rounded-lg p-4">
+              <h3 class="font-semibold text-gray-800 mb-2">📍 위치 미리보기</h3>
+              <div id="map-preview" class="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                <p class="text-gray-500">GPS 좌표를 입력하면 지도가 표시됩니다</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 등록 버튼 -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-6">
+          <div class="flex items-start">
+            <span class="text-orange-500 text-2xl mr-4">🏀</span>
+            <div>
+              <h3 class="text-lg font-semibold text-orange-800">실외 코트 등록 준비 완료!</h3>
+              <p class="text-orange-700 mt-1">
+                모든 정보를 확인하시고 코트를 등록해주세요. 등록된 코트는 다른 사용자들과 공유됩니다.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-between">
+          <%= link_to "취소", community_path, class: "px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300" %>
+          <%= form.submit "🏀 코트 등록하기", 
+                class: "px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition duration-300 transform hover:scale-105" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  function getCurrentLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          
+          // 폼 필드에 값 설정
+          document.getElementById('outdoor_court_latitude').value = latitude;
+          document.getElementById('outdoor_court_longitude').value = longitude;
+          
+          // 지도 미리보기 업데이트
+          updateMapPreview(latitude, longitude);
+          
+          alert(`현재 위치가 설정되었습니다!\n위도: ${latitude}\n경도: ${longitude}`);
+        },
+        function(error) {
+          let errorMessage = "위치 정보를 가져올 수 없습니다.";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "위치 정보 접근이 거부되었습니다.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "위치 정보를 사용할 수 없습니다.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "위치 정보 요청 시간이 초과되었습니다.";
+              break;
+          }
+          alert(errorMessage);
+        }
+      );
+    } else {
+      alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
+    }
+  }
+  
+  function updateMapPreview(lat, lng) {
+    const mapPreview = document.getElementById('map-preview');
+    mapPreview.innerHTML = `
+      <div class="text-center">
+        <div class="text-2xl mb-2">📍</div>
+        <div class="text-sm text-gray-600">
+          위도: ${lat}<br>
+          경도: ${lng}
+        </div>
+        <a href="https://www.google.com/maps?q=${lat},${lng}" 
+           target="_blank" 
+           class="text-blue-500 hover:text-blue-700 text-sm mt-2 inline-block">
+          Google Maps에서 보기
+        </a>
+      </div>
+    `;
+  }
+  
+  // 좌표 입력 시 지도 미리보기 업데이트
+  document.addEventListener('DOMContentLoaded', function() {
+    const latInput = document.getElementById('outdoor_court_latitude');
+    const lngInput = document.getElementById('outdoor_court_longitude');
+    
+    function updatePreview() {
+      const lat = parseFloat(latInput.value);
+      const lng = parseFloat(lngInput.value);
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        updateMapPreview(lat, lng);
+      }
+    }
+    
+    latInput.addEventListener('input', updatePreview);
+    lngInput.addEventListener('input', updatePreview);
+  });
+</script>

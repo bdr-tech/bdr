@@ -1,0 +1,126 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 3-Second Rule Progress -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">⚡ 3초 룰 매칭</h1>
+      
+      <div class="flex justify-center items-center mb-8">
+        <div class="flex items-center space-x-4">
+          <div class="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">✓</div>
+          <div class="text-green-500 font-semibold">게임 선택</div>
+          <div class="w-12 h-1 bg-orange-500"></div>
+          <div class="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold">2</div>
+          <div class="text-orange-500 font-semibold">참가 확인</div>
+          <div class="w-12 h-1 bg-gray-300"></div>
+          <div class="bg-gray-300 text-gray-500 rounded-full w-10 h-10 flex items-center justify-center font-bold">3</div>
+          <div class="text-gray-500">완료</div>
+        </div>
+      </div>
+
+      <p class="text-center text-gray-600 mb-6">2단계: 게임 참가를 확인하세요</p>
+    </div>
+
+    <!-- Game Details -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2"><%= @game.court.name %></h2>
+        <p class="text-gray-600">선택하신 게임의 상세 정보입니다</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Game Info -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">게임 정보</h3>
+          
+          <div class="space-y-3">
+            <div class="flex items-center">
+              <span class="w-8 text-orange-500">📍</span>
+              <div>
+                <div class="font-medium"><%= @game.court.name %></div>
+                <div class="text-sm text-gray-600"><%= @game.court.address %></div>
+              </div>
+            </div>
+            
+            <div class="flex items-center">
+              <span class="w-8 text-orange-500">⏰</span>
+              <div>
+                <div class="font-medium"><%= @game.scheduled_at.strftime("%m월 %d일 %H시 %M분") %></div>
+                <div class="text-sm text-gray-600"><%= time_ago_in_words(@game.scheduled_at) %> 후 시작</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center">
+              <span class="w-8 text-orange-500">👥</span>
+              <div>
+                <div class="font-medium"><%= @game.players.count %>/<%= @game.max_players %>명</div>
+                <div class="text-sm text-gray-600"><%= @available_spots %>자리 남음</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center">
+              <span class="w-8 text-orange-500">🏀</span>
+              <div>
+                <div class="font-medium"><%= @game.court.court_type == 'indoor' ? '실내' : '실외' %> 코트</div>
+                <div class="text-sm text-gray-600">최대 <%= @game.court.capacity %>명 수용</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Organizer Info -->
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-800 border-b pb-2">주최자 정보</h3>
+          
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                <%= @game.organizer&.name&.first || 'U' %>
+              </div>
+              <div>
+                <div class="font-medium"><%= @game.organizer&.name || '사용자' %></div>
+                <div class="text-sm text-gray-600">주최자</div>
+              </div>
+            </div>
+            
+            <div class="text-sm space-y-1">
+              <div class="flex justify-between">
+                <span class="text-gray-600">실력 레벨:</span>
+                <span class="font-medium"><%= @game.organizer&.skill_level || 5 %>/10</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">포지션:</span>
+                <span class="font-medium"><%= @game.organizer&.position_names&.join(', ') || 'ALL' %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Section -->
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">게임에 참가하시겠습니까?</h3>
+      <p class="text-gray-600 mb-8">참가 후에는 취소하기 어려우니 신중히 결정해주세요</p>
+      
+      <div class="space-x-4">
+        <%= link_to "← 다른 게임 선택", quick_match_path, 
+            class: "bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg transition duration-300" %>
+        
+        <%= form_with url: confirm_join_path(@game), method: :post, local: true, class: "inline" do |form| %>
+          <%= form.submit "⚡ 참가 확정하기", 
+              class: "bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-3 rounded-lg transition duration-300 transform hover:scale-105 cursor-pointer" %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Safety Notice -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+      <div class="flex items-center">
+        <span class="text-yellow-600 mr-3">⚠️</span>
+        <div class="text-sm text-yellow-800">
+          <strong>참가 전 확인사항:</strong> 게임 시간, 장소를 다시 한번 확인하고 안전하게 게임에 참가하세요.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

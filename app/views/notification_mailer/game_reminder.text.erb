@@ -1,0 +1,49 @@
+내일 경기가 있습니다!
+
+안녕하세요, <%= @user.nickname || @user.name %>님!
+
+내일 참가 예정인 경기를 잊지 마세요!
+
+========================================
+<%= @game.scheduled_at.strftime("%m월 %d일 %H:%M") %>
+========================================
+
+경기 정보
+----------------------------------------
+경기명: <%= @game.title %>
+일시: <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %A %H:%M") %>
+장소: <%= @game.venue_name %>
+주소: <%= @game.venue_address %>
+주최자: <%= @game.organizer.nickname || @game.organizer.name %>
+게임 타입: <%= @game.game_type %>
+레벨: <%= @game.level %> 레벨
+참가 인원: <%= @game.game_applications.final_approved.count %> / <%= @game.max_players %>명
+
+경기 상세 정보: <%= game_url(@game) %>
+
+네이버 지도: https://map.naver.com/v5/search/<%= CGI.escape(@game.venue_address) %>
+카카오맵: https://map.kakao.com/?q=<%= CGI.escape(@game.venue_address) %>
+
+========================================
+준비물 체크리스트
+========================================
+✓ 운동복 및 농구화
+✓ 개인 음료 및 수건
+✓ 유니폼 색상: <%= @game.uniform_colors.try(:join, ', ') || '자유' %>
+<% if @game.description.present? && @game.description.include?('준비') %>✓ 기타: <%= @game.description.match(/준비[^.]*/).to_s %><% end %>
+
+<% if @game.venue_name.include?('실내') || @game.description.to_s.include?('실내') %>
+💡 실내 체육관인 경우 실내화를 별도로 준비해주세요.
+<% end %>
+
+========================================
+취소 시 주의사항
+========================================
+• 경기 시작 24시간 이내 취소 시 패널티가 부과됩니다.
+• 불가피한 사유로 참가가 어려운 경우, 미리 주최자에게 연락해주세요.
+
+멋진 경기 되시길 바랍니다! 🏀
+안전하게 운동하시고, 부상 조심하세요.
+
+* 이 리마인더는 경기 하루 전 자동으로 발송됩니다.
+* 경기 관련 문의는 앱 내 메시지를 통해 주최자에게 연락하세요.

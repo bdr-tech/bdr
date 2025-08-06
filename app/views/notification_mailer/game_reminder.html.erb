@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+    <style>
+      body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .header { background-color: #FF6B6B; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+      .content { background-color: #f8f9fa; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 5px 5px; }
+      .reminder-box { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #ffeaa7; text-align: center; }
+      .game-info { background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border: 1px solid #e0e0e0; }
+      .preparation { background-color: #e8f4f8; padding: 20px; margin: 20px 0; border-radius: 5px; }
+      .button { display: inline-block; padding: 12px 30px; background-color: #FF6B6B; color: white; text-decoration: none; border-radius: 5px; margin: 10px 0; }
+      .info-row { margin: 10px 0; }
+      .label { font-weight: bold; color: #666; }
+      .time-highlight { font-size: 24px; color: #FF6B6B; font-weight: bold; margin: 10px 0; }
+      .map-button { display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin: 5px; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🏀 내일 경기가 있습니다!</h1>
+      </div>
+      
+      <div class="content">
+        <h2>안녕하세요, <%= @user.nickname || @user.name %>님!</h2>
+        
+        <div class="reminder-box">
+          <p style="font-size: 18px; margin: 0;">
+            <strong>내일 참가 예정인 경기를 잊지 마세요!</strong>
+          </p>
+          <div class="time-highlight">
+            <%= @game.scheduled_at.strftime("%m월 %d일 %H:%M") %>
+          </div>
+        </div>
+        
+        <div class="game-info">
+          <h3>경기 정보</h3>
+          <div class="info-row">
+            <span class="label">경기명:</span> <%= @game.title %>
+          </div>
+          <div class="info-row">
+            <span class="label">일시:</span> <strong><%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %A %H:%M") %></strong>
+          </div>
+          <div class="info-row">
+            <span class="label">장소:</span> <%= @game.venue_name %>
+          </div>
+          <div class="info-row">
+            <span class="label">주소:</span> <%= @game.venue_address %>
+          </div>
+          <div class="info-row">
+            <span class="label">주최자:</span> <%= @game.organizer.nickname || @game.organizer.name %>
+          </div>
+          <div class="info-row">
+            <span class="label">게임 타입:</span> <%= @game.game_type %>
+          </div>
+          <div class="info-row">
+            <span class="label">레벨:</span> <%= @game.level %> 레벨
+          </div>
+          <div class="info-row">
+            <span class="label">참가 인원:</span> <%= @game.game_applications.final_approved.count %> / <%= @game.max_players %>명
+          </div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+          <%= link_to "경기 상세 정보", game_url(@game), class: "button" %>
+          <br>
+          <a href="https://map.naver.com/v5/search/<%= CGI.escape(@game.venue_address) %>" class="map-button" target="_blank">네이버 지도로 보기</a>
+          <a href="https://map.kakao.com/?q=<%= CGI.escape(@game.venue_address) %>" class="map-button" target="_blank">카카오맵으로 보기</a>
+        </div>
+        
+        <div class="preparation">
+          <h3>✅ 준비물 체크리스트</h3>
+          <ul style="margin: 10px 0;">
+            <li><strong>운동복 및 농구화</strong></li>
+            <li><strong>개인 음료 및 수건</strong></li>
+            <li><strong>유니폼 색상: <%= @game.uniform_colors.try(:join, ', ') || '자유' %></strong></li>
+            <% if @game.description.present? && @game.description.include?('준비') %>
+            <li>기타: <%= @game.description.match(/준비[^.]*/).to_s %></li>
+            <% end %>
+          </ul>
+          
+          <% if @game.venue_name.include?('실내') || @game.description.to_s.include?('실내') %>
+          <p style="color: #007bff; margin-top: 10px;">
+            💡 실내 체육관인 경우 실내화를 별도로 준비해주세요.
+          </p>
+          <% end %>
+        </div>
+        
+        <div style="background-color: #f8d7da; padding: 15px; margin: 20px 0; border-radius: 5px; border: 1px solid #f5c6cb;">
+          <h4 style="margin-top: 0; color: #721c24;">취소 시 주의사항</h4>
+          <p style="color: #721c24; margin: 5px 0;">
+            • 경기 시작 24시간 이내 취소 시 패널티가 부과됩니다.<br>
+            • 불가피한 사유로 참가가 어려운 경우, 미리 주최자에게 연락해주세요.
+          </p>
+        </div>
+        
+        <p style="margin-top: 30px;">
+          멋진 경기 되시길 바랍니다! 🏀<br>
+          안전하게 운동하시고, 부상 조심하세요.
+        </p>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+          * 이 리마인더는 경기 하루 전 자동으로 발송됩니다.<br>
+          * 경기 관련 문의는 앱 내 메시지를 통해 주최자에게 연락하세요.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

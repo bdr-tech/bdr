@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  game_application: one
+  amount: 9.99
+  status: MyString
+  payment_method: MyString
+  bdr_account_info: MyText
+  paid_at: 2025-07-18 01:49:11
+  transferred_to_host_at: 2025-07-18 01:49:11
+
+two:
+  game_application: two
+  amount: 9.99
+  status: MyString
+  payment_method: MyString
+  bdr_account_info: MyText
+  paid_at: 2025-07-18 01:49:11
+  transferred_to_host_at: 2025-07-18 01:49:11

@@ -1,0 +1,237 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900"><%= @tournament.name %></h1>
+          <p class="text-gray-600 mt-1">대회 코드: <%= @tournament.display_code %></p>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                       <%= @tournament.status == 'ongoing' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+            <%= @tournament.status_text %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <div class="flex justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700">진행률</span>
+        <span class="text-sm font-medium text-gray-700"><%= @tournament_stats[:progress] %>%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-3">
+        <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" 
+             style="width: <%= @tournament_stats[:progress] %>%"></div>
+      </div>
+      <div class="mt-2 text-sm text-gray-600">
+        현재: <%= @tournament_stats[:current_round] %> | 
+        완료: <%= @tournament_stats[:completed_matches] %>/<%= @tournament_stats[:total_matches] %> 경기
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4">빠른 실행</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <%= button_to "📢 전체 공지", 
+                      announce_tournament_dashboard_path(@tournament),
+                      method: :post,
+                      data: { turbo_confirm: "공지사항을 발송하시겠습니까?" },
+                      class: "bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" %>
+        
+        <% if @tournament.status == 'ongoing' %>
+          <%= button_to "⏸️ 대회 일시정지", 
+                        pause_tournament_dashboard_path(@tournament),
+                        method: :post,
+                        class: "bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition" %>
+        <% else %>
+          <%= button_to "▶️ 대회 재개", 
+                        resume_tournament_dashboard_path(@tournament),
+                        method: :post,
+                        class: "bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" %>
+        <% end %>
+        
+        <%= link_to "📷 사진 요청", "#", 
+                    class: "bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition text-center" %>
+        
+        <%= link_to "🏆 순위 발표", tournament_standings_path(@tournament), 
+                    class: "bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition text-center" %>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white p-4 rounded-lg shadow-sm">
+        <div class="text-sm text-gray-600">총 참가팀</div>
+        <div class="text-2xl font-bold text-gray-900"><%= @tournament_stats[:total_teams] %></div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow-sm">
+        <div class="text-sm text-gray-600">승인된 팀</div>
+        <div class="text-2xl font-bold text-green-600"><%= @tournament_stats[:approved_teams] %></div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow-sm">
+        <div class="text-sm text-gray-600">체크인 완료</div>
+        <div class="text-2xl font-bold text-blue-600"><%= @tournament_stats[:checked_in_teams] %></div>
+      </div>
+      
+      <div class="bg-white p-4 rounded-lg shadow-sm">
+        <div class="text-sm text-gray-600">완료 경기</div>
+        <div class="text-2xl font-bold text-purple-600"><%= @tournament_stats[:completed_matches] %></div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Current Matches -->
+      <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">진행 중인 경기</h2>
+        <% if @current_matches.any? %>
+          <div class="space-y-3">
+            <% @current_matches.each do |match| %>
+              <div class="border-l-4 border-green-500 pl-4 py-2">
+                <div class="font-medium">
+                  <%= match.home_team.team_name %> vs <%= match.away_team.team_name %>
+                </div>
+                <div class="text-sm text-gray-600">
+                  코트 <%= match.court_number %> | <%= match.round_name %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500">진행 중인 경기가 없습니다.</p>
+        <% end %>
+      </div>
+
+      <!-- Upcoming Matches -->
+      <div class="bg-white shadow-sm rounded-lg p-6">
+        <h2 class="text-lg font-semibold mb-4">다음 경기</h2>
+        <% if @upcoming_matches.any? %>
+          <div class="space-y-3">
+            <% @upcoming_matches.each do |match| %>
+              <div class="border-l-4 border-blue-500 pl-4 py-2">
+                <div class="font-medium">
+                  <%= match.home_team.team_name %> vs <%= match.away_team.team_name %>
+                </div>
+                <div class="text-sm text-gray-600">
+                  <%= match.scheduled_at&.strftime("%H:%M") %> | 코트 <%= match.court_number %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-gray-500">예정된 경기가 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Pending Checklists -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mt-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-semibold">대기 중인 체크리스트</h2>
+        <%= link_to "전체 보기", tournament_checklists_path(@tournament), 
+                    class: "text-blue-600 hover:text-blue-800 text-sm" %>
+      </div>
+      <% if @checklists.any? %>
+        <div class="space-y-2">
+          <% @checklists.each do |checklist| %>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <input type="checkbox" 
+                       data-checklist-id="<%= checklist.id %>"
+                       class="mr-3 h-4 w-4 text-blue-600 rounded">
+                <div>
+                  <div class="font-medium"><%= checklist.task_name %></div>
+                  <div class="text-sm text-gray-600"><%= checklist.phase %></div>
+                </div>
+              </div>
+              <% if checklist.automated? %>
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">자동</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500">대기 중인 작업이 없습니다.</p>
+      <% end %>
+    </div>
+
+    <!-- Recent Updates -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mt-6">
+      <h2 class="text-lg font-semibold mb-4">최근 업데이트</h2>
+      <% if @recent_updates.any? %>
+        <div class="space-y-2">
+          <% @recent_updates.each do |update| %>
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <% if update[:type] == 'check_in' %>
+                  <span class="text-green-500">✓</span>
+                <% else %>
+                  <span class="text-blue-500">🏀</span>
+                <% end %>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-gray-900"><%= update[:message] %></p>
+                <p class="text-xs text-gray-500"><%= time_ago_in_words(update[:time]) %> 전</p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-gray-500">최근 업데이트가 없습니다.</p>
+      <% end %>
+    </div>
+
+    <!-- Batch Operations -->
+    <div class="bg-white shadow-sm rounded-lg p-6 mt-6">
+      <h2 class="text-lg font-semibold mb-4">일괄 처리</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <%= button_to "팀 일괄 승인", 
+                      batch_approve_teams_tournament_dashboard_path(@tournament),
+                      method: :post,
+                      class: "bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition" %>
+        
+        <%= button_to "리마인더 일괄 발송", 
+                      batch_send_reminders_tournament_dashboard_path(@tournament),
+                      method: :post,
+                      class: "bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition" %>
+        
+        <%= link_to "리포트 생성", 
+                    generate_report_tournament_dashboard_path(@tournament, format: :pdf),
+                    class: "bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition text-center" %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-refresh every 30 seconds
+  setTimeout(function() {
+    Turbo.visit(window.location.href);
+  }, 30000);
+  
+  // Checklist completion
+  document.querySelectorAll('input[data-checklist-id]').forEach(function(checkbox) {
+    checkbox.addEventListener('change', function() {
+      const checklistId = this.dataset.checklistId;
+      const url = `/tournaments/<%= @tournament.id %>/checklists/${checklistId}/complete`;
+      
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+          'Content-Type': 'application/json'
+        }
+      }).then(response => response.json())
+        .then(data => {
+          if (data.status === 'completed') {
+            this.parentElement.parentElement.style.opacity = '0.5';
+          }
+        });
+    });
+  });
+</script>

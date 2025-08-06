@@ -1,0 +1,247 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- 헤더 -->
+  <div class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">
+          🏀 <%= @tournament.name %> - 실시간 대시보드
+        </h1>
+        
+        <div class="flex items-center space-x-4">
+          <!-- 체크인 현황 -->
+          <div class="bg-blue-50 px-4 py-2 rounded-lg">
+            <span class="text-sm text-blue-600">체크인</span>
+            <span class="ml-2 font-bold text-blue-900">
+              <%= @checked_in_count %> / <%= @tournament.max_teams * 5 %>
+            </span>
+          </div>
+          
+          <!-- QR 체크인 버튼 -->
+          <%= link_to tournament_check_in_path(@tournament), 
+                      class: "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700" do %>
+            <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+            </svg>
+            QR 체크인
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- 현재 진행 중인 경기 -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            🔴 진행 중인 경기
+          </h2>
+          
+          <% if @current_matches.any? %>
+            <div class="space-y-4">
+              <% @current_matches.each do |match| %>
+                <div class="border rounded-lg p-4 bg-red-50">
+                  <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm text-gray-600">
+                      코트 <%= match.court_number %> | <%= match.round %>라운드
+                    </span>
+                    <span class="text-xs bg-red-600 text-white px-2 py-1 rounded">
+                      LIVE
+                    </span>
+                  </div>
+                  
+                  <div class="grid grid-cols-3 gap-4 items-center">
+                    <!-- 팀 A -->
+                    <div class="text-center">
+                      <div class="font-medium text-gray-900">
+                        <%= match.team_a.name %>
+                      </div>
+                      <div class="text-3xl font-bold text-gray-900 mt-2">
+                        <%= match.team_a_score || 0 %>
+                      </div>
+                    </div>
+                    
+                    <!-- VS -->
+                    <div class="text-center text-gray-500">
+                      VS
+                    </div>
+                    
+                    <!-- 팀 B -->
+                    <div class="text-center">
+                      <div class="font-medium text-gray-900">
+                        <%= match.team_b.name %>
+                      </div>
+                      <div class="text-3xl font-bold text-gray-900 mt-2">
+                        <%= match.team_b_score || 0 %>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 점수 업데이트 버튼 -->
+                  <div class="mt-4 text-center">
+                    <%= link_to "점수 업데이트", 
+                                score_board_tournament_live_path(@tournament, match_id: match.id),
+                                class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-8">
+              현재 진행 중인 경기가 없습니다
+            </p>
+          <% end %>
+        </div>
+
+        <!-- 다음 경기 일정 -->
+        <div class="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            ⏰ 다음 경기 일정
+          </h2>
+          
+          <% if @upcoming_matches.any? %>
+            <div class="space-y-3">
+              <% @upcoming_matches.each do |match| %>
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <div>
+                    <span class="font-medium">
+                      <%= match.team_a&.name || 'TBD' %> vs <%= match.team_b&.name || 'TBD' %>
+                    </span>
+                    <div class="text-sm text-gray-600">
+                      코트 <%= match.court_number %> | <%= match.round %>라운드
+                    </div>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <%= match.scheduled_at&.strftime('%H:%M') || '미정' %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-gray-500 text-center py-4">
+              예정된 경기가 없습니다
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- 실시간 업데이트 피드 -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            📢 실시간 업데이트
+          </h2>
+          
+          <div id="live-feed" class="space-y-3 max-h-96 overflow-y-auto">
+            <% @recent_updates.each do |update| %>
+              <div class="border-l-4 <%= update_border_color(update) %> pl-3 py-2">
+                <div class="text-sm text-gray-600">
+                  <%= update.created_at.strftime('%H:%M') %>
+                </div>
+                <div class="text-sm font-medium text-gray-900">
+                  <%= update_message(update) %>
+                </div>
+                <div class="text-xs text-gray-500">
+                  by <%= update.user.nickname || update.user.name %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- 공지사항 작성 -->
+          <% if can_update_live? %>
+            <div class="mt-4 pt-4 border-t">
+              <%= form_with url: announcement_tournament_live_path(@tournament), 
+                            local: false,
+                            class: "space-y-2" do |f| %>
+                <%= f.text_area :message, 
+                                rows: 2,
+                                placeholder: "공지사항 작성...",
+                                class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" %>
+                <%= f.submit "전송", 
+                             class: "w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 text-sm" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- 대진표 보기 -->
+        <div class="bg-white rounded-lg shadow p-6 mt-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">
+            🏆 대진표
+          </h2>
+          
+          <%= link_to tournament_bracket_path(@tournament),
+                      class: "block w-full text-center bg-gray-100 hover:bg-gray-200 py-3 rounded-md transition" do %>
+            전체 대진표 보기
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ActionCable로 실시간 업데이트 수신
+  document.addEventListener('DOMContentLoaded', function() {
+    App.tournament = App.cable.subscriptions.create(
+      { channel: "TournamentChannel", tournament_id: <%= @tournament.id %> },
+      {
+        received: function(data) {
+          // 실시간 피드 업데이트
+          const feed = document.getElementById('live-feed');
+          const newUpdate = createUpdateElement(data);
+          feed.insertBefore(newUpdate, feed.firstChild);
+          
+          // 점수 업데이트인 경우 화면 갱신
+          if (data.type === 'score_update') {
+            location.reload();
+          }
+        }
+      }
+    );
+  });
+  
+  function createUpdateElement(data) {
+    const div = document.createElement('div');
+    div.className = 'border-l-4 border-blue-500 pl-3 py-2 animate-pulse';
+    div.innerHTML = `
+      <div class="text-sm text-gray-600">${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'})}</div>
+      <div class="text-sm font-medium text-gray-900">${data.message || data.type}</div>
+      <div class="text-xs text-gray-500">by ${data.user.nickname || data.user.name}</div>
+    `;
+    return div;
+  }
+</script>
+
+<% def update_border_color(update)
+  case update.update_type
+  when 'score_update' then 'border-blue-500'
+  when 'match_start' then 'border-green-500'
+  when 'match_end' then 'border-red-500'
+  when 'announcement' then 'border-yellow-500'
+  else 'border-gray-400'
+  end
+end %>
+
+<% def update_message(update)
+  case update.update_type
+  when 'score_update'
+    "점수 업데이트: #{update.data['team_a_score']} - #{update.data['team_b_score']}"
+  when 'match_start'
+    "경기 시작: #{update.data['teams']&.join(' vs ')}"
+  when 'match_end'
+    "경기 종료: #{update.data['winner']} 승리!"
+  when 'announcement'
+    update.data['message']
+  else
+    update.update_type.humanize
+  end
+end %>
+
+<% def can_update_live?
+  current_user == @tournament.organizer || 
+  current_user.admin? ||
+  @tournament.tournament_check_ins.where(user: current_user, role: 'staff').exists?
+end %>

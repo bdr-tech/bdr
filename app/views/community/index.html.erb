@@ -1,0 +1,124 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- 헤더 영역 -->
+  <div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-3">💬 BDR 커뮤니티</h1>
+        <p class="text-lg text-gray-600">농구를 사랑하는 사람들이 모이는 공간</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- 게시판 카테고리들 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- 자유게시판 -->
+      <%= link_to community_free_board_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 block" do %>
+        <div class="text-center">
+          <div class="text-4xl mb-4">💬</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">자유게시판</h3>
+          <p class="text-gray-600 text-sm mb-4">자유롭게 대화를 나누는 공간</p>
+          <div class="text-2xl font-bold text-orange-500 mb-1">
+            <%= @categories_stats['자유게시판'] || 0 %>
+          </div>
+          <div class="text-xs text-gray-500">개의 게시글</div>
+        </div>
+      <% end %>
+
+      <!-- 중고거래 -->
+      <%= link_to community_marketplace_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 block" do %>
+        <div class="text-center">
+          <div class="text-4xl mb-4">🛒</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">중고거래</h3>
+          <p class="text-gray-600 text-sm mb-4">농구 용품 중고 거래</p>
+          <div class="text-2xl font-bold text-green-500 mb-1">
+            <%= @categories_stats['중고거래'] || 0 %>
+          </div>
+          <div class="text-xs text-gray-500">개의 게시글</div>
+        </div>
+      <% end %>
+
+      <!-- 팀 소개 -->
+      <%= link_to community_teams_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 block" do %>
+        <div class="text-center">
+          <div class="text-4xl mb-4">👥</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">팀 소개</h3>
+          <p class="text-gray-600 text-sm mb-4">농구팀 소개 및 모집</p>
+          <div class="text-2xl font-bold text-blue-500 mb-1">
+            <%= @categories_stats['팀소개'] || 0 %>
+          </div>
+          <div class="text-xs text-gray-500">개의 게시글</div>
+        </div>
+      <% end %>
+
+      <!-- 농구코트 정보 -->
+      <%= link_to community_courts_info_path, class: "bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300 block" do %>
+        <div class="text-center">
+          <div class="text-4xl mb-4">🏀</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">농구코트 정보</h3>
+          <p class="text-gray-600 text-sm mb-4">농구장 정보 및 후기</p>
+          <div class="text-2xl font-bold text-purple-500 mb-1">
+            <%= @categories_stats['농구코트정보'] || 0 %>
+          </div>
+          <div class="text-xs text-gray-500">개의 게시글</div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 최근 게시글 -->
+    <% if @recent_posts.any? %>
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+          <span class="mr-2">📋</span>
+          최근 게시글
+        </h2>
+        <div class="space-y-3">
+          <% @recent_posts.limit(5).each do |post| %>
+            <%= link_to post_path(post), class: "block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-300" do %>
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3">
+                    <span class="text-lg"><%= post.category_icon %></span>
+                    <div class="flex-1">
+                      <h4 class="font-semibold text-gray-800 hover:text-orange-600 transition duration-300">
+                        <%= truncate(post.title, length: 50) %>
+                        <% if post.comments_count > 0 %>
+                          <span class="text-orange-500 text-sm font-normal">[<%= post.comments_count %>]</span>
+                        <% end %>
+                      </h4>
+                      <div class="flex items-center space-x-2 text-sm text-gray-500">
+                        <span><%= post.user.nickname || post.user.name %></span>
+                        <span class="text-gray-300">•</span>
+                        <span><%= time_ago_in_words(post.created_at) %>전</span>
+                        <span class="text-gray-300">•</span>
+                        <span class="text-orange-600"><%= post.category %></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right text-sm text-gray-500">
+                  <div>조회 <%= post.views_count %></div>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+        <div class="text-center mt-6">
+          <%= link_to "전체 게시글 보기", posts_path, 
+                class: "text-orange-600 hover:text-orange-800 transition duration-300 font-medium" %>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+
+  <!-- Floating 글작성 버튼 -->
+  <% if logged_in? %>
+    <%= link_to new_post_path, class: "fixed bottom-6 right-6 bg-orange-500 hover:bg-orange-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 z-50", title: "글 작성하기" do %>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+    <% end %>
+  <% end %>
+</div>

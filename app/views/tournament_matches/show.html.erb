@@ -1,0 +1,421 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    <!-- Match Header -->
+    <div class="bg-white rounded-lg shadow-lg mb-6">
+      <div class="p-6">
+        <!-- Tournament Info -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <%= link_to @tournament.name, tournament_path(@tournament), 
+                class: "text-blue-600 hover:text-blue-800 text-sm" %>
+            <span class="text-gray-500 mx-2">›</span>
+            <span class="text-sm text-gray-600"><%= @match.round_name %></span>
+          </div>
+          <div class="text-sm text-gray-500">
+            <%= @match.scheduled_at&.strftime("%Y년 %m월 %d일") %>
+          </div>
+        </div>
+        
+        <!-- Score Board -->
+        <div class="grid grid-cols-3 gap-4 items-center">
+          <!-- Home Team -->
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">
+              <%= @match.home_team.team_name %>
+            </h2>
+            <% if @match.completed? && @match.winner_team == @match.home_team %>
+              <span class="text-green-600 text-sm font-semibold">승리</span>
+            <% end %>
+          </div>
+          
+          <!-- Score -->
+          <div class="text-center">
+            <% if @match.completed? %>
+              <div class="text-5xl font-bold">
+                <span class="<%= @match.home_score > @match.away_score ? 'text-green-600' : 'text-gray-700' %>">
+                  <%= @match.home_score %>
+                </span>
+                <span class="text-gray-400 mx-3">-</span>
+                <span class="<%= @match.away_score > @match.home_score ? 'text-green-600' : 'text-gray-700' %>">
+                  <%= @match.away_score %>
+                </span>
+              </div>
+              <div class="text-sm text-gray-500 mt-2">경기 종료</div>
+            <% else %>
+              <div class="text-3xl text-gray-400">vs</div>
+              <div class="text-sm text-gray-500 mt-2">
+                <%= @match.scheduled_at ? @match.scheduled_at.strftime("%H:%M") : "시간 미정" %>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Away Team -->
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">
+              <%= @match.away_team.team_name %>
+            </h2>
+            <% if @match.completed? && @match.winner_team == @match.away_team %>
+              <span class="text-green-600 text-sm font-semibold">승리</span>
+            <% end %>
+          </div>
+        </div>
+        
+        <!-- Quarter Scores -->
+        <% if @match.completed? && @quarter_scores.present? %>
+          <div class="mt-6 overflow-x-auto">
+            <table class="mx-auto">
+              <thead>
+                <tr class="text-sm text-gray-600">
+                  <th class="px-4 py-2">팀</th>
+                  <th class="px-4 py-2 text-center">1Q</th>
+                  <th class="px-4 py-2 text-center">2Q</th>
+                  <th class="px-4 py-2 text-center">3Q</th>
+                  <th class="px-4 py-2 text-center">4Q</th>
+                  <% if @match.overtime_scores %>
+                    <th class="px-4 py-2 text-center">OT</th>
+                  <% end %>
+                  <th class="px-4 py-2 text-center font-bold">합계</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-t">
+                  <td class="px-4 py-2 font-semibold"><%= @match.home_team.team_name %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q1, :home) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q2, :home) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q3, :home) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q4, :home) || '-' %></td>
+                  <% if @match.overtime_scores %>
+                    <td class="px-4 py-2 text-center"><%= @match.overtime_scores['home'] %></td>
+                  <% end %>
+                  <td class="px-4 py-2 text-center font-bold text-lg"><%= @match.home_score %></td>
+                </tr>
+                <tr class="border-t">
+                  <td class="px-4 py-2 font-semibold"><%= @match.away_team.team_name %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q1, :away) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q2, :away) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q3, :away) || '-' %></td>
+                  <td class="px-4 py-2 text-center"><%= @quarter_scores.dig(:q4, :away) || '-' %></td>
+                  <% if @match.overtime_scores %>
+                    <td class="px-4 py-2 text-center"><%= @match.overtime_scores['away'] %></td>
+                  <% end %>
+                  <td class="px-4 py-2 text-center font-bold text-lg"><%= @match.away_score %></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <% if @match.completed? %>
+      <!-- MVP Section -->
+      <% if @game_mvp %>
+        <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg shadow-lg mb-6 p-6">
+          <h3 class="text-lg font-bold text-gray-800 mb-3">🏆 경기 MVP</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xl font-bold text-gray-900">
+                <%= @game_mvp[:player].nickname || @game_mvp[:player].name %>
+              </p>
+              <p class="text-sm text-gray-600">
+                <%= @game_mvp[:team] == 'home' ? @match.home_team.team_name : @match.away_team.team_name %>
+              </p>
+            </div>
+            <div class="text-right">
+              <div class="flex space-x-6">
+                <div class="text-center">
+                  <p class="text-2xl font-bold"><%= @game_mvp[:stats].points %></p>
+                  <p class="text-xs text-gray-600">득점</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-2xl font-bold"><%= @game_mvp[:stats].total_rebounds %></p>
+                  <p class="text-xs text-gray-600">리바운드</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-2xl font-bold"><%= @game_mvp[:stats].assists %></p>
+                  <p class="text-xs text-gray-600">어시스트</p>
+                </div>
+              </div>
+              <p class="text-sm text-gray-600 mt-2">
+                게임 스코어: <%= @game_mvp[:stats].game_score %>
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Box Score Tables -->
+      <div class="space-y-6">
+        <!-- Home Team Stats -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div class="bg-gray-800 text-white px-6 py-4">
+            <h3 class="text-lg font-bold"><%= @match.home_team.team_name %></h3>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">선수</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">MIN</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">PTS</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">FGM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">3PM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">FTM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">OREB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">DREB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">REB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">AST</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">STL</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">BLK</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">TO</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">PF</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">+/-</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% @home_team_stats.each do |stat| %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 text-sm">
+                      <div class="flex items-center">
+                        <% if stat.starter %>
+                          <span class="text-xs text-gray-500 mr-2">S</span>
+                        <% end %>
+                        <span class="font-medium">
+                          <%= stat.user.nickname || stat.user.name %>
+                        </span>
+                        <% if stat.double_double? %>
+                          <span class="ml-2 text-xs bg-green-100 text-green-800 px-1 rounded">DD</span>
+                        <% elsif stat.triple_double? %>
+                          <span class="ml-2 text-xs bg-purple-100 text-purple-800 px-1 rounded">TD</span>
+                        <% end %>
+                      </div>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.minutes_played %></td>
+                    <td class="px-4 py-2 text-sm text-center font-bold"><%= stat.points %></td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.field_goals_made %>-<%= stat.field_goals_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.three_pointers_made %>-<%= stat.three_pointers_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.free_throws_made %>-<%= stat.free_throws_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.offensive_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.defensive_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center font-semibold"><%= stat.total_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center font-semibold"><%= stat.assists %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.steals %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.blocks %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.turnovers %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.personal_fouls %></td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <span class="<%= stat.plus_minus >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                        <%= stat.plus_minus > 0 ? '+' : '' %><%= stat.plus_minus %>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+                <!-- Team Totals -->
+                <tr class="bg-gray-100 font-bold">
+                  <td class="px-4 py-2 text-sm">팀 합계</td>
+                  <td class="px-4 py-2 text-sm text-center">200</td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:points] %></td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @home_team_totals[:field_goals_made] %>-<%= @home_team_totals[:field_goals_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @home_team_totals[:three_pointers_made] %>-<%= @home_team_totals[:three_pointers_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @home_team_totals[:free_throws_made] %>-<%= @home_team_totals[:free_throws_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:offensive_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:defensive_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:total_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:assists] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:steals] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:blocks] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:turnovers] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @home_team_totals[:personal_fouls] %></td>
+                  <td class="px-4 py-2 text-sm text-center">-</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Team Shooting Percentages -->
+            <div class="bg-gray-50 px-6 py-3 text-sm text-gray-600">
+              <span class="mr-6">
+                FG: <%= calculate_percentage(@home_team_totals[:field_goals_made], @home_team_totals[:field_goals_attempted]) %>%
+              </span>
+              <span class="mr-6">
+                3P: <%= calculate_percentage(@home_team_totals[:three_pointers_made], @home_team_totals[:three_pointers_attempted]) %>%
+              </span>
+              <span>
+                FT: <%= calculate_percentage(@home_team_totals[:free_throws_made], @home_team_totals[:free_throws_attempted]) %>%
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Away Team Stats -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div class="bg-gray-800 text-white px-6 py-4">
+            <h3 class="text-lg font-bold"><%= @match.away_team.team_name %></h3>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <!-- Same table structure as home team -->
+            <table class="min-w-full">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase">선수</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">MIN</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">PTS</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">FGM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">3PM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">FTM-A</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">OREB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">DREB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">REB</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">AST</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">STL</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">BLK</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">TO</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">PF</th>
+                  <th class="px-4 py-2 text-center text-xs font-medium text-gray-600 uppercase">+/-</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% @away_team_stats.each do |stat| %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 text-sm">
+                      <div class="flex items-center">
+                        <% if stat.starter %>
+                          <span class="text-xs text-gray-500 mr-2">S</span>
+                        <% end %>
+                        <span class="font-medium">
+                          <%= stat.user.nickname || stat.user.name %>
+                        </span>
+                        <% if stat.double_double? %>
+                          <span class="ml-2 text-xs bg-green-100 text-green-800 px-1 rounded">DD</span>
+                        <% elsif stat.triple_double? %>
+                          <span class="ml-2 text-xs bg-purple-100 text-purple-800 px-1 rounded">TD</span>
+                        <% end %>
+                      </div>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.minutes_played %></td>
+                    <td class="px-4 py-2 text-sm text-center font-bold"><%= stat.points %></td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.field_goals_made %>-<%= stat.field_goals_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.three_pointers_made %>-<%= stat.three_pointers_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <%= stat.free_throws_made %>-<%= stat.free_throws_attempted %>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.offensive_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.defensive_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center font-semibold"><%= stat.total_rebounds %></td>
+                    <td class="px-4 py-2 text-sm text-center font-semibold"><%= stat.assists %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.steals %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.blocks %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.turnovers %></td>
+                    <td class="px-4 py-2 text-sm text-center"><%= stat.personal_fouls %></td>
+                    <td class="px-4 py-2 text-sm text-center">
+                      <span class="<%= stat.plus_minus >= 0 ? 'text-green-600' : 'text-red-600' %>">
+                        <%= stat.plus_minus > 0 ? '+' : '' %><%= stat.plus_minus %>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+                <!-- Team Totals -->
+                <tr class="bg-gray-100 font-bold">
+                  <td class="px-4 py-2 text-sm">팀 합계</td>
+                  <td class="px-4 py-2 text-sm text-center">200</td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:points] %></td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @away_team_totals[:field_goals_made] %>-<%= @away_team_totals[:field_goals_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @away_team_totals[:three_pointers_made] %>-<%= @away_team_totals[:three_pointers_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center">
+                    <%= @away_team_totals[:free_throws_made] %>-<%= @away_team_totals[:free_throws_attempted] %>
+                  </td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:offensive_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:defensive_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:total_rebounds] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:assists] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:steals] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:blocks] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:turnovers] %></td>
+                  <td class="px-4 py-2 text-sm text-center"><%= @away_team_totals[:personal_fouls] %></td>
+                  <td class="px-4 py-2 text-sm text-center">-</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Team Shooting Percentages -->
+            <div class="bg-gray-50 px-6 py-3 text-sm text-gray-600">
+              <span class="mr-6">
+                FG: <%= calculate_percentage(@away_team_totals[:field_goals_made], @away_team_totals[:field_goals_attempted]) %>%
+              </span>
+              <span class="mr-6">
+                3P: <%= calculate_percentage(@away_team_totals[:three_pointers_made], @away_team_totals[:three_pointers_attempted]) %>%
+              </span>
+              <span>
+                FT: <%= calculate_percentage(@away_team_totals[:free_throws_made], @away_team_totals[:free_throws_attempted]) %>%
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Team Comparison Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">팀 통계 비교</h3>
+          
+          <div class="space-y-4">
+            <% @team_comparison.each do |stat, values| %>
+              <div>
+                <div class="flex justify-between text-sm text-gray-600 mb-1">
+                  <span><%= @match.home_team.team_name %></span>
+                  <span class="font-medium">
+                    <%= stat.to_s.humanize %>
+                  </span>
+                  <span><%= @match.away_team.team_name %></span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm font-semibold w-12 text-right">
+                    <%= values[:home].is_a?(Float) ? "#{values[:home]}%" : values[:home] %>
+                  </span>
+                  <div class="flex-1 bg-gray-200 rounded-full h-6 relative">
+                    <% 
+                      total = values[:home] + values[:away]
+                      home_percentage = total > 0 ? (values[:home].to_f / total * 100) : 50
+                    %>
+                    <div class="absolute inset-y-0 left-0 bg-blue-600 rounded-l-full" 
+                         style="width: <%= home_percentage %>%"></div>
+                    <div class="absolute inset-y-0 right-0 bg-red-600 rounded-r-full" 
+                         style="width: <%= 100 - home_percentage %>%"></div>
+                  </div>
+                  <span class="text-sm font-semibold w-12">
+                    <%= values[:away].is_a?(Float) ? "#{values[:away]}%" : values[:away] %>
+                  </span>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <!-- Match Not Started -->
+      <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <p class="text-gray-500 text-lg">경기가 아직 시작되지 않았습니다.</p>
+        <p class="text-gray-400 mt-2">경기 종료 후 상세 통계를 확인할 수 있습니다.</p>
+      </div>
+    <% end %>
+  </div>
+</div>

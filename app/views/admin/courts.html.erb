@@ -1,0 +1,146 @@
+<% content_for :title, "코트 관리 - BDR 관리자" %>
+
+    <!-- 페이지 제목 -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">🏀 코트 관리</h2>
+      <p class="text-gray-600">등록된 코트들을 관리하고 모니터링하세요</p>
+    </div>
+
+    <!-- 코트 추가 버튼 -->
+    <div class="mb-6">
+      <%= link_to "새 코트 추가", new_admin_court_path, class: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+    </div>
+
+    <!-- 필터 및 검색 -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <%= form_with url: admin_courts_path, method: :get, local: true, class: "flex flex-wrap gap-4 items-end" do |form| %>
+        <div class="flex-1 min-w-64">
+          <%= form.text_field :search, placeholder: "코트명, 주소 검색", 
+                              value: params[:search], 
+                              class: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        </div>
+        <div>
+          <%= form.select :status, 
+                          options_for_select([
+                            ['전체 상태', ''],
+                            ['활성', 'active'],
+                            ['비활성', 'inactive'],
+                            ['점검중', 'maintenance']
+                          ], params[:status]), 
+                          {}, 
+                          { class: "px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" } %>
+        </div>
+        <div class="flex gap-2">
+          <%= form.submit "검색", class: "bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+          <%= link_to "초기화", admin_courts_path, class: "bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-300" %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 코트 목록 -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">코트 정보</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">시설</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">이용 통계</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">등록일</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">관리</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% if @courts && @courts.any? %>
+              <% @courts.each do |court| %>
+                <tr class="hover:bg-gray-50">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold">
+                          🏀
+                        </div>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          <%= court.name %>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          <%= court.address %>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <% case court.status %>
+                    <% when 'active' %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        활성
+                      </span>
+                    <% when 'inactive' %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        비활성
+                      </span>
+                    <% when 'maintenance' %>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        점검중
+                      </span>
+                    <% end %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div>코트 수: <%= court.court_count || 0 %>개</div>
+                    <div class="text-xs text-gray-400">
+                      <%= court.indoor? ? '실내' : '실외' %>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div>총 경기: <%= court.games.count %>건</div>
+                    <div class="text-xs text-gray-400">
+                      이번 달: <%= court.games.where(created_at: Date.current.beginning_of_month..Date.current.end_of_month).count %>건
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <%= court.created_at.strftime("%Y-%m-%d") %>
+                    <div class="text-xs text-gray-400">
+                      <%= time_ago_in_words(court.created_at) %> 전
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div class="flex space-x-2">
+                      <%= link_to "수정", edit_admin_court_path(court), class: "text-blue-600 hover:text-blue-800" %>
+                      
+                      <% if court.status == 'active' %>
+                        <%= form_with url: admin_court_action_path(court), method: :post, local: true, class: "inline" do |f| %>
+                          <%= f.hidden_field :action_type, value: 'deactivate' %>
+                          <%= f.submit "비활성화", class: "bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs", 
+                                       data: { confirm: "이 코트를 비활성화하시겠습니까?" } %>
+                        <% end %>
+                      <% else %>
+                        <%= form_with url: admin_court_action_path(court), method: :post, local: true, class: "inline" do |f| %>
+                          <%= f.hidden_field :action_type, value: 'activate' %>
+                          <%= f.submit "활성화", class: "bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs" %>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                  등록된 코트가 없습니다.
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <% if @courts && @courts.respond_to?(:current_page) && @courts.any? %>
+      <!-- 페이지네이션 -->
+      <div class="mt-6 flex justify-center">
+        <%= paginate @courts %>
+      </div>
+    <% end %>

@@ -1,0 +1,135 @@
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">경기 평가 내역</h1>
+    
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+      <h3 class="font-semibold text-gray-700 mb-2">경기 정보</h3>
+      <p class="text-sm text-gray-600">
+        <span class="font-medium">경기 ID:</span> <%= @game.game_id %><br>
+        <span class="font-medium">일시:</span> <%= @game.start_time.strftime('%Y년 %m월 %d일 %H:%M') %><br>
+        <span class="font-medium">장소:</span> <%= @game.venue_name %>
+      </p>
+    </div>
+
+    <% if @my_ratings.any? %>
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">내가 작성한 평가</h2>
+        <div class="space-y-3">
+          <% @my_ratings.each do |rating| %>
+            <div class="border rounded-lg p-4 bg-gray-50">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="font-semibold text-gray-700">
+                    <%= rating.rated_user.display_name %>
+                  </span>
+                  <% if rating.rating_type == 'host' %>
+                    <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">호스트</span>
+                  <% end %>
+                </div>
+                <div class="flex items-center">
+                  <% rating.rating.times do %>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  <% end %>
+                  <% (5 - rating.rating).times do %>
+                    <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  <% end %>
+                  <span class="ml-2 text-sm text-gray-600">(<%= rating.rating %>/5)</span>
+                </div>
+              </div>
+              <% if rating.comment.present? %>
+                <p class="text-sm text-gray-600 mt-2"><%= rating.comment %></p>
+              <% end %>
+              <p class="text-xs text-gray-500 mt-2">
+                <%= rating.created_at.strftime('%Y-%m-%d %H:%M') %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @received_ratings.any? %>
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">받은 평가</h2>
+        <div class="space-y-3">
+          <% @received_ratings.each do |rating| %>
+            <div class="border rounded-lg p-4">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="font-semibold text-gray-700">
+                    <%= rating.user.display_name %>
+                  </span>
+                  <span class="text-sm text-gray-500">님이 평가</span>
+                </div>
+                <div class="flex items-center">
+                  <% rating.rating.times do %>
+                    <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  <% end %>
+                  <% (5 - rating.rating).times do %>
+                    <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  <% end %>
+                  <span class="ml-2 text-sm text-gray-600">(<%= rating.rating %>/5)</span>
+                </div>
+              </div>
+              <% if rating.comment.present? %>
+                <p class="text-sm text-gray-600 mt-2"><%= rating.comment %></p>
+              <% end %>
+              <p class="text-xs text-gray-500 mt-2">
+                <%= rating.created_at.strftime('%Y-%m-%d %H:%M') %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% all_ratings = @ratings.where.not(user: current_user).where.not(rated_user: current_user) %>
+    <% if all_ratings.any? %>
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">다른 평가들</h2>
+        <div class="space-y-3">
+          <% all_ratings.each do |rating| %>
+            <div class="border rounded-lg p-4 bg-gray-50">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <span class="text-sm text-gray-600">
+                    <%= rating.user.display_name %> → <%= rating.rated_user.display_name %>
+                  </span>
+                  <% if rating.rating_type == 'host' %>
+                    <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">호스트 평가</span>
+                  <% end %>
+                </div>
+                <div class="flex items-center">
+                  <% rating.rating.times do %>
+                    <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  <% end %>
+                  <span class="ml-1 text-xs text-gray-600">(<%= rating.rating %>)</span>
+                </div>
+              </div>
+              <% if rating.comment.present? %>
+                <p class="text-xs text-gray-600 mt-1 italic"><%= truncate(rating.comment, length: 100) %></p>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="mt-6 flex justify-between items-center">
+      <%= link_to "경기 상세로 돌아가기", game_path(@game), class: "text-blue-500 hover:text-blue-700 font-medium" %>
+      <% if !@my_ratings.any? && @game.status == 'completed' && (@game.participants.include?(current_user) || @game.host == current_user) %>
+        <%= link_to "평가하기", new_game_rating_path(@game), class: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300" %>
+      <% end %>
+    </div>
+  </div>
+</div>

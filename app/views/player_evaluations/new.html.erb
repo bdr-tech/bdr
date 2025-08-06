@@ -1,0 +1,137 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+    <%= form_with model: [@game, @evaluation], url: game_player_evaluations_path(@game), local: true do |f| %>
+      <%= f.hidden_field :evaluated_user_id %>
+      
+      <!-- 헤더 -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">🌟 동료 평가하기</h1>
+        
+        <div class="bg-gray-50 rounded-lg p-4">
+          <p class="text-lg font-semibold text-gray-800 mb-2">
+            <%= @evaluated_user.nickname || @evaluated_user.name %>
+            <% if @evaluated_user == @game.organizer %>
+              <span class="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded ml-2">호스트</span>
+            <% end %>
+          </p>
+          <p class="text-sm text-gray-600">
+            경기: <%= @game.title %><br>
+            날짜: <%= @game.scheduled_at.strftime("%Y년 %m월 %d일") %>
+          </p>
+        </div>
+      </div>
+      
+      <!-- 평가 항목 -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">평가 항목</h2>
+        
+        <!-- 실력 평가 -->
+        <div class="mb-8">
+          <label class="block text-gray-700 font-semibold mb-3">
+            🏀 실력 (Skill Level)
+          </label>
+          <div class="flex items-center space-x-4">
+            <% (1..5).each do |i| %>
+              <label class="cursor-pointer">
+                <%= f.radio_button :skill_level, i, class: "hidden peer" %>
+                <div class="peer-checked:text-orange-500 text-gray-300 text-3xl transition duration-300 hover:text-orange-400">
+                  ★
+                </div>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-sm text-gray-500 mt-2">기본기, 슈팅, 드리블 등 전반적인 실력</p>
+        </div>
+        
+        <!-- 팀워크 평가 -->
+        <div class="mb-8">
+          <label class="block text-gray-700 font-semibold mb-3">
+            🤝 팀워크 (Teamwork)
+          </label>
+          <div class="flex items-center space-x-4">
+            <% (1..5).each do |i| %>
+              <label class="cursor-pointer">
+                <%= f.radio_button :teamwork, i, class: "hidden peer" %>
+                <div class="peer-checked:text-blue-500 text-gray-300 text-3xl transition duration-300 hover:text-blue-400">
+                  ★
+                </div>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-sm text-gray-500 mt-2">소통, 협력, 팀 플레이 능력</p>
+        </div>
+        
+        <!-- 매너 평가 -->
+        <div class="mb-8">
+          <label class="block text-gray-700 font-semibold mb-3">
+            😊 매너 (Manner)
+          </label>
+          <div class="flex items-center space-x-4">
+            <% (1..5).each do |i| %>
+              <label class="cursor-pointer">
+                <%= f.radio_button :manner, i, class: "hidden peer" %>
+                <div class="peer-checked:text-green-500 text-gray-300 text-3xl transition duration-300 hover:text-green-400">
+                  ★
+                </div>
+              </label>
+            <% end %>
+          </div>
+          <p class="text-sm text-gray-500 mt-2">스포츠맨십, 예의, 긍정적인 태도</p>
+        </div>
+        
+        <!-- 기억에 남는 선수 -->
+        <div class="mb-8">
+          <label class="flex items-center space-x-3 cursor-pointer">
+            <%= f.check_box :memorable, class: "w-5 h-5 text-yellow-500 rounded focus:ring-yellow-400" %>
+            <span class="text-gray-700 font-semibold">⭐ 기억에 남는 선수로 추천</span>
+          </label>
+          <p class="text-sm text-gray-500 mt-2">특별히 인상 깊었던 선수라면 체크해주세요</p>
+        </div>
+        
+        <!-- 코멘트 -->
+        <div>
+          <label class="block text-gray-700 font-semibold mb-3">
+            💬 한마디 (선택사항)
+          </label>
+          <%= f.text_area :comment, rows: 4, 
+              class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
+              placeholder: "함께 플레이한 소감을 자유롭게 작성해주세요 (최대 500자)" %>
+          <p class="text-sm text-gray-500 mt-2">긍정적이고 건설적인 피드백을 부탁드립니다</p>
+        </div>
+      </div>
+      
+      <!-- 버튼 -->
+      <div class="flex justify-between">
+        <%= link_to "취소", game_player_evaluations_path(@game), 
+            class: "bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg transition duration-300" %>
+        <%= f.submit "평가 완료", 
+            class: "bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition duration-300" %>
+      </div>
+      
+      <!-- 오류 메시지 -->
+      <% if @evaluation.errors.any? %>
+        <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p class="text-red-800 font-semibold mb-2">평가를 완료할 수 없습니다:</p>
+          <ul class="list-disc list-inside text-red-600">
+            <% @evaluation.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  /* 별점 애니메이션 */
+  input[type="radio"]:checked ~ div {
+    animation: starPulse 0.3s ease-out;
+  }
+  
+  @keyframes starPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+</style>

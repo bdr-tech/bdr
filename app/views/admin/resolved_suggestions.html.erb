@@ -1,0 +1,231 @@
+<% content_for :title, "완료된 건의사항 - BDR 관리자" %>
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">완료된 건의사항</h2>
+        <div class="flex gap-2">
+          <%= link_to "활성 건의사항", admin_suggestions_path, 
+                class: "px-4 py-2 rounded-lg transition duration-300 bg-gray-200 text-gray-700 hover:bg-gray-300" %>
+          <%= link_to "완료된 건의사항", admin_resolved_suggestions_path, 
+                class: "px-4 py-2 rounded-lg transition duration-300 bg-green-600 text-white" %>
+        </div>
+      </div>
+      
+      <!-- 필터 및 검색 -->
+      <%= form_with url: admin_resolved_suggestions_path, method: :get, local: true, class: "mb-6" do |f| %>
+        <div class="flex flex-col md:flex-row gap-4">
+          <div class="flex-1">
+            <%= f.text_field :search, value: params[:search], 
+                  placeholder: "제목, 내용, 작성자로 검색", 
+                  class: "w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+          </div>
+          <!-- Status filter removed for resolved suggestions page -->
+          <div>
+            <%= f.submit "검색", class: "bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-300" %>
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- 건의사항 목록 -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">제목</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">작성자</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">상태</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">완료일</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">액션</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% @suggestions.each do |suggestion| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  #<%= suggestion.id %>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">
+                  <div class="max-w-xs">
+                    <p class="font-medium truncate"><%= suggestion.title %></p>
+                    <p class="text-xs text-gray-500 truncate"><%= suggestion.content %></p>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div>
+                    <p><%= suggestion.user.nickname || suggestion.user.name %></p>
+                    <p class="text-xs text-gray-500"><%= suggestion.user.email %></p>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                    <%= suggestion.status == 'resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' %>">
+                    <%= suggestion.status == 'resolved' ? '해결됨' : '종료' %>
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= suggestion.updated_at.strftime("%Y-%m-%d %H:%M") %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button onclick="showSuggestionModal(<%= suggestion.id %>)" 
+                          class="text-blue-600 hover:text-blue-900"
+                          data-suggestion-id="<%= suggestion.id %>"
+                          data-suggestion-title="<%= suggestion.title.gsub('"', '&quot;').gsub("'", '&#39;') %>"
+                          data-suggestion-content="<%= suggestion.content.gsub('"', '&quot;').gsub("'", '&#39;').gsub("\n", '\\n') %>"
+                          data-suggestion-status="<%= suggestion.status %>"
+                          data-suggestion-response="<%= suggestion.admin_response.to_s.gsub('"', '&quot;').gsub("'", '&#39;').gsub("\n", '\\n') %>">
+                    상세보기
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      
+      <% if @suggestions.empty? %>
+        <div class="text-center py-8 text-gray-500">
+          <p>완료된 건의사항이 없습니다.</p>
+        </div>
+      <% end %>
+      
+      <!-- 페이지네이션 -->
+      <div class="mt-6">
+        <%= paginate @suggestions %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 건의사항 상세 모달 -->
+  <div id="suggestion-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">건의사항 상세</h3>
+          <button onclick="closeSuggestionModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+            <p id="modal-title" class="p-3 bg-gray-50 rounded-lg"></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">내용</label>
+            <p id="modal-content" class="p-3 bg-gray-50 rounded-lg whitespace-pre-wrap"></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">현재 상태</label>
+            <p id="modal-status" class="font-semibold"></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">관리자 응답</label>
+            <div id="modal-response" class="p-3 bg-gray-50 rounded-lg whitespace-pre-wrap"></div>
+          </div>
+          
+          <div class="flex justify-end space-x-3 pt-4 border-t">
+            <button onclick="updateSuggestionStatus('pending')" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition duration-200">
+              다시 열기
+            </button>
+            <% if action_name == 'resolved_suggestions' %>
+              <button onclick="updateSuggestionStatus('closed')" id="close-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200 hidden">
+                종료로 변경
+              </button>
+              <button onclick="updateSuggestionStatus('resolved')" id="resolve-btn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 hidden">
+                해결됨으로 변경
+              </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let currentSuggestionId = null;
+    
+    function showSuggestionModal(id) {
+      currentSuggestionId = id;
+      
+      // 버튼에서 데이터 속성 가져오기
+      const button = document.querySelector(`[data-suggestion-id="${id}"]`);
+      const title = button.getAttribute('data-suggestion-title');
+      const content = button.getAttribute('data-suggestion-content');
+      const status = button.getAttribute('data-suggestion-status');
+      const response = button.getAttribute('data-suggestion-response');
+      
+      // HTML 엔티티 디코딩
+      const decodeHtml = (html) => {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
+      };
+      
+      document.getElementById('modal-title').textContent = decodeHtml(title);
+      document.getElementById('modal-content').textContent = decodeHtml(content.replace(/\\n/g, '\n'));
+      document.getElementById('modal-status').textContent = 
+        status === 'pending' ? '대기중' : 
+        status === 'reviewing' ? '검토중' : 
+        status === 'resolved' ? '해결됨' : '종료';
+      document.getElementById('modal-response').textContent = decodeHtml(response.replace(/\\n/g, '\n')) || '(관리자 응답 없음)';
+      
+      // 상태에 따라 버튼 표시/숨김
+      const closeBtn = document.getElementById('close-btn');
+      const resolveBtn = document.getElementById('resolve-btn');
+      
+      if (closeBtn && resolveBtn) {
+        if (status === 'resolved') {
+          closeBtn.classList.remove('hidden');
+          resolveBtn.classList.add('hidden');
+        } else if (status === 'closed') {
+          closeBtn.classList.add('hidden');
+          resolveBtn.classList.remove('hidden');
+        }
+      }
+      
+      const modal = document.getElementById('suggestion-detail-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    
+    function closeSuggestionModal() {
+      const modal = document.getElementById('suggestion-detail-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentSuggestionId = null;
+    }
+    
+    function updateSuggestionStatus(status) {
+      if (!currentSuggestionId) return;
+      
+      const response = document.getElementById('modal-response').textContent;
+      
+      // AJAX 요청으로 상태 업데이트
+      fetch(`/admin/suggestion_action/${currentSuggestionId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          status: status,
+          admin_response: response !== '(관리자 응답 없음)' ? response : ''
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('상태 변경 중 오류가 발생했습니다.');
+        }
+      });
+    }
+  </script>

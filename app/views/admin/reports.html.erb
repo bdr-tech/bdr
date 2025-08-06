@@ -1,0 +1,268 @@
+<% content_for :title, "리포트" %>
+
+<!-- 리포트 제목 -->
+<div class="mb-8">
+  <h2 class="text-3xl font-bold text-gray-800 mb-2">📋 리포트</h2>
+  <p class="text-gray-600">BDR 플랫폼의 상세 보고서를 확인하고 다운로드하세요</p>
+</div>
+
+<!-- 기간 선택 -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">📅 리포트 기간 설정</h3>
+  <%= form_with url: admin_reports_path, method: :get, local: true, class: "flex flex-wrap gap-4" do |f| %>
+    <div>
+      <%= f.label :start_date, "시작일", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.date_field :start_date, value: params[:start_date] || 1.month.ago.to_date, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+    <div>
+      <%= f.label :end_date, "종료일", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.date_field :end_date, value: params[:end_date] || Date.today, class: "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" %>
+    </div>
+    <div class="flex items-end">
+      <%= f.submit "리포트 생성", class: "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- 주요 지표 요약 -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h4 class="text-sm font-medium text-gray-600 mb-2">신규 사용자</h4>
+    <p class="text-3xl font-bold text-blue-600"><%= @report_stats[:new_users] || 0 %></p>
+    <p class="text-xs text-gray-500 mt-1">전 기간 대비 <%= @report_stats[:new_users_growth] || 0 %>%</p>
+  </div>
+  
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h4 class="text-sm font-medium text-gray-600 mb-2">총 경기 수</h4>
+    <p class="text-3xl font-bold text-green-600"><%= @report_stats[:total_games] || 0 %></p>
+    <p class="text-xs text-gray-500 mt-1">전 기간 대비 <%= @report_stats[:games_growth] || 0 %>%</p>
+  </div>
+  
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h4 class="text-sm font-medium text-gray-600 mb-2">총 매출</h4>
+    <p class="text-3xl font-bold text-purple-600"><%= number_to_currency(@report_stats[:total_revenue] || 0, unit: '₩', precision: 0) %></p>
+    <p class="text-xs text-gray-500 mt-1">전 기간 대비 <%= @report_stats[:revenue_growth] || 0 %>%</p>
+  </div>
+  
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h4 class="text-sm font-medium text-gray-600 mb-2">활성 사용자</h4>
+    <p class="text-3xl font-bold text-orange-600"><%= @report_stats[:active_users] || 0 %></p>
+    <p class="text-xs text-gray-500 mt-1">전체 사용자의 <%= @report_stats[:active_user_ratio] || 0 %>%</p>
+  </div>
+</div>
+
+<!-- 상세 리포트 섹션 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- 사용자 리포트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">👥 사용자 리포트</h3>
+    <div class="space-y-4">
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">전체 사용자</span>
+          <span class="font-medium"><%= @user_report[:total] || 0 %>명</span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">신규 가입</span>
+          <span class="font-medium text-green-600"><%= @user_report[:new] || 0 %>명</span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">탈퇴 사용자</span>
+          <span class="font-medium text-red-600"><%= @user_report[:deleted] || 0 %>명</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">평균 사용 시간</span>
+          <span class="font-medium"><%= @user_report[:avg_session_time] || '0' %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 경기 리포트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">🏀 경기 리포트</h3>
+    <div class="space-y-4">
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">총 경기 수</span>
+          <span class="font-medium"><%= @game_report[:total] || 0 %>건</span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">완료된 경기</span>
+          <span class="font-medium text-green-600"><%= @game_report[:completed] || 0 %>건</span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">취소된 경기</span>
+          <span class="font-medium text-red-600"><%= @game_report[:cancelled] || 0 %>건</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">평균 참가자</span>
+          <span class="font-medium"><%= @game_report[:avg_participants] || 0 %>명</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 매출 리포트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">💰 매출 리포트</h3>
+    <div class="space-y-4">
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">총 거래액</span>
+          <span class="font-medium"><%= number_to_currency(@revenue_report[:total] || 0, unit: '₩', precision: 0) %></span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">성공 거래</span>
+          <span class="font-medium text-green-600"><%= number_to_currency(@revenue_report[:success] || 0, unit: '₩', precision: 0) %></span>
+        </div>
+      </div>
+      <div class="border-b pb-3">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">환불 금액</span>
+          <span class="font-medium text-red-600"><%= number_to_currency(@revenue_report[:refund] || 0, unit: '₩', precision: 0) %></span>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-600">평균 거래액</span>
+          <span class="font-medium"><%= number_to_currency(@revenue_report[:average] || 0, unit: '₩', precision: 0) %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인기 코트 리포트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">🏟️ 인기 코트 TOP 5</h3>
+    <div class="space-y-3">
+      <% if @popular_courts && @popular_courts.any? %>
+        <% @popular_courts.each_with_index do |court, index| %>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="text-lg font-bold text-gray-400"><%= index + 1 %></span>
+              <span class="text-gray-800"><%= court[:name] %></span>
+            </div>
+            <span class="text-sm text-gray-600"><%= court[:game_count] %>경기</span>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="text-gray-500 text-center py-4">데이터가 없습니다.</p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- 차트 섹션 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+  <!-- 일별 매출 차트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 일별 매출 추이</h3>
+    <canvas id="revenueChart" width="400" height="200"></canvas>
+  </div>
+
+  <!-- 사용자 증가 차트 -->
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">📊 사용자 증가 추이</h3>
+    <canvas id="userGrowthChart" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<!-- 리포트 다운로드 -->
+<div class="bg-white rounded-lg shadow-md p-6 mt-8">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">📥 리포트 다운로드</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <%= link_to admin_export_data_path(format: 'pdf', start_date: params[:start_date], end_date: params[:end_date]), 
+        class: "bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+      <div class="text-2xl mb-2">📄</div>
+      <div class="font-medium">PDF 다운로드</div>
+    <% end %>
+    
+    <%= link_to admin_export_data_path(format: 'csv', start_date: params[:start_date], end_date: params[:end_date]), 
+        class: "bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+      <div class="text-2xl mb-2">📊</div>
+      <div class="font-medium">CSV 다운로드</div>
+    <% end %>
+    
+    <%= link_to admin_export_data_path(format: 'xlsx', start_date: params[:start_date], end_date: params[:end_date]), 
+        class: "bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg text-center transition duration-300" do %>
+      <div class="text-2xl mb-2">📑</div>
+      <div class="font-medium">Excel 다운로드</div>
+    <% end %>
+  </div>
+</div>
+
+<!-- 차트 스크립트 -->
+<script>
+  // 일별 매출 차트
+  const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+  const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+      labels: <%= (@daily_revenue_data&.keys || []).to_json.html_safe %>,
+      datasets: [{
+        label: '일별 매출',
+        data: <%= (@daily_revenue_data&.values || []).to_json.html_safe %>,
+        borderColor: 'rgb(147, 51, 234)',
+        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '₩' + value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // 사용자 증가 차트
+  const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+  const userChart = new Chart(userCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= (@daily_user_data&.keys || []).to_json.html_safe %>,
+      datasets: [{
+        label: '신규 사용자',
+        data: <%= (@daily_user_data&.values || []).to_json.html_safe %>,
+        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+        borderColor: 'rgb(59, 130, 246)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+</script>

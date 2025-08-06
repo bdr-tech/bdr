@@ -1,0 +1,78 @@
+<% cache ["game_card", game, game.updated_at, game.confirmed_players_count, logged_in?] do %>
+<div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300">
+  <div class="flex justify-between items-start mb-4">
+    <div>
+      <h3 class="text-lg font-bold text-gray-800"><%= game.court.name %></h3>
+      <p class="text-sm text-gray-600"><%= game.court.address %></p>
+    </div>
+    
+    <div class="flex flex-col items-end space-y-2">
+      <% if game.confirmed_players_count < game.max_players %>
+        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">참가 가능</span>
+      <% else %>
+        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-semibold">정원 마감</span>
+      <% end %>
+      
+      <% if game.scheduled_at < Time.current %>
+        <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-semibold">진행중</span>
+      <% elsif game.scheduled_at < 2.hours.from_now %>
+        <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-semibold">곧 시작</span>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+    <div class="flex items-center">
+      <span class="w-4 text-blue-500">⏰</span>
+      <span class="ml-2"><%= game.start_time&.strftime("%H:%M") || game.scheduled_at.strftime("%H:%M") %> ~ <%= game.end_time&.strftime("%H:%M") || (game.scheduled_at + 2.hours).strftime("%H:%M") %></span>
+    </div>
+    
+    <div class="flex items-center">
+      <span class="w-4 text-green-500">👥</span>
+      <span class="ml-2"><%= game.confirmed_players_count %>/<%= game.max_players %>명</span>
+    </div>
+    
+    <div class="flex items-center">
+      <span class="w-4 text-purple-500">🏟️</span>
+      <span class="ml-2"><%= game.court.court_type == 'indoor' ? '실내' : '실외' %></span>
+    </div>
+    
+    <div class="flex items-center">
+      <span class="w-4 text-gray-500">👤</span>
+      <span class="ml-2"><%= game.organizer&.name || '관리자' %></span>
+    </div>
+  </div>
+  
+  <!-- 진행 바 -->
+  <div class="mb-4">
+    <div class="flex justify-between text-xs text-gray-600 mb-1">
+      <span>참가율</span>
+      <span><%= ((game.confirmed_players_count.to_f / game.max_players) * 100).round %>%</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2">
+      <div class="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+           style="width: <%= ((game.confirmed_players_count.to_f / game.max_players) * 100).round %>%"></div>
+    </div>
+  </div>
+  
+  <div class="flex space-x-3">
+    <% if logged_in? %>
+      <%= link_to "상세보기", game_path(game), class: "flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+      
+      <% if game.confirmed_players_count < game.max_players && game.scheduled_at > Time.current %>
+        <%= link_to "⚡ 참가", quick_join_path(game), class: "flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+      <% else %>
+        <button disabled class="flex-1 bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-center text-sm cursor-not-allowed">
+          <%= game.scheduled_at < Time.current ? '진행중' : '정원마감' %>
+        </button>
+      <% end %>
+    <% else %>
+      <%= link_to "로그인", login_path, class: "flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-center text-sm transition duration-300" %>
+      
+      <span class="flex-1 bg-gray-300 text-gray-500 py-2 px-4 rounded-lg text-center text-sm">
+        로그인 필요
+      </span>
+    <% end %>
+  </div>
+</div>
+<% end %>

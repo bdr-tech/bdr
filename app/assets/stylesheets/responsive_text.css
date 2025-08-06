@@ -1,0 +1,198 @@
+/* 반응형 텍스트 시스템 */
+:root {
+  /* 기본 폰트 크기 설정 */
+  --base-font-size: 16px;
+  
+  /* 반응형 크기 비율 */
+  --scale-xs: 0.75;    /* 12px */
+  --scale-sm: 0.875;   /* 14px */
+  --scale-base: 1;     /* 16px */
+  --scale-lg: 1.125;   /* 18px */
+  --scale-xl: 1.25;    /* 20px */
+  --scale-2xl: 1.5;    /* 24px */
+  --scale-3xl: 1.875;  /* 30px */
+  --scale-4xl: 2.25;   /* 36px */
+  --scale-5xl: 3;      /* 48px */
+}
+
+/* 뷰포트 너비에 따른 폰트 크기 자동 조정 */
+html {
+  font-size: clamp(14px, 2.5vw, 18px);
+}
+
+/* 반응형 텍스트 유틸리티 클래스 */
+.text-responsive-xs {
+  font-size: clamp(0.625rem, 1.5vw, 0.75rem);
+}
+
+.text-responsive-sm {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.text-responsive-3xl {
+  font-size: clamp(1.5rem, 5vw, 1.875rem);
+}
+
+.text-responsive-4xl {
+  font-size: clamp(1.875rem, 6vw, 2.25rem);
+}
+
+.text-responsive-5xl {
+  font-size: clamp(2.25rem, 7vw, 3rem);
+}
+
+/* 관리자 페이지 전용 반응형 스타일 */
+.admin-container {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.admin-nav-link {
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  padding: clamp(0.25rem, 1vw, 0.5rem) clamp(0.5rem, 2vw, 1rem);
+}
+
+.admin-card-title {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.admin-card-value {
+  font-size: clamp(1.25rem, 3.5vw, 1.5rem);
+}
+
+.admin-card-subtitle {
+  font-size: clamp(0.625rem, 1.5vw, 0.75rem);
+}
+
+/* 반응형 패딩 및 마진 */
+.p-responsive {
+  padding: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.px-responsive {
+  padding-left: clamp(0.5rem, 2vw, 1.5rem);
+  padding-right: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.py-responsive {
+  padding-top: clamp(0.5rem, 2vw, 1.5rem);
+  padding-bottom: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.m-responsive {
+  margin: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.mx-responsive {
+  margin-left: clamp(0.5rem, 2vw, 1.5rem);
+  margin-right: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.my-responsive {
+  margin-top: clamp(0.5rem, 2vw, 1.5rem);
+  margin-bottom: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+/* 반응형 간격 */
+.gap-responsive {
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.space-responsive > * + * {
+  margin-top: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+/* 미디어 쿼리를 통한 세밀한 조정 */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  /* 모바일에서 너무 작아지지 않도록 최소값 보장 */
+  .text-xs { min-font-size: 11px; }
+  .text-sm { min-font-size: 12px; }
+  .text-base { min-font-size: 14px; }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 18px;
+  }
+  
+  /* 대형 화면에서 너무 커지지 않도록 최대값 제한 */
+  .text-4xl { max-font-size: 40px; }
+  .text-5xl { max-font-size: 52px; }
+}
+
+/* 관리자 네비게이션 반응형 개선 */
+@media (max-width: 768px) {
+  .admin-nav-link {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    width: auto;
+    padding: 0.5rem 0.25rem;
+  }
+}
+
+/* 스크롤바 스타일링 (반응형 너비) */
+::-webkit-scrollbar {
+  width: clamp(8px, 1vw, 12px);
+  height: clamp(8px, 1vw, 12px);
+}
+
+/* 반응형 버튼 크기 */
+.btn-responsive {
+  padding: clamp(0.25rem, 1vw, 0.5rem) clamp(0.75rem, 2vw, 1.5rem);
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  border-radius: clamp(0.25rem, 0.5vw, 0.5rem);
+}
+
+/* 반응형 카드 */
+.card-responsive {
+  padding: clamp(1rem, 3vw, 2rem);
+  border-radius: clamp(0.5rem, 1vw, 1rem);
+}
+
+/* 반응형 아이콘 */
+.icon-responsive-sm {
+  width: clamp(1rem, 2.5vw, 1.5rem);
+  height: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.icon-responsive-base {
+  width: clamp(1.5rem, 3vw, 2rem);
+  height: clamp(1.5rem, 3vw, 2rem);
+}
+
+.icon-responsive-lg {
+  width: clamp(2rem, 4vw, 3rem);
+  height: clamp(2rem, 4vw, 3rem);
+}
+
+/* 반응형 라인 높이 */
+.leading-responsive {
+  line-height: clamp(1.4, 1.5vw, 1.6);
+}
+
+.leading-responsive-tight {
+  line-height: clamp(1.2, 1.3vw, 1.4);
+}
+
+.leading-responsive-loose {
+  line-height: clamp(1.6, 1.7vw, 1.8);
+}

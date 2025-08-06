@@ -1,0 +1,168 @@
+<div class="max-w-7xl mx-auto px-4 py-8">
+  <!-- 헤더 -->
+  <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg p-8 mb-8 text-white">
+    <h1 class="text-3xl font-bold mb-4">🏆 업적 & 포인트</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <!-- 전체 진행률 -->
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">전체 진행률</div>
+        <div class="text-2xl font-bold"><%= @progress_percentage %>%</div>
+        <div class="w-full bg-white/30 rounded-full h-2 mt-2">
+          <div class="bg-white rounded-full h-2" style="width: <%= @progress_percentage %>%"></div>
+        </div>
+        <div class="text-xs mt-1 opacity-90"><%= @unlocked_count %> / <%= @total_achievements %>개 달성</div>
+      </div>
+      
+      <!-- 총 포인트 -->
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">총 포인트</div>
+        <div class="text-2xl font-bold"><%= number_with_delimiter(@total_points) %>P</div>
+        <div class="text-xs mt-1 opacity-90">이번 달: +<%= number_with_delimiter(@points_this_month) %>P</div>
+      </div>
+      
+      <!-- 최근 업적 -->
+      <div class="bg-white/20 backdrop-blur rounded-lg p-4">
+        <div class="text-sm opacity-90">최근 획득</div>
+        <% if @recent_achievements.any? %>
+          <div class="text-lg font-bold"><%= @recent_achievements.first.achievement.name %></div>
+          <div class="text-xs mt-1 opacity-90"><%= @recent_achievements.first.created_at.strftime('%m/%d') %> 달성</div>
+        <% else %>
+          <div class="text-lg">아직 없음</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 탭 네비게이션 -->
+  <div class="bg-white rounded-lg shadow mb-6">
+    <div class="flex border-b">
+      <button class="tab-button px-6 py-3 font-semibold text-purple-600 border-b-2 border-purple-600" 
+              data-tab="achievements">
+        업적
+      </button>
+      <button class="tab-button px-6 py-3 font-semibold text-gray-600 hover:text-gray-800" 
+              data-tab="points">
+        포인트 내역
+      </button>
+    </div>
+  </div>
+  
+  <!-- 업적 탭 -->
+  <div id="achievements-tab" class="tab-content">
+    <% @achievements_by_category.each do |category, achievements| %>
+      <div class="mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          <%= achievement_category_name(category) %>
+          <span class="text-sm font-normal text-gray-500">
+            (<%= achievements.count { |a| @unlocked_achievement_ids.include?(a.id) } %>/<%= achievements.count %>)
+          </span>
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <% achievements.each do |achievement| %>
+            <% unlocked = @unlocked_achievement_ids.include?(achievement.id) %>
+            <div class="<%= unlocked ? 'bg-white' : 'bg-gray-100' %> rounded-lg shadow p-4 
+                        <%= unlocked ? 'border-2 border-purple-500' : 'opacity-60' %>">
+              <div class="flex items-start">
+                <div class="text-3xl mr-3">
+                  <%= unlocked ? achievement.icon : '🔒' %>
+                </div>
+                <div class="flex-1">
+                  <h3 class="font-semibold text-gray-800 <%= unlocked ? '' : 'text-gray-600' %>">
+                    <%= achievement.name %>
+                  </h3>
+                  <p class="text-sm text-gray-600 mt-1">
+                    <%= achievement.description %>
+                  </p>
+                  <% if unlocked %>
+                    <% user_achievement = @user_achievements.find { |ua| ua.achievement_id == achievement.id } %>
+                    <p class="text-xs text-purple-600 mt-2">
+                      <%= user_achievement.created_at.strftime('%Y.%m.%d') %> 달성
+                    </p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- 포인트 내역 탭 -->
+  <div id="points-tab" class="tab-content hidden">
+    <div class="bg-white rounded-lg shadow">
+      <div class="p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">포인트 획득 내역</h2>
+        
+        <% if @points_history.any? %>
+          <div class="space-y-3">
+            <% @points_history.each do |point| %>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <div class="font-semibold text-gray-800"><%= point.reason %></div>
+                  <div class="text-sm text-gray-500"><%= point.earned_at.strftime('%Y년 %m월 %d일 %H:%M') %></div>
+                </div>
+                <div class="text-lg font-bold <%= point.points > 0 ? 'text-green-600' : 'text-red-600' %>">
+                  <%= point.points > 0 ? '+' : '' %><%= number_with_delimiter(point.points) %>P
+                </div>
+              </div>
+            <% end %>
+          </div>
+          
+          <div class="mt-6 text-center">
+            <%= link_to "전체 내역 보기", points_path, 
+                class: "text-purple-600 hover:text-purple-800 font-semibold" %>
+          </div>
+        <% else %>
+          <p class="text-gray-500 text-center py-8">아직 포인트 내역이 없습니다.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 탭 전환
+document.addEventListener('DOMContentLoaded', function() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const targetTab = this.dataset.tab;
+      
+      // 모든 탭 버튼 스타일 초기화
+      tabButtons.forEach(btn => {
+        btn.classList.remove('text-purple-600', 'border-b-2', 'border-purple-600');
+        btn.classList.add('text-gray-600');
+      });
+      
+      // 클릭한 탭 버튼 활성화
+      this.classList.remove('text-gray-600');
+      this.classList.add('text-purple-600', 'border-b-2', 'border-purple-600');
+      
+      // 모든 탭 컨텐츠 숨기기
+      tabContents.forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      // 선택한 탭 컨텐츠 표시
+      document.getElementById(targetTab + '-tab').classList.remove('hidden');
+    });
+  });
+});
+
+// 헬퍼 함수
+function achievement_category_name(category) {
+  const names = {
+    'participation': '참가',
+    'host': '호스트',
+    'social': '소셜',
+    'skill': '실력',
+    'special': '특별'
+  };
+  return names[category] || category;
+}
+</script>

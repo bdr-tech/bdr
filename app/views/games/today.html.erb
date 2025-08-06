@@ -1,0 +1,276 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <!-- 3초룰 헤더 -->
+    <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-lg p-8 mb-8 text-white">
+      <div class="flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">⚡ 3초룰 경기</h1>
+          <p class="text-lg opacity-90">현재 위치에서 가장 가까운 경기를 찾아드립니다</p>
+          <p class="text-sm opacity-75 mt-2">3번의 클릭으로 빠르게 참가하세요!</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <button id="enable-location" class="bg-white text-orange-500 hover:text-orange-600 px-6 py-3 rounded-lg font-semibold transition duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+            <span class="inline-block mr-2">📍</span> 내 위치 찾기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 위치 정보 표시 -->
+    <div id="location-info" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div class="flex items-center">
+        <span class="text-2xl mr-3">📍</span>
+        <div>
+          <p class="text-sm font-medium text-blue-800">현재 위치</p>
+          <p id="current-location" class="text-lg text-blue-900 font-semibold">위치를 확인하는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 로딩 스피너 -->
+    <div id="loading-spinner" class="hidden text-center py-8">
+      <div class="inline-flex items-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mr-3"></div>
+        <span class="text-lg text-gray-600">가까운 경기를 찾고 있습니다...</span>
+      </div>
+    </div>
+
+    <!-- 추천 경기 목록 -->
+    <div id="recommended-games" class="space-y-4">
+      <% if @games.any? %>
+        <% @games.each_with_index do |game, index| %>
+          <div class="game-card bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300 overflow-hidden" 
+               data-lat="<%= game.court&.latitude || Location.find_by(city: game.city, district: game.district)&.latitude %>" 
+               data-lng="<%= game.court&.longitude || Location.find_by(city: game.city, district: game.district)&.longitude %>">
+            <div class="flex flex-col md:flex-row">
+              <!-- 경기 정보 -->
+              <div class="flex-1 p-6">
+                <div class="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-1"><%= game.title %></h3>
+                    <p class="text-gray-600">
+                      <span class="inline-block mr-2">📍</span>
+                      <%= game.court&.name || game.venue_name %> • <%= game.district %>, <%= game.city %>
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-2xl font-bold text-orange-500">
+                      <%= game.confirmed_players_count %>/<%= game.max_players %>
+                    </div>
+                    <div class="text-xs text-gray-500">참가자</div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div class="flex items-center text-sm">
+                    <span class="text-blue-500 mr-2">📅</span>
+                    <span class="text-gray-700"><%= game.scheduled_at.strftime("%m월 %d일") %></span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <span class="text-green-500 mr-2">⏰</span>
+                    <span class="text-gray-700"><%= game.start_time.strftime("%H:%M") %></span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <span class="text-purple-500 mr-2">🎯</span>
+                    <span class="text-gray-700"><%= game.level_name %></span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <span class="text-yellow-500 mr-2">💰</span>
+                    <span class="text-gray-700"><%= game.fee_display %></span>
+                  </div>
+                </div>
+
+                <!-- 거리 표시 -->
+                <div class="distance-info hidden bg-gray-50 rounded-lg px-3 py-2 inline-block">
+                  <span class="text-sm text-gray-600">🚶 약 <span class="distance-value font-semibold text-gray-800">계산중...</span></span>
+                </div>
+              </div>
+
+              <!-- 액션 버튼 -->
+              <div class="bg-gray-50 p-6 flex items-center justify-center border-t md:border-t-0 md:border-l">
+                <% if game.confirmed_players_count < game.max_players %>
+                  <% if index == 0 %>
+                    <%= link_to quick_join_path(game), class: "relative" do %>
+                      <div class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold animate-pulse">
+                        추천
+                      </div>
+                      <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                        ⚡ 3초 참가
+                      </div>
+                    <% end %>
+                  <% else %>
+                    <%= link_to "상세보기", game_path(game), 
+                          class: "bg-white border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+                  <% end %>
+                <% else %>
+                  <span class="bg-gray-300 text-gray-600 px-6 py-3 rounded-lg font-semibold">마감</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div class="text-6xl mb-4">📍</div>
+          <h3 class="text-xl font-bold text-gray-800 mb-2">오늘 참가 가능한 경기가 없습니다</h3>
+          <p class="text-gray-600 mb-6">내일 경기를 확인하거나 새로운 경기를 만들어보세요!</p>
+          <div class="space-y-3">
+            <%= link_to "전체 경기 보기", games_path, 
+                  class: "block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+            <%= link_to "경기 만들기", new_game_path, 
+                  class: "block bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition duration-300" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+// 위치 기반 경기 추천 기능
+document.addEventListener('DOMContentLoaded', function() {
+  const enableLocationBtn = document.getElementById('enable-location');
+  const locationInfo = document.getElementById('location-info');
+  const currentLocationEl = document.getElementById('current-location');
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const gameCards = document.querySelectorAll('.game-card');
+  
+  // 거리 계산 함수 (Haversine formula)
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // 지구 반경 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const d = R * c;
+    return d;
+  }
+  
+  // 거리 표시 형식
+  function formatDistance(km) {
+    if (km < 1) {
+      return (km * 1000).toFixed(0) + 'm';
+    } else {
+      return km.toFixed(1) + 'km';
+    }
+  }
+  
+  // 위치 권한 요청 및 경기 정렬
+  enableLocationBtn.addEventListener('click', function() {
+    if (navigator.geolocation) {
+      loadingSpinner.classList.remove('hidden');
+      enableLocationBtn.disabled = true;
+      enableLocationBtn.textContent = '위치 확인 중...';
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          
+          // 위치 정보 표시
+          locationInfo.classList.remove('hidden');
+          
+          // 한국 주요 도시 좌표로 대략적인 위치 표시
+          const koreanCities = {
+            '서울': { lat: 37.5665, lng: 126.9780 },
+            '부산': { lat: 35.1796, lng: 129.0756 },
+            '대구': { lat: 35.8714, lng: 128.6014 },
+            '인천': { lat: 37.4563, lng: 126.7052 },
+            '광주': { lat: 35.1595, lng: 126.8526 },
+            '대전': { lat: 36.3504, lng: 127.3845 },
+            '울산': { lat: 35.5384, lng: 129.3114 }
+          };
+          
+          // 가장 가까운 도시 찾기
+          let closestCity = '서울';
+          let minDistance = Infinity;
+          
+          for (const [city, coords] of Object.entries(koreanCities)) {
+            const distance = calculateDistance(userLat, userLng, coords.lat, coords.lng);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestCity = city;
+            }
+          }
+          
+          currentLocationEl.textContent = `${closestCity} 근처`;
+          
+          // 각 경기까지의 거리 계산 및 표시
+          const gameDistances = [];
+          gameCards.forEach((card, index) => {
+            const gameLat = parseFloat(card.dataset.lat);
+            const gameLng = parseFloat(card.dataset.lng);
+            
+            if (gameLat && gameLng) {
+              const distance = calculateDistance(userLat, userLng, gameLat, gameLng);
+              gameDistances.push({
+                element: card,
+                distance: distance,
+                index: index
+              });
+              
+              // 거리 표시
+              const distanceEl = card.querySelector('.distance-value');
+              if (distanceEl) {
+                distanceEl.textContent = formatDistance(distance);
+                card.querySelector('.distance-info').classList.remove('hidden');
+              }
+            }
+          });
+          
+          // 거리순으로 정렬
+          gameDistances.sort((a, b) => a.distance - b.distance);
+          
+          // DOM 재정렬
+          const container = document.getElementById('recommended-games');
+          gameDistances.forEach(item => {
+            container.appendChild(item.element);
+          });
+          
+          loadingSpinner.classList.add('hidden');
+          enableLocationBtn.textContent = '위치 업데이트';
+          enableLocationBtn.disabled = false;
+          
+          // 가장 가까운 경기 하이라이트
+          if (gameDistances.length > 0) {
+            gameDistances[0].element.classList.add('ring-2', 'ring-orange-500');
+          }
+        },
+        function(error) {
+          loadingSpinner.classList.add('hidden');
+          enableLocationBtn.textContent = '📍 내 위치 찾기';
+          enableLocationBtn.disabled = false;
+          
+          let errorMessage = '위치 정보를 가져올 수 없습니다.';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = '위치 정보를 사용할 수 없습니다.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
+              break;
+          }
+          
+          alert(errorMessage);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      alert('이 브라우저는 위치 정보를 지원하지 않습니다.');
+    }
+  });
+  
+  // 페이지 로드 시 자동으로 위치 확인 (선택사항)
+  // enableLocationBtn.click();
+});
+</script>

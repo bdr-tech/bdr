@@ -1,0 +1,137 @@
+<% content_for :title, "#{@post.title} - BDR 커뮤니티" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- 뒤로 가기 -->
+    <div class="mb-6">
+      <%= link_to "← #{@post.category} 목록", 
+            case @post.category
+            when '자유게시판' then community_free_board_path
+            when '중고거래' then community_marketplace_path  
+            when '팀소개' then community_teams_path
+            when '농구코트정보' then community_courts_info_path
+            else community_path
+            end,
+            class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+    </div>
+
+    <!-- 게시글 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <!-- 게시글 헤더 -->
+      <div class="border-b border-gray-200 p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center">
+            <span class="text-2xl mr-3"><%= @post.category_icon %></span>
+            <div>
+              <span class="text-sm text-orange-600 font-semibold"><%= @post.category %></span>
+              <h1 class="text-2xl font-bold text-gray-800"><%= @post.title %></h1>
+            </div>
+          </div>
+          
+          <% if current_user == @post.user %>
+            <div class="flex space-x-2">
+              <%= link_to "수정", edit_post_path(@post), class: "text-sm text-gray-600 hover:text-gray-800 transition duration-300" %>
+              <%= link_to "삭제", post_path(@post), method: :delete, 
+                    data: { confirm: "정말 삭제하시겠습니까?" },
+                    class: "text-sm text-red-600 hover:text-red-800 transition duration-300" %>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="flex items-center space-x-4 text-sm text-gray-500">
+          <div class="flex items-center">
+            <span class="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+              <%= @post.user.nickname&.first || @post.user.name&.first || 'U' %>
+            </span>
+            <span class="font-medium"><%= @post.user.nickname || @post.user.name %></span>
+          </div>
+          <span>•</span>
+          <span><%= @post.created_at.strftime("%Y.%m.%d %H:%M") %></span>
+          <span>•</span>
+          <span>조회 <%= @post.views_count %></span>
+          <span>•</span>
+          <span>댓글 <%= @post.comments_count %></span>
+        </div>
+      </div>
+      
+      <!-- 게시글 내용 -->
+      <div class="p-6">
+        <div class="prose max-w-none">
+          <%= simple_format(@post.content, class: "text-gray-800 leading-relaxed") %>
+        </div>
+        
+        <!-- 이미지 -->
+        <% if @post.has_images? %>
+          <div class="mt-6 space-y-4">
+            <% if @post.image1.present? %>
+              <div class="border border-gray-200 rounded-lg p-4">
+                <p class="text-sm text-gray-600 mb-2">첫 번째 이미지:</p>
+                <div class="bg-gray-100 rounded-lg p-8 text-center">
+                  <div class="text-gray-500">
+                    📸 이미지: <%= @post.image1 %>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-2">실제 구현에서는 이미지가 표시됩니다</p>
+                </div>
+              </div>
+            <% end %>
+            
+            <% if @post.image2.present? %>
+              <div class="border border-gray-200 rounded-lg p-4">
+                <p class="text-sm text-gray-600 mb-2">두 번째 이미지:</p>
+                <div class="bg-gray-100 rounded-lg p-8 text-center">
+                  <div class="text-gray-500">
+                    📸 이미지: <%= @post.image2 %>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-2">실제 구현에서는 이미지가 표시됩니다</p>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+        <span class="mr-2">💬</span>
+        댓글 (<%= @post.comments_count %>)
+      </h2>
+      
+      <!-- 댓글 작성 폼 -->
+      <% if logged_in? %>
+        <div class="mb-8 p-4 bg-gray-50 rounded-lg">
+          <%= form_with model: [@post, @comment], local: true, class: "space-y-4" do |form| %>
+            <%= form.text_area :content, rows: 3,
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500",
+                  placeholder: "댓글을 입력하세요..." %>
+            <div class="flex justify-end">
+              <%= form.submit "댓글 작성", 
+                    class: "px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition duration-300" %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mb-8 p-4 bg-gray-50 rounded-lg text-center">
+          <p class="text-gray-600">댓글을 작성하려면 로그인이 필요합니다.</p>
+          <%= link_to "로그인", login_path, class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+        </div>
+      <% end %>
+      
+      <!-- 댓글 목록 -->
+      <div class="space-y-4">
+        <% if @comments.any? %>
+          <% @comments.each do |comment| %>
+            <%= render 'comments/comment', comment: comment, post: @post %>
+          <% end %>
+        <% else %>
+          <div class="text-center py-8">
+            <div class="text-4xl mb-2">💬</div>
+            <p class="text-gray-600">아직 댓글이 없습니다.</p>
+            <p class="text-gray-500 text-sm">첫 번째 댓글을 작성해보세요!</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

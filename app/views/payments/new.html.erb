@@ -1,0 +1,201 @@
+<% content_for :title, "결제하기 - BDR" %>
+
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+    <!-- 뒤로 가기 -->
+    <div class="mb-6">
+      <%= link_to "← 경기로 돌아가기", @game, class: "text-orange-600 hover:text-orange-800 transition duration-300" %>
+    </div>
+
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">💳 결제하기</h1>
+        <p class="text-gray-600">경기 참가비를 결제해주세요</p>
+      </div>
+    </div>
+
+    <!-- 경기 정보 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">🏀 경기 정보</h2>
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-600">경기명</span>
+          <span class="text-gray-800 font-semibold"><%= @game.title %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">장소</span>
+          <span class="text-gray-800"><%= @game.venue_name %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">일시</span>
+          <span class="text-gray-800">
+            <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 (%a)") %>
+            <%= @game.start_time&.strftime("%H:%M") || @game.scheduled_at.strftime("%H:%M") %> ~ 
+            <%= @game.end_time&.strftime("%H:%M") || (@game.scheduled_at + 2.hours).strftime("%H:%M") %>
+          </span>
+        </div>
+        <hr class="my-4">
+        <div class="flex justify-between text-lg">
+          <span class="text-gray-800 font-semibold">참가비</span>
+          <span class="text-orange-600 font-bold text-xl"><%= @game.fee_display %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 결제 방법 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">💰 결제 방법</h2>
+      
+      <!-- 토스페이먼츠 결제 -->
+      <div class="border border-gray-200 rounded-lg p-4 bg-blue-50 border-blue-200 mb-4">
+        <div class="flex items-center mb-3">
+          <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+            <span class="text-white text-sm">✓</span>
+          </div>
+          <div class="text-lg font-semibold text-gray-800">💳 토스페이먼츠</div>
+        </div>
+        
+        <!-- 토스페이먼츠 설명 -->
+        <div class="ml-9 text-sm text-gray-600">
+          <p class="mb-3">안전하고 편리한 온라인 결제 서비스</p>
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">카드</span>
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">계좌이체</span>
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">카카오페이</span>
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">페이코</span>
+            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">토스페이</span>
+          </div>
+        </div>
+      </div>
+        
+      <!-- 결제 진행 버튼 -->
+      <div class="mt-8 text-center">
+        <button type="button" id="toss-payment-btn" disabled class="w-full bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300">
+          💳 토스페이먼츠로 결제하기 (로딩 중...)
+        </button>
+      </div>
+    </div>
+
+    <!-- 주의사항 -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="text-yellow-800 font-semibold mb-2">⚠️ 주의사항</div>
+      <ul class="text-yellow-700 text-sm space-y-1">
+        <li>• 결제 후 취소는 경기 시작 24시간 전까지만 가능합니다</li>
+        <li>• 허위 정보 입력 시 참가가 취소될 수 있습니다</li>
+        <li>• 문의사항은 고객센터로 연락해주세요</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 토스페이먼츠 SDK v1 -->
+<script src="https://js.tosspayments.com/v1/payment"></script>
+
+<script>
+// 토스페이먼츠 클라이언트 키 (테스트용)
+const clientKey = "test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq"
+console.log('Loading TossPayments with client key:', clientKey)
+
+let tossPayments;
+
+// 결제 정보
+const paymentInfo = {
+  amount: <%= @game.fee %>,
+  orderId: "BDR-<%= @game.game_id %>-<%= @application.id %>-<%= Time.current.to_i %>",
+  orderName: "<%= @game.title %> 참가비",
+  customerName: "<%= current_user.name %>",
+  customerEmail: "<%= current_user.email %>",
+  successUrl: "<%= request.protocol + request.host_with_port %>/payments/success",
+  failUrl: "<%= request.protocol + request.host_with_port %>/payments/fail"
+}
+
+// 토스페이먼츠 결제 처리
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, initializing TossPayments...')
+  
+  const tossBtn = document.getElementById('toss-payment-btn')
+  
+  if (!tossBtn) {
+    console.error('TossPayments button not found!')
+    return
+  }
+  
+  console.log('TossPayments button found:', tossBtn)
+  console.log('Payment info:', paymentInfo)
+  
+  // TossPayments 초기화 대기 (SDK v1)
+  function initializeTossPayments() {
+    if (typeof TossPayments === 'undefined') {
+      console.log('TossPayments SDK not loaded yet, waiting...')
+      setTimeout(initializeTossPayments, 100)
+      return
+    }
+    
+    if (!tossPayments) {
+      try {
+        tossPayments = TossPayments(clientKey)
+        console.log('TossPayments initialized successfully:', tossPayments)
+        console.log('TossPayments methods:', Object.keys(tossPayments))
+      } catch (error) {
+        console.error('Failed to initialize TossPayments:', error)
+        return
+      }
+    }
+    
+    // 결제 버튼 활성화
+    tossBtn.disabled = false
+    tossBtn.textContent = '💳 토스페이먼츠로 결제하기'
+    tossBtn.className = 'w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300 transform hover:scale-105'
+    console.log('TossPayments ready, button enabled')
+  }
+  
+  // 초기화 시작
+  initializeTossPayments()
+  
+  // 토스페이먼츠 결제 버튼 클릭
+  tossBtn.addEventListener('click', function() {
+    console.log('TossPayments button clicked!')
+    
+    if (!tossPayments) {
+      console.error('TossPayments not initialized!')
+      alert('결제 시스템 초기화 오류입니다. 페이지를 새로고침해주세요.')
+      return
+    }
+    
+    try {
+      console.log('Requesting payment with:', {
+        method: "CARD",
+        amount: paymentInfo.amount,
+        orderId: paymentInfo.orderId,
+        orderName: paymentInfo.orderName,
+        customerName: paymentInfo.customerName,
+        customerEmail: paymentInfo.customerEmail,
+        successUrl: paymentInfo.successUrl,
+        failUrl: paymentInfo.failUrl
+      })
+      
+      // 토스페이먼츠 SDK v1 사용법
+      tossPayments.requestPayment('카드', {
+        amount: paymentInfo.amount,
+        orderId: paymentInfo.orderId,
+        orderName: paymentInfo.orderName,
+        customerName: paymentInfo.customerName,
+        customerEmail: paymentInfo.customerEmail,
+        successUrl: paymentInfo.successUrl,
+        failUrl: paymentInfo.failUrl,
+      }).catch(function (error) {
+        console.error('Payment error:', error)
+        if (error.code === 'USER_CANCEL') {
+          alert('결제가 취소되었습니다.')
+        } else {
+          alert('결제 중 오류가 발생했습니다: ' + error.message)
+        }
+      })
+    } catch (error) {
+      console.error('Payment request failed:', error)
+      alert('결제 요청 중 오류가 발생했습니다: ' + error.message)
+    }
+  })
+})
+</script>

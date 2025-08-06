@@ -1,0 +1,149 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    <!-- 헤더 -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800 mb-4">🏆 농구 대회</h1>
+          <p class="text-gray-600">다양한 농구 대회에 참가하고 실력을 겨뤄보세요!</p>
+        </div>
+        <% if current_user&.can_create_tournament? %>
+          <%= link_to "대회 등록하기", new_tournament_path, 
+              class: "bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-lg transition duration-300" %>
+        <% end %>
+      </div>
+      
+      <!-- 검색 및 필터 -->
+      <div class="flex flex-col md:flex-row gap-4">
+        <%= form_with url: tournaments_path, method: :get, local: true, class: "flex-1" do |f| %>
+          <div class="flex gap-2">
+            <%= f.text_field :search, value: params[:search], 
+                placeholder: "대회명 또는 설명 검색...", 
+                class: "flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" %>
+            <%= f.submit "검색", class: "bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition duration-300" %>
+          </div>
+        <% end %>
+        
+        <div class="flex gap-2">
+          <%= link_to "전체", tournaments_path, 
+              class: "px-4 py-2 rounded-lg transition duration-300 #{params[:filter].blank? ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+          <%= link_to "예정", tournaments_path(filter: 'upcoming'), 
+              class: "px-4 py-2 rounded-lg transition duration-300 #{params[:filter] == 'upcoming' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+          <%= link_to "접수중", tournaments_path(filter: 'registration_open'), 
+              class: "px-4 py-2 rounded-lg transition duration-300 #{params[:filter] == 'registration_open' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+          <%= link_to "진행중", tournaments_path(filter: 'ongoing'), 
+              class: "px-4 py-2 rounded-lg transition duration-300 #{params[:filter] == 'ongoing' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- 추천 대회 -->
+    <% if @featured_tournaments.any? %>
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">⭐ 추천 대회</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <% @featured_tournaments.each do |tournament| %>
+            <div class="bg-gradient-to-br from-orange-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold"><%= tournament.name %></h3>
+                <span class="bg-white/20 backdrop-blur text-white text-xs px-2 py-1 rounded">추천</span>
+              </div>
+              <p class="text-white/90 mb-4 line-clamp-2"><%= tournament.description %></p>
+              <div class="space-y-2 text-sm">
+                <p>📅 <%= tournament.tournament_start_at.strftime("%m월 %d일") %></p>
+                <p>📍 <%= tournament.location_name %></p>
+                <p>💰 상금 <%= number_with_delimiter(tournament.prize_pool.to_i) %>원</p>
+              </div>
+              <%= link_to "자세히 보기", tournament_path(tournament), 
+                  class: "block text-center bg-white text-orange-600 font-semibold px-4 py-2 rounded-lg mt-4 hover:bg-gray-100 transition duration-300" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- 대회 목록 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @tournaments.each do |tournament| %>
+        <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition duration-300">
+          <% if tournament.banner_image.present? %>
+            <%= image_tag tournament.banner_image, class: "w-full h-48 object-cover rounded-t-lg" %>
+          <% else %>
+            <div class="w-full h-48 bg-gradient-to-br from-orange-400 to-red-500 rounded-t-lg flex items-center justify-center">
+              <span class="text-white text-6xl">🏀</span>
+            </div>
+          <% end %>
+          
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-xl font-bold text-gray-800"><%= tournament.name %></h3>
+              <% case tournament.status %>
+              <% when 'registration_open' %>
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">접수중</span>
+              <% when 'ongoing' %>
+                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">진행중</span>
+              <% when 'completed' %>
+                <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">종료</span>
+              <% else %>
+                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">예정</span>
+              <% end %>
+            </div>
+            
+            <p class="text-gray-600 mb-4 line-clamp-2"><%= tournament.description %></p>
+            
+            <div class="space-y-2 text-sm text-gray-600 mb-4">
+              <div class="flex items-center">
+                <span class="w-6">📅</span>
+                <span><%= tournament.tournament_start_at&.strftime("%Y년 %m월 %d일") || "미정" %></span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-6">📍</span>
+                <span><%= tournament.location_name || "미정" %></span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-6">👥</span>
+                <span><%= tournament.approved_teams.count %>/<%= tournament.max_teams %>팀</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-6">💰</span>
+                <span>참가비 <%= tournament.entry_fee > 0 ? "#{number_with_delimiter(tournament.entry_fee.to_i)}원" : "무료" %></span>
+              </div>
+            </div>
+            
+            <!-- 진행률 바 -->
+            <% if tournament.registration_open? %>
+              <div class="mb-4">
+                <div class="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>참가 신청</span>
+                  <span><%= tournament.registration_progress_percentage %>%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-orange-500 h-2 rounded-full" style="width: <%= tournament.registration_progress_percentage %>%"></div>
+                </div>
+              </div>
+            <% end %>
+            
+            <%= link_to "상세보기", tournament_path(tournament), 
+                class: "block text-center bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition duration-300" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- 대회가 없을 때 -->
+    <% if @tournaments.empty? %>
+      <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <div class="text-6xl mb-4">🏆</div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-3">등록된 대회가 없습니다</h3>
+        <p class="text-gray-600">곧 새로운 대회가 등록될 예정입니다.</p>
+      </div>
+    <% end %>
+    
+    <!-- 페이지네이션 -->
+    <% if @tournaments.respond_to?(:total_pages) && @tournaments.total_pages > 1 %>
+      <div class="mt-8 flex justify-center">
+        <%= paginate @tournaments %>
+      </div>
+    <% end %>
+  </div>
+</div>

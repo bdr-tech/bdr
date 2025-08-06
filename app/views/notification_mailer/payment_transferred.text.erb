@@ -1,0 +1,37 @@
+경기 참가비 송금 완료
+
+안녕하세요, <%= @host.nickname || @host.name %>님!
+
+<%= @game.title %> 경기 참가비가 계좌로 송금되었습니다.
+
+실 수령액: <%= number_to_currency(@host_amount, unit: "₩", precision: 0) %>
+
+========================================
+경기 정보
+========================================
+경기명: <%= @game.title %>
+경기 일시: <%= @game.scheduled_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+경기 상태: <%= @game.status == 'completed' ? '완료' : '진행중' %>
+송금 일시: <%= @payment.transferred_to_host_at.strftime("%Y년 %m월 %d일 %H:%M") %>
+송금 계좌: <%= @host.bank_name %> <%= @host.bank_account %>
+
+========================================
+정산 내역
+========================================
+참가비 총액: <%= number_to_currency(@total_amount, unit: "₩", precision: 0) %>
+플랫폼 수수료 (<%= (@payment.platform_fee_percentage || 10) %>%): - <%= number_to_currency(@platform_fee, unit: "₩", precision: 0) %>
+----------------------------------------
+실 수령액: <%= number_to_currency(@host_amount, unit: "₩", precision: 0) %>
+
+========================================
+안내사항
+========================================
+- 경기 완료 후 2영업일 이내에 자동으로 송금됩니다.
+- 송금 내역은 마이페이지 > 정산 내역에서 확인 가능합니다.
+- 세금계산서가 필요한 경우 고객센터로 문의해주세요.
+
+정산 내역 확인하기:
+<%= payments_url %>
+
+* 이 이메일은 BDR 플랫폼에서 자동으로 발송된 메일입니다.
+* 정산 관련 문의사항은 고객센터로 연락주시기 바랍니다.
