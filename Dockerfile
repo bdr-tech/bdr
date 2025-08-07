@@ -52,8 +52,13 @@ COPY --from=build /rails /rails
 
 # Run and own only the runtime files as a non-root user for security
 RUN useradd rails --create-home --shell /bin/bash && \
+    mkdir -p storage && \
     chown -R rails:rails db log storage tmp
+    
+# Create SQLite database directory with proper permissions
 USER rails:rails
+RUN mkdir -p /rails/storage && \
+    touch /rails/storage/production.sqlite3
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
