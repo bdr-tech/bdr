@@ -2,8 +2,9 @@ Rails.application.routes.draw do
   # Test endpoint
   get "/test", to: "test#index"
   
-  # Health check endpoint
+  # Health check endpoints
   get "/up", to: "health#check"
+  get "/health", to: "health#check"
   
   # Court realtime activities
   resources :courts do

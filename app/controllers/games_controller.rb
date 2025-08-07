@@ -43,10 +43,11 @@ class GamesController < ApplicationController
   end
 
   def show
-    @can_join = @game.players.count < @game.max_players
-    @current_players = @game.players.includes(:game_participations)
+    # N+1 쿼리 해결: 한 번에 모든 연관 데이터 로드
     @game = Game.includes(:court, :organizer, :players, game_applications: :user).find(@game.id)
-    @pending_applications = @game.game_applications.pending.includes(:user)
+    @can_join = @game.players.count < @game.max_players
+    @current_players = @game.players
+    @pending_applications = @game.game_applications.pending
   end
 
   def new

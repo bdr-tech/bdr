@@ -2,26 +2,40 @@ class CourtsController < ApplicationController
   before_action :set_court, only: [ :show, :realtime ]
 
   def index
-    @courts = Court.all
-
-    # 필터링 옵션
-    if params[:court_type].present?
-      @courts = @courts.where(court_type: params[:court_type])
+    # Build cache key with all filter parameters
+    cache_key = [
+      "courts",
+      params[:court_type],
+      params[:search],
+      params[:lat],
+      params[:lng],
+      params[:radius],
+      params[:page] || 1,
+      Court.maximum(:updated_at)&.to_i
+    ].join("/")
+    
+    @courts = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+      courts = Court.includes(:games)
+      
+      # 필터링 옵션
+      if params[:court_type].present?
+        courts = courts.where(court_type: params[:court_type])
+      end
+      
+      if params[:search].present?
+        courts = courts.where("name LIKE ? OR address LIKE ?",
+                                "%#{params[:search]}%",
+                                "%#{params[:search]}%")
+      end
+      
+      # 위치 기반 검색
+      if params[:lat].present? && params[:lng].present?
+        courts = courts.nearby(params[:lat], params[:lng], params[:radius] || 10)
+      end
+      
+      # 페이지네이션
+      courts.page(params[:page]).per(12).to_a
     end
-
-    if params[:search].present?
-      @courts = @courts.where("name LIKE ? OR address LIKE ?",
-                              "%#{params[:search]}%",
-                              "%#{params[:search]}%")
-    end
-
-    # 위치 기반 검색
-    if params[:lat].present? && params[:lng].present?
-      @courts = @courts.nearby(params[:lat], params[:lng], params[:radius] || 10)
-    end
-
-    # 페이지네이션
-    @courts = @courts.page(params[:page]).per(12)
   end
 
   def show

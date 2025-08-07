@@ -1,11 +1,15 @@
 class ApplicationController < ActionController::Base
+  # Security: Enable CSRF protection
+  protect_from_forgery with: :exception
+  
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   # allow_browser versions: :modern # Temporarily disabled for deployment
   
-  # Temporarily comment out for deployment
-  # include Cacheable
+  # Include caching module for performance optimization
+  include Cacheable
 
   before_action :current_user
+  before_action :set_security_headers
 
   # 전역 에러 핸들링
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
@@ -56,6 +60,14 @@ class ApplicationController < ActionController::Base
   
   # Alias for compatibility with some controllers
   alias_method :authenticate_user!, :require_login
+  
+  # Security headers
+  def set_security_headers
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+  end
 
   # 에러 핸들러
   def record_not_found
